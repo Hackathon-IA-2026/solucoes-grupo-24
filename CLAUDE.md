@@ -31,6 +31,7 @@ Stack: Python, pandas, pyarrow, duckdb, geopandas, matplotlib, seaborn, lightgbm
 
 ## Regras do projeto
 
+- Antes de começar a fazer qualquer alteração deve-se checar se existe atualizações da branch atual, se não tiver alterações conflitantes atualize com pull para ter a versão mais atual do time.
 - **Nunca inventar dados.** Se uma série, endpoint ou arquivo não existir ou não estiver acessível, pare e reporte. Dado sintético ou placeholder só com flag explícita (`mock=True` ou coluna `is_mock`) e registrado em `docs/real_vs_mock.md`.
 - **Split sempre cronológico.** Nunca aleatório. Toda etapa de modelagem precisa de um teste que prove ausência de vazamento temporal.
 - **Nunca cruzar** recortes por subsistema e por área operativa sem `data/processed/mapeamento_subsistema_area.csv`.
@@ -44,6 +45,8 @@ Stack: Python, pandas, pyarrow, duckdb, geopandas, matplotlib, seaborn, lightgbm
 - Parâmetros (pesos da loss, datas de corte, caminhos) em `config/*.yaml`, nunca hardcoded.
 - Antes de downloads longos ou treinos acima de ~10 min: avise e estime o tempo.
 - Commits pequenos e descritivos. Ao fim de cada tarefa, registre o andamento em `docs/STATUS.md`.
+- Após fazer commit faça imediatamente push para enviar logo as alterações para o time.
+- Respeite os principios DRY! evite ao máximo ter mais de uma cópia do mesmo código!
 
 ## README (modelo da competição)
 
