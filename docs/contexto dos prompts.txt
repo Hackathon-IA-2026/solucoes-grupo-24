@@ -1,0 +1,78 @@
+# Contexto de execução dos prompts
+
+Este arquivo **complementa** o `CLAUDE.md`. Em qualquer conflito, **o `CLAUDE.md` vence**.
+
+## Como executar um prompt
+
+- **Início:** siga a regra de git do `CLAUDE.md` (checar e puxar atualizações) e leia `docs/STATUS.md` para saber o estado atual.
+- **Execute de ponta a ponta.** Decisões menores (nome de coluna, hiperparâmetro, formato intermediário, escolha entre bibliotecas equivalentes): decida, explique no comentário do código (regra do `CLAUDE.md`) e resuma em `docs/STATUS.md` → Decisões.
+- **Quando o `CLAUDE.md` mandar parar** (dado inexistente ou inacessível, mudança no schema): antes de parar, termine as tarefas deste prompt que **não dependem** do item bloqueado. Depois pare e reporte. Nunca contorne com dado inventado.
+- **Downloads ou treinos longos:** escreva a estimativa de tempo no terminal e siga, sem esperar resposta.
+- **Prioridade:** `[NUNCA CORTAR]` > `[PADRÃO]` > `[CORTÁVEL]`. Se uma tarefa passar do dobro do tempo estimado, entregue a versão mais simples que funcione, registre e siga.
+- **Fim:** `docs/STATUS.md` com cinco seções — Feito, Bloqueado, Decisões, Pendências humanas (o que o Tiago precisa fazer ou decidir), Enviar ao Luiz. Depois, commit descritivo e push (regras do `CLAUDE.md`).
+
+## Git com duas sessões em paralelo
+
+- Adicione ao commit **só os arquivos que você criou ou alterou**. Nunca `git add -A` nem `git add .`.
+- **Antes de cada push:** `git pull --rebase`. Se houver conflito em arquivo que não é seu, pare e reporte.
+
+## Configuração central
+
+`config/projeto.yaml`: `area_piloto`, `incluir_rel`, `bloco_espacial` (tiago|luiz), `era5_disponivel`, `gpu`, `caminho_fator_correcao`. Todo script lê daqui.
+
+## Formatos de dados
+
+| O quê | Formato |
+| --- | --- |
+| Bases brutas grandes | Parquet particionado em `data/raw/` (regra do `CLAUDE.md`) |
+| Tabelas processadas e saídas dos modelos | **CSV por padrão**; Parquet só acima de ~1M linhas |
+| Espacial | GeoJSON (EPSG:4326) em `output/`; GeoParquet para intermediários grandes |
+| Banco (dentro de `Backend/`) | **Só o que o frontend consome**: previsões publicadas, riscos, explicabilidade, excedentes, manchas, validação e metadados. Nada de base bruta ou intermediária no banco |
+
+## Fluxo de publicação para o frontend
+
+```
+modelos ──► arquivos em output/ ──► carregador do Backend ──► banco ──► API FastAPI ──► Frontend (Luiz)
+```
+
+- O comando do carregador fica documentado em `docs/backend.md`.
+- O carregador sempre cria uma nova execução com **tudo** que estiver disponível em `output/`. Blocos ainda sem saída real entram do exemplo, com `is_mock: true`.
+- O JSON do contrato é montado por **uma única função** do Backend, usada tanto pela API quanto pela exportação para arquivo (DRY).
+
+## Relatórios
+
+Tabelas de métricas, relatórios e figuras de relatório vão em `docs/reports/` (o `CLAUDE.md` manda toda documentação e relatório ficar em `docs/`).
+
+## Regras de dados e modelagem que complementam o `CLAUDE.md`
+
+- **Timestamps:** verifique o fuso de cada base do ONS, padronize tudo num fuso único e registre a decisão.
+- **Unidades:** confira MW / MWmed / MWh antes de somar ou subtrair séries.
+- **Horizontes em passos de 30 min:** h=1 (30 min), h=6 (3h), h=48 (D+1).
+- Dia dos Pais = 2º domingo de agosto (flag própria no calendário).
+- **Montante esperado de corte** = P(corte) × E[MW | corte].
+- **Features compartilhadas** (calendário, lags, MMGD corrigida) ficam em um módulo só, reutilizado pelos modelos de carga e de curtailment (DRY).
+
+## O que o frontend do Luiz precisa (6 telas)
+
+| Tela | Dados |
+| --- | --- |
+| 1 — Visão geral | carga supervisionada atual, MMGD estimada atual, risco agregado de curtailment (%) |
+| 2 — Despacho preditivo | curva D+1 com P10/P50/P90, rampa projetada (MW/h), fatores que mais pesaram (importância de variáveis) |
+| 3 — Lista de riscos | por usina/conjunto: razão, probabilidade, montante previsto (MW), horizonte, nome legível |
+| 4 — Detalhe do alerta | pesos por variável, decomposição por razão (%), dataset de origem, timestamp alvo, gerado_em |
+| 5 — Excedentes | por área de concessão e fronteira: id da mancha, prioridade, horizonte, excedente projetado (MW), risco de fluxo reverso, ação recomendada |
+| 6 — Validação | erro do modelo vs. baseline no período recente, status e data do último dado de cada fonte, metadados do modelo, limitações declaradas |
+
+Formato do alerta que o frontend monta (os dados precisam ter todos os campos para isso):
+
+> "Probabilidade de 85% de curtailment de 312 MW no <usina/conjunto>, amanhã às 14h. Motivo: x% <razão> · y% <razão>. Fontes: Portal ONS, BDGD, ERA5 · D+1 · atualizado há N min"
+
+## Pastas
+
+Todas na raiz do repositório:
+
+| Pasta | O que contém | Dono |
+| --- | --- | --- |
+| `Frontend/` | **Todo** o código do frontend (dashboard). Nada de frontend fora dela | Luiz — **não altere nada lá** |
+| `Backend/` | Todo o backend: FastAPI, SQLAlchemy, Alembic e o arquivo SQLite, seguindo as Regras de Compatibilidade de Banco de Dados do `CLAUDE.md` (Prompt 2) | Tiago |
+| `output/` | **Só arquivos de dados** gerados pelos modelos (CSV, GeoJSON, JSON do contrato). Não é frontend nem contém código: o carregador lê daqui e grava no banco | Tiago |

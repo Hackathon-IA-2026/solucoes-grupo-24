@@ -1,0 +1,1742 @@
+conjunto,arquivo,status,linhas,bytes,baixado_em
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2000.parquet,ok,43915.0,1300517.0,2026-09-25T19:58:22+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2001.parquet,ok,43795.0,1382269.0,2026-09-25T19:58:22+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2002.parquet,ok,43795.0,1554964.0,2026-09-25T19:58:20+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2003.parquet,ok,43795.0,1608349.0,2026-09-25T19:58:21+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2004.parquet,ok,43915.0,1672224.0,2026-09-25T19:58:22+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2005.parquet,ok,43795.0,1663758.0,2026-09-25T19:58:22+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2006.parquet,ok,43795.0,1735685.0,2026-09-25T19:58:21+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2007.parquet,ok,43795.0,1807558.0,2026-09-25T19:58:22+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2008.parquet,ok,43915.0,1850233.0,2026-09-25T19:58:22+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2009.parquet,ok,43795.0,1841102.0,2026-09-25T19:58:23+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2010.parquet,ok,43795.0,1957890.0,2026-09-25T19:58:23+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2011.parquet,ok,43795.0,1912908.0,2026-09-25T19:58:23+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2012.parquet,ok,43915.0,2088224.0,2026-09-25T19:58:23+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2013.parquet,ok,43795.0,2191526.0,2026-09-25T19:58:24+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2014.parquet,ok,43775.0,2500744.0,2026-09-25T19:58:23+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2015.parquet,ok,43775.0,2453910.0,2026-09-25T19:58:24+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2016.parquet,ok,43919.0,2400482.0,2026-09-25T19:58:24+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2017.parquet,ok,43799.0,2431121.0,2026-09-25T19:58:25+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2018.parquet,ok,43799.0,2530297.0,2026-09-25T19:58:25+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2019.parquet,ok,43800.0,2541342.0,2026-09-25T19:58:24+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2020.parquet,ok,43920.0,2555477.0,2026-09-25T19:58:25+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2021.parquet,ok,43800.0,2623319.0,2026-09-25T19:58:25+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2022.parquet,ok,43800.0,2750811.0,2026-09-25T19:58:26+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2023.parquet,ok,43800.0,2075363.0,2026-09-25T19:58:25+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2024.parquet,ok,43920.0,2086316.0,2026-09-25T19:58:25+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2025.parquet,ok,43800.0,2105644.0,2026-09-25T19:58:26+00:00
+balanco_subsistema,BALANCO_ENERGIA_SUBSISTEMA_2026.parquet,ok,31920.0,1550420.0,2026-09-25T19:58:27+00:00
+capacidade_geracao,CAPACIDADE_GERACAO.parquet,ok,5686.0,238330.0,2026-09-25T19:52:56+00:00
+carga_programada,N/2021-03-05_2021-05-31,ok,4224.0,61670.0,2026-09-25T20:05:18+00:00
+carga_programada,N/2021-06-01_2021-08-31,ok,4416.0,66716.0,2026-09-25T20:05:18+00:00
+carga_programada,N/2021-09-01_2021-11-30,ok,4368.0,64124.0,2026-09-25T20:05:18+00:00
+carga_programada,N/2021-12-01_2022-02-28,ok,4320.0,62820.0,2026-09-25T20:05:18+00:00
+carga_programada,N/2022-03-01_2022-05-31,ok,4416.0,64245.0,2026-09-25T20:05:18+00:00
+carga_programada,N/2022-06-01_2022-08-31,ok,4416.0,64339.0,2026-09-25T20:05:18+00:00
+carga_programada,N/2022-09-01_2022-11-30,ok,4368.0,63757.0,2026-09-25T20:05:19+00:00
+carga_programada,N/2022-12-01_2023-02-28,ok,4320.0,63510.0,2026-09-25T20:05:19+00:00
+carga_programada,N/2023-03-01_2023-05-31,ok,4416.0,66056.0,2026-09-25T20:05:19+00:00
+carga_programada,N/2023-06-01_2023-08-31,ok,4416.0,65340.0,2026-09-25T20:05:19+00:00
+carga_programada,N/2023-09-01_2023-11-30,ok,4368.0,64047.0,2026-09-25T20:05:19+00:00
+carga_programada,N/2023-12-01_2024-02-29,ok,4368.0,64185.0,2026-09-25T20:05:19+00:00
+carga_programada,N/2024-03-01_2024-05-31,ok,4416.0,64368.0,2026-09-25T20:05:19+00:00
+carga_programada,N/2024-06-01_2024-08-31,ok,4416.0,64128.0,2026-09-25T20:05:19+00:00
+carga_programada,N/2024-09-01_2024-11-30,ok,4368.0,62902.0,2026-09-25T20:05:20+00:00
+carga_programada,N/2024-12-01_2025-02-28,ok,4320.0,62792.0,2026-09-25T20:05:20+00:00
+carga_programada,N/2025-03-01_2025-05-31,ok,4416.0,63765.0,2026-09-25T20:05:20+00:00
+carga_programada,N/2025-06-01_2025-08-31,ok,4368.0,63065.0,2026-09-25T20:05:20+00:00
+carga_programada,N/2025-09-01_2025-11-30,ok,4368.0,62512.0,2026-09-25T20:05:20+00:00
+carga_programada,N/2025-12-01_2026-02-28,ok,4320.0,62198.0,2026-09-25T20:05:20+00:00
+carga_programada,N/2026-03-01_2026-05-31,ok,4416.0,63615.0,2026-09-25T20:05:20+00:00
+carga_programada,N/2026-06-01_2026-08-31,ok,4416.0,63330.0,2026-09-25T20:05:20+00:00
+carga_programada,N/2026-09-01_2026-09-24,ok,1152.0,18567.0,2026-09-25T20:05:20+00:00
+carga_programada,NE/2021-03-05_2021-05-31,ok,4224.0,61070.0,2026-09-25T20:05:15+00:00
+carga_programada,NE/2021-06-01_2021-08-31,ok,4416.0,63174.0,2026-09-25T20:05:15+00:00
+carga_programada,NE/2021-09-01_2021-11-30,ok,4368.0,63263.0,2026-09-25T20:05:15+00:00
+carga_programada,NE/2021-12-01_2022-02-28,ok,4320.0,62255.0,2026-09-25T20:05:15+00:00
+carga_programada,NE/2022-03-01_2022-05-31,ok,4416.0,63401.0,2026-09-25T20:05:16+00:00
+carga_programada,NE/2022-06-01_2022-08-31,ok,4416.0,63393.0,2026-09-25T20:05:16+00:00
+carga_programada,NE/2022-09-01_2022-11-30,ok,4368.0,62936.0,2026-09-25T20:05:16+00:00
+carga_programada,NE/2022-12-01_2023-02-28,ok,4320.0,62280.0,2026-09-25T20:05:16+00:00
+carga_programada,NE/2023-03-01_2023-05-31,ok,4416.0,63614.0,2026-09-25T20:05:16+00:00
+carga_programada,NE/2023-06-01_2023-08-31,ok,4416.0,63401.0,2026-09-25T20:05:16+00:00
+carga_programada,NE/2023-09-01_2023-11-30,ok,4368.0,62812.0,2026-09-25T20:05:16+00:00
+carga_programada,NE/2023-12-01_2024-02-29,ok,4368.0,62824.0,2026-09-25T20:05:16+00:00
+carga_programada,NE/2024-03-01_2024-05-31,ok,4368.0,62994.0,2026-09-25T20:05:17+00:00
+carga_programada,NE/2024-06-01_2024-08-31,ok,4416.0,63451.0,2026-09-25T20:05:17+00:00
+carga_programada,NE/2024-09-01_2024-11-30,ok,4368.0,62865.0,2026-09-25T20:05:17+00:00
+carga_programada,NE/2024-12-01_2025-02-28,ok,4320.0,62198.0,2026-09-25T20:05:17+00:00
+carga_programada,NE/2025-03-01_2025-05-31,ok,4368.0,62847.0,2026-09-25T20:05:17+00:00
+carga_programada,NE/2025-06-01_2025-08-31,ok,4416.0,63509.0,2026-09-25T20:05:17+00:00
+carga_programada,NE/2025-09-01_2025-11-30,ok,4368.0,63052.0,2026-09-25T20:05:17+00:00
+carga_programada,NE/2025-12-01_2026-02-28,ok,4320.0,62176.0,2026-09-25T20:05:17+00:00
+carga_programada,NE/2026-03-01_2026-05-31,ok,4416.0,63457.0,2026-09-25T20:05:17+00:00
+carga_programada,NE/2026-06-01_2026-08-31,ok,4416.0,63647.0,2026-09-25T20:05:18+00:00
+carga_programada,NE/2026-09-01_2026-09-24,ok,1152.0,18672.0,2026-09-25T20:05:18+00:00
+carga_programada,S/2021-03-05_2021-05-31,ok,4176.0,60940.0,2026-09-25T20:05:12+00:00
+carga_programada,S/2021-06-01_2021-08-31,ok,4416.0,64344.0,2026-09-25T20:05:12+00:00
+carga_programada,S/2021-09-01_2021-11-30,ok,4368.0,63993.0,2026-09-25T20:05:12+00:00
+carga_programada,S/2021-12-01_2022-02-28,ok,4320.0,62835.0,2026-09-25T20:05:12+00:00
+carga_programada,S/2022-03-01_2022-05-31,ok,4416.0,66727.0,2026-09-25T20:05:12+00:00
+carga_programada,S/2022-06-01_2022-08-31,ok,4416.0,64316.0,2026-09-25T20:05:12+00:00
+carga_programada,S/2022-09-01_2022-11-30,ok,4368.0,63680.0,2026-09-25T20:05:13+00:00
+carga_programada,S/2022-12-01_2023-02-28,ok,4320.0,62877.0,2026-09-25T20:05:13+00:00
+carga_programada,S/2023-03-01_2023-05-31,ok,4416.0,64625.0,2026-09-25T20:05:13+00:00
+carga_programada,S/2023-06-01_2023-08-31,ok,4416.0,64261.0,2026-09-25T20:05:13+00:00
+carga_programada,S/2023-09-01_2023-11-30,ok,4368.0,63601.0,2026-09-25T20:05:14+00:00
+carga_programada,S/2023-12-01_2024-02-29,ok,4368.0,63282.0,2026-09-25T20:05:14+00:00
+carga_programada,S/2024-03-01_2024-05-31,ok,4416.0,64106.0,2026-09-25T20:05:14+00:00
+carga_programada,S/2024-06-01_2024-08-31,ok,4416.0,64253.0,2026-09-25T20:05:14+00:00
+carga_programada,S/2024-09-01_2024-11-30,ok,4368.0,63398.0,2026-09-25T20:05:14+00:00
+carga_programada,S/2024-12-01_2025-02-28,ok,4320.0,62566.0,2026-09-25T20:05:14+00:00
+carga_programada,S/2025-03-01_2025-05-31,ok,4416.0,64030.0,2026-09-25T20:05:14+00:00
+carga_programada,S/2025-06-01_2025-08-31,ok,4416.0,64221.0,2026-09-25T20:05:14+00:00
+carga_programada,S/2025-09-01_2025-11-30,ok,4368.0,63541.0,2026-09-25T20:05:15+00:00
+carga_programada,S/2025-12-01_2026-02-28,ok,4320.0,62429.0,2026-09-25T20:05:15+00:00
+carga_programada,S/2026-03-01_2026-05-31,ok,4416.0,64015.0,2026-09-25T20:05:15+00:00
+carga_programada,S/2026-06-01_2026-08-31,ok,4416.0,64187.0,2026-09-25T20:05:15+00:00
+carga_programada,S/2026-09-01_2026-09-24,ok,1152.0,19192.0,2026-09-25T20:05:15+00:00
+carga_programada,SECO/2021-03-05_2021-05-31,ok,4224.0,59893.0,2026-09-25T20:05:09+00:00
+carga_programada,SECO/2021-06-01_2021-08-31,ok,4416.0,62747.0,2026-09-25T20:05:09+00:00
+carga_programada,SECO/2021-09-01_2021-11-30,ok,4368.0,61833.0,2026-09-25T20:05:09+00:00
+carga_programada,SECO/2021-12-01_2022-02-28,ok,4320.0,61065.0,2026-09-25T20:05:10+00:00
+carga_programada,SECO/2022-03-01_2022-05-31,ok,4416.0,62746.0,2026-09-25T20:05:10+00:00
+carga_programada,SECO/2022-06-01_2022-08-31,ok,4416.0,62676.0,2026-09-25T20:05:10+00:00
+carga_programada,SECO/2022-09-01_2022-11-30,ok,4368.0,61977.0,2026-09-25T20:05:10+00:00
+carga_programada,SECO/2022-12-01_2023-02-28,ok,4320.0,61177.0,2026-09-25T20:05:10+00:00
+carga_programada,SECO/2023-03-01_2023-05-31,ok,4416.0,62532.0,2026-09-25T20:05:10+00:00
+carga_programada,SECO/2023-06-01_2023-08-31,ok,4416.0,62688.0,2026-09-25T20:05:10+00:00
+carga_programada,SECO/2023-09-01_2023-11-30,ok,4368.0,61926.0,2026-09-25T20:05:10+00:00
+carga_programada,SECO/2023-12-01_2024-02-29,ok,4368.0,61768.0,2026-09-25T20:05:11+00:00
+carga_programada,SECO/2024-03-01_2024-05-31,ok,4368.0,61774.0,2026-09-25T20:05:11+00:00
+carga_programada,SECO/2024-06-01_2024-08-31,ok,4416.0,62447.0,2026-09-25T20:05:11+00:00
+carga_programada,SECO/2024-09-01_2024-11-30,ok,4368.0,61915.0,2026-09-25T20:05:11+00:00
+carga_programada,SECO/2024-12-01_2025-02-28,ok,4320.0,61054.0,2026-09-25T20:05:11+00:00
+carga_programada,SECO/2025-03-01_2025-05-31,ok,4416.0,62437.0,2026-09-25T20:05:11+00:00
+carga_programada,SECO/2025-06-01_2025-08-31,ok,4416.0,62503.0,2026-09-25T20:05:11+00:00
+carga_programada,SECO/2025-09-01_2025-11-30,ok,4368.0,61789.0,2026-09-25T20:05:11+00:00
+carga_programada,SECO/2025-12-01_2026-02-28,ok,4320.0,61038.0,2026-09-25T20:05:11+00:00
+carga_programada,SECO/2026-03-01_2026-05-31,ok,4416.0,62367.0,2026-09-25T20:05:12+00:00
+carga_programada,SECO/2026-06-01_2026-08-31,ok,4416.0,62566.0,2026-09-25T20:05:12+00:00
+carga_programada,SECO/2026-09-01_2026-09-24,ok,1152.0,18288.0,2026-09-25T20:05:12+00:00
+carga_verificada,AC/2016-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AC/2016-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AC/2016-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AC/2016-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AC/2017-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AC/2017-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AC/2017-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AC/2017-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AC/2018-01-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,AC/2018-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AC/2018-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AC/2018-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AC/2019-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AC/2019-04-01_2019-06-30,ok,4368.0,183180.0,2026-09-25T20:01:04+00:00
+carga_verificada,AC/2019-07-01_2019-09-30,ok,4416.0,189287.0,2026-09-25T20:01:04+00:00
+carga_verificada,AC/2019-10-01_2019-12-31,ok,4416.0,194691.0,2026-09-25T20:01:04+00:00
+carga_verificada,AC/2020-01-01_2020-03-31,ok,4368.0,204584.0,2026-09-25T20:01:05+00:00
+carga_verificada,AC/2020-04-01_2020-06-30,ok,4368.0,187253.0,2026-09-25T20:01:05+00:00
+carga_verificada,AC/2020-07-01_2020-09-30,ok,4416.0,192633.0,2026-09-25T20:01:05+00:00
+carga_verificada,AC/2020-10-01_2020-12-31,ok,4416.0,207926.0,2026-09-25T20:01:05+00:00
+carga_verificada,AC/2021-01-01_2021-03-31,ok,4320.0,188017.0,2026-09-25T20:01:07+00:00
+carga_verificada,AC/2021-04-01_2021-06-30,ok,4368.0,190805.0,2026-09-25T20:01:06+00:00
+carga_verificada,AC/2021-07-01_2021-09-30,ok,4416.0,209642.0,2026-09-25T20:01:07+00:00
+carga_verificada,AC/2021-10-01_2021-12-31,ok,4416.0,195325.0,2026-09-25T20:01:07+00:00
+carga_verificada,AC/2022-01-01_2022-03-31,ok,4320.0,184856.0,2026-09-25T20:01:07+00:00
+carga_verificada,AC/2022-04-01_2022-06-30,ok,4368.0,179527.0,2026-09-25T20:01:08+00:00
+carga_verificada,AC/2022-07-01_2022-09-30,ok,4416.0,187734.0,2026-09-25T20:01:09+00:00
+carga_verificada,AC/2022-10-01_2022-12-31,ok,4416.0,192734.0,2026-09-25T20:01:08+00:00
+carga_verificada,AC/2023-01-01_2023-03-31,ok,4320.0,195849.0,2026-09-25T20:01:09+00:00
+carga_verificada,AC/2023-04-01_2023-06-30,ok,4368.0,204307.0,2026-09-25T20:01:10+00:00
+carga_verificada,AC/2023-07-01_2023-09-30,ok,4416.0,191101.0,2026-09-25T20:01:10+00:00
+carga_verificada,AC/2023-10-01_2023-12-31,ok,4416.0,206482.0,2026-09-25T20:01:11+00:00
+carga_verificada,AC/2024-01-01_2024-03-31,ok,4368.0,198758.0,2026-09-25T20:01:10+00:00
+carga_verificada,AC/2024-04-01_2024-06-30,ok,4368.0,193318.0,2026-09-25T20:01:12+00:00
+carga_verificada,AC/2024-07-01_2024-09-30,ok,4416.0,223533.0,2026-09-25T20:01:12+00:00
+carga_verificada,AC/2024-10-01_2024-12-31,ok,4416.0,191006.0,2026-09-25T20:01:12+00:00
+carga_verificada,AC/2025-01-01_2025-03-31,ok,4320.0,204179.0,2026-09-25T20:01:13+00:00
+carga_verificada,AC/2025-04-01_2025-06-30,ok,4368.0,190954.0,2026-09-25T20:01:14+00:00
+carga_verificada,AC/2025-07-01_2025-09-30,ok,4416.0,207507.0,2026-09-25T20:01:14+00:00
+carga_verificada,AC/2025-10-01_2025-12-31,ok,4416.0,211071.0,2026-09-25T20:01:14+00:00
+carga_verificada,AC/2026-01-01_2026-03-31,ok,4320.0,199801.0,2026-09-25T20:01:15+00:00
+carga_verificada,AC/2026-04-01_2026-06-30,ok,4368.0,217665.0,2026-09-25T20:01:15+00:00
+carga_verificada,AC/2026-07-01_2026-09-24,ok,4128.0,197194.0,2026-09-25T20:01:16+00:00
+carga_verificada,ALPE/2016-01-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,ALPE/2016-04-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,ALPE/2016-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ALPE/2016-10-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,ALPE/2017-01-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,ALPE/2017-04-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,ALPE/2017-07-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,ALPE/2017-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ALPE/2018-01-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,ALPE/2018-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ALPE/2018-07-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,ALPE/2018-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,ALPE/2019-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ALPE/2019-04-01_2019-06-30,ok,4368.0,235691.0,2026-09-25T20:02:48+00:00
+carga_verificada,ALPE/2019-07-01_2019-09-30,ok,4416.0,244230.0,2026-09-25T20:02:48+00:00
+carga_verificada,ALPE/2019-10-01_2019-12-31,ok,4416.0,254782.0,2026-09-25T20:02:48+00:00
+carga_verificada,ALPE/2020-01-01_2020-03-31,ok,4368.0,243243.0,2026-09-25T20:02:49+00:00
+carga_verificada,ALPE/2020-04-01_2020-06-30,ok,4368.0,234557.0,2026-09-25T20:02:49+00:00
+carga_verificada,ALPE/2020-07-01_2020-09-30,ok,4416.0,253407.0,2026-09-25T20:02:50+00:00
+carga_verificada,ALPE/2020-10-01_2020-12-31,ok,4416.0,244731.0,2026-09-25T20:02:51+00:00
+carga_verificada,ALPE/2021-01-01_2021-03-31,ok,4320.0,238004.0,2026-09-25T20:02:50+00:00
+carga_verificada,ALPE/2021-04-01_2021-06-30,ok,4368.0,232355.0,2026-09-25T20:02:50+00:00
+carga_verificada,ALPE/2021-07-01_2021-09-30,ok,4416.0,241608.0,2026-09-25T20:02:51+00:00
+carga_verificada,ALPE/2021-10-01_2021-12-31,ok,4416.0,232314.0,2026-09-25T20:02:51+00:00
+carga_verificada,ALPE/2022-01-01_2022-03-31,ok,4320.0,224255.0,2026-09-25T20:02:52+00:00
+carga_verificada,ALPE/2022-04-01_2022-06-30,ok,4368.0,224136.0,2026-09-25T20:02:53+00:00
+carga_verificada,ALPE/2022-07-01_2022-09-30,ok,4416.0,220169.0,2026-09-25T20:02:52+00:00
+carga_verificada,ALPE/2022-10-01_2022-12-31,ok,4416.0,224142.0,2026-09-25T20:02:53+00:00
+carga_verificada,ALPE/2023-01-01_2023-03-31,ok,4320.0,215762.0,2026-09-25T20:02:53+00:00
+carga_verificada,ALPE/2023-04-01_2023-06-30,ok,4368.0,224089.0,2026-09-25T20:02:54+00:00
+carga_verificada,ALPE/2023-07-01_2023-09-30,ok,4416.0,227726.0,2026-09-25T20:02:56+00:00
+carga_verificada,ALPE/2023-10-01_2023-12-31,ok,4416.0,233956.0,2026-09-25T20:02:55+00:00
+carga_verificada,ALPE/2024-01-01_2024-03-31,ok,4368.0,227064.0,2026-09-25T20:02:55+00:00
+carga_verificada,ALPE/2024-04-01_2024-06-30,ok,4368.0,224821.0,2026-09-25T20:02:55+00:00
+carga_verificada,ALPE/2024-07-01_2024-09-30,ok,4416.0,226862.0,2026-09-25T20:02:56+00:00
+carga_verificada,ALPE/2024-10-01_2024-12-31,ok,4416.0,240519.0,2026-09-25T20:02:56+00:00
+carga_verificada,ALPE/2025-01-01_2025-03-31,ok,4320.0,228853.0,2026-09-25T20:02:56+00:00
+carga_verificada,ALPE/2025-04-01_2025-06-30,ok,4368.0,246277.0,2026-09-25T20:02:57+00:00
+carga_verificada,ALPE/2025-07-01_2025-09-30,ok,4416.0,227654.0,2026-09-25T20:02:57+00:00
+carga_verificada,ALPE/2025-10-01_2025-12-31,ok,4416.0,230091.0,2026-09-25T20:02:58+00:00
+carga_verificada,ALPE/2026-01-01_2026-03-31,ok,4320.0,251946.0,2026-09-25T20:02:59+00:00
+carga_verificada,ALPE/2026-04-01_2026-06-30,ok,4368.0,230404.0,2026-09-25T20:02:58+00:00
+carga_verificada,ALPE/2026-07-01_2026-09-24,ok,4128.0,215832.0,2026-09-25T20:02:59+00:00
+carga_verificada,AM/2016-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AM/2016-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,AM/2016-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,AM/2016-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,AM/2017-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AM/2017-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,AM/2017-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,AM/2017-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,AM/2018-01-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,AM/2018-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AM/2018-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,AM/2018-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,AM/2019-01-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,AM/2019-04-01_2019-06-30,ok,4368.0,196671.0,2026-09-25T20:04:54+00:00
+carga_verificada,AM/2019-07-01_2019-09-30,ok,4416.0,197492.0,2026-09-25T20:04:55+00:00
+carga_verificada,AM/2019-10-01_2019-12-31,ok,4416.0,206017.0,2026-09-25T20:04:55+00:00
+carga_verificada,AM/2020-01-01_2020-03-31,ok,4368.0,200429.0,2026-09-25T20:04:55+00:00
+carga_verificada,AM/2020-04-01_2020-06-30,ok,4368.0,195208.0,2026-09-25T20:04:55+00:00
+carga_verificada,AM/2020-07-01_2020-09-30,ok,4416.0,199169.0,2026-09-25T20:04:56+00:00
+carga_verificada,AM/2020-10-01_2020-12-31,ok,4416.0,200399.0,2026-09-25T20:04:55+00:00
+carga_verificada,AM/2021-01-01_2021-03-31,ok,4320.0,195151.0,2026-09-25T20:04:56+00:00
+carga_verificada,AM/2021-04-01_2021-06-30,ok,4368.0,195847.0,2026-09-25T20:04:57+00:00
+carga_verificada,AM/2021-07-01_2021-09-30,ok,4416.0,199897.0,2026-09-25T20:04:56+00:00
+carga_verificada,AM/2021-10-01_2021-12-31,ok,4416.0,203715.0,2026-09-25T20:04:56+00:00
+carga_verificada,AM/2022-01-01_2022-03-31,ok,4320.0,189363.0,2026-09-25T20:04:57+00:00
+carga_verificada,AM/2022-04-01_2022-06-30,ok,4368.0,195092.0,2026-09-25T20:04:57+00:00
+carga_verificada,AM/2022-07-01_2022-09-30,ok,4416.0,194427.0,2026-09-25T20:04:57+00:00
+carga_verificada,AM/2022-10-01_2022-12-31,ok,4416.0,207509.0,2026-09-25T20:04:57+00:00
+carga_verificada,AM/2023-01-01_2023-03-31,ok,4320.0,206792.0,2026-09-25T20:04:58+00:00
+carga_verificada,AM/2023-04-01_2023-06-30,ok,4368.0,205141.0,2026-09-25T20:04:59+00:00
+carga_verificada,AM/2023-07-01_2023-09-30,ok,4416.0,227872.0,2026-09-25T20:04:58+00:00
+carga_verificada,AM/2023-10-01_2023-12-31,ok,4416.0,226965.0,2026-09-25T20:04:58+00:00
+carga_verificada,AM/2024-01-01_2024-03-31,ok,4368.0,203341.0,2026-09-25T20:04:59+00:00
+carga_verificada,AM/2024-04-01_2024-06-30,ok,4368.0,199671.0,2026-09-25T20:04:59+00:00
+carga_verificada,AM/2024-07-01_2024-09-30,ok,4416.0,198398.0,2026-09-25T20:04:59+00:00
+carga_verificada,AM/2024-10-01_2024-12-31,ok,4416.0,210427.0,2026-09-25T20:05:00+00:00
+carga_verificada,AM/2025-01-01_2025-03-31,ok,4320.0,196605.0,2026-09-25T20:05:01+00:00
+carga_verificada,AM/2025-04-01_2025-06-30,ok,4368.0,196533.0,2026-09-25T20:05:00+00:00
+carga_verificada,AM/2025-07-01_2025-09-30,ok,4416.0,199691.0,2026-09-25T20:05:01+00:00
+carga_verificada,AM/2025-10-01_2025-12-31,ok,4416.0,216235.0,2026-09-25T20:05:01+00:00
+carga_verificada,AM/2026-01-01_2026-03-31,ok,4320.0,220715.0,2026-09-25T20:05:01+00:00
+carga_verificada,AM/2026-04-01_2026-06-30,ok,4368.0,199452.0,2026-09-25T20:05:01+00:00
+carga_verificada,AM/2026-07-01_2026-09-24,ok,4128.0,195441.0,2026-09-25T20:05:02+00:00
+carga_verificada,AP/2016-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AP/2016-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AP/2016-07-01,erro: Expecting value: line 9 column 33 (char 310),,,
+carga_verificada,AP/2016-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,AP/2017-01-01,erro: Expecting value: line 9 column 33 (char 311),,,
+carga_verificada,AP/2017-04-01,erro: Expecting value: line 9 column 33 (char 311),,,
+carga_verificada,AP/2017-07-01,erro: Expecting value: line 9 column 33 (char 311),,,
+carga_verificada,AP/2017-10-01,erro: Expecting value: line 9 column 33 (char 311),,,
+carga_verificada,AP/2018-01-01,erro: Expecting value: line 9 column 33 (char 311),,,
+carga_verificada,AP/2018-04-01,erro: Expecting value: line 9 column 33 (char 309),,,
+carga_verificada,AP/2018-07-01,erro: Expecting value: line 9 column 33 (char 309),,,
+carga_verificada,AP/2018-10-01,erro: Expecting value: line 9 column 33 (char 311),,,
+carga_verificada,AP/2019-01-01,erro: Expecting value: line 9 column 33 (char 311),,,
+carga_verificada,AP/2019-04-01_2019-06-30,ok,4368.0,196760.0,2026-09-25T20:04:43+00:00
+carga_verificada,AP/2019-07-01_2019-09-30,ok,4416.0,218184.0,2026-09-25T20:04:45+00:00
+carga_verificada,AP/2019-10-01_2019-12-31,ok,4416.0,236204.0,2026-09-25T20:04:43+00:00
+carga_verificada,AP/2020-01-01_2020-03-31,ok,4368.0,209571.0,2026-09-25T20:04:43+00:00
+carga_verificada,AP/2020-04-01_2020-06-30,ok,4368.0,216718.0,2026-09-25T20:04:44+00:00
+carga_verificada,AP/2020-07-01_2020-09-30,ok,4416.0,220846.0,2026-09-25T20:04:44+00:00
+carga_verificada,AP/2020-10-01_2020-12-31,ok,4416.0,218374.0,2026-09-25T20:04:45+00:00
+carga_verificada,AP/2021-01-01_2021-03-31,ok,4320.0,199744.0,2026-09-25T20:04:45+00:00
+carga_verificada,AP/2021-04-01_2021-06-30,ok,4368.0,190601.0,2026-09-25T20:04:46+00:00
+carga_verificada,AP/2021-07-01_2021-09-30,ok,4416.0,207498.0,2026-09-25T20:04:46+00:00
+carga_verificada,AP/2021-10-01_2021-12-31,ok,4416.0,206566.0,2026-09-25T20:04:46+00:00
+carga_verificada,AP/2022-01-01_2022-03-31,ok,4320.0,175860.0,2026-09-25T20:04:46+00:00
+carga_verificada,AP/2022-04-01_2022-06-30,ok,4368.0,178608.0,2026-09-25T20:04:47+00:00
+carga_verificada,AP/2022-07-01_2022-09-30,ok,4416.0,188661.0,2026-09-25T20:04:47+00:00
+carga_verificada,AP/2022-10-01_2022-12-31,ok,4416.0,204066.0,2026-09-25T20:04:48+00:00
+carga_verificada,AP/2023-01-01_2023-03-31,ok,4320.0,191237.0,2026-09-25T20:04:48+00:00
+carga_verificada,AP/2023-04-01_2023-06-30,ok,4368.0,192708.0,2026-09-25T20:04:47+00:00
+carga_verificada,AP/2023-07-01_2023-09-30,ok,4416.0,192139.0,2026-09-25T20:04:48+00:00
+carga_verificada,AP/2023-10-01_2023-12-31,ok,4416.0,197833.0,2026-09-25T20:04:48+00:00
+carga_verificada,AP/2024-01-01_2024-03-31,ok,4368.0,192905.0,2026-09-25T20:04:49+00:00
+carga_verificada,AP/2024-04-01_2024-06-30,ok,4368.0,194385.0,2026-09-25T20:04:49+00:00
+carga_verificada,AP/2024-07-01_2024-09-30,ok,4416.0,195264.0,2026-09-25T20:04:49+00:00
+carga_verificada,AP/2024-10-01_2024-12-31,ok,4416.0,192824.0,2026-09-25T20:04:49+00:00
+carga_verificada,AP/2025-01-01_2025-03-31,ok,4320.0,187802.0,2026-09-25T20:04:50+00:00
+carga_verificada,AP/2025-04-01_2025-06-30,ok,4368.0,196467.0,2026-09-25T20:04:50+00:00
+carga_verificada,AP/2025-07-01_2025-09-30,ok,4416.0,228136.0,2026-09-25T20:04:50+00:00
+carga_verificada,AP/2025-10-01_2025-12-31,ok,4416.0,207397.0,2026-09-25T20:04:51+00:00
+carga_verificada,AP/2026-01-01_2026-03-31,ok,4320.0,199656.0,2026-09-25T20:04:51+00:00
+carga_verificada,AP/2026-04-01_2026-06-30,ok,4368.0,212845.0,2026-09-25T20:04:51+00:00
+carga_verificada,AP/2026-07-01_2026-09-24,ok,4128.0,184393.0,2026-09-25T20:04:51+00:00
+carga_verificada,BAOE/2016-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BAOE/2016-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BAOE/2016-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BAOE/2016-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BAOE/2017-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BAOE/2017-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BAOE/2017-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,BAOE/2017-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BAOE/2018-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BAOE/2018-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BAOE/2018-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BAOE/2018-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BAOE/2019-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BAOE/2019-04-01_2019-06-30,ok,4368.0,196849.0,2026-09-25T20:02:33+00:00
+carga_verificada,BAOE/2019-07-01_2019-09-30,ok,4416.0,196717.0,2026-09-25T20:02:33+00:00
+carga_verificada,BAOE/2019-10-01_2019-12-31,ok,4416.0,214429.0,2026-09-25T20:02:34+00:00
+carga_verificada,BAOE/2020-01-01_2020-03-31,ok,4368.0,243949.0,2026-09-25T20:02:34+00:00
+carga_verificada,BAOE/2020-04-01_2020-06-30,ok,4368.0,236072.0,2026-09-25T20:02:34+00:00
+carga_verificada,BAOE/2020-07-01_2020-09-30,ok,4416.0,250585.0,2026-09-25T20:02:34+00:00
+carga_verificada,BAOE/2020-10-01_2020-12-31,ok,4416.0,244289.0,2026-09-25T20:02:35+00:00
+carga_verificada,BAOE/2021-01-01_2021-03-31,ok,4320.0,244768.0,2026-09-25T20:02:35+00:00
+carga_verificada,BAOE/2021-04-01_2021-06-30,ok,4368.0,248771.0,2026-09-25T20:02:35+00:00
+carga_verificada,BAOE/2021-07-01_2021-09-30,ok,4416.0,244987.0,2026-09-25T20:02:35+00:00
+carga_verificada,BAOE/2021-10-01_2021-12-31,ok,4416.0,241682.0,2026-09-25T20:02:36+00:00
+carga_verificada,BAOE/2022-01-01_2022-03-31,ok,4320.0,227433.0,2026-09-25T20:02:37+00:00
+carga_verificada,BAOE/2022-04-01_2022-06-30,ok,4368.0,224387.0,2026-09-25T20:02:37+00:00
+carga_verificada,BAOE/2022-07-01_2022-09-30,ok,4416.0,225563.0,2026-09-25T20:02:37+00:00
+carga_verificada,BAOE/2022-10-01_2022-12-31,ok,4416.0,226285.0,2026-09-25T20:02:37+00:00
+carga_verificada,BAOE/2023-01-01_2023-03-31,ok,4320.0,233455.0,2026-09-25T20:02:38+00:00
+carga_verificada,BAOE/2023-04-01_2023-06-30,ok,4368.0,231715.0,2026-09-25T20:02:38+00:00
+carga_verificada,BAOE/2023-07-01_2023-09-30,ok,4416.0,243320.0,2026-09-25T20:02:38+00:00
+carga_verificada,BAOE/2023-10-01_2023-12-31,ok,4416.0,241933.0,2026-09-25T20:02:40+00:00
+carga_verificada,BAOE/2024-01-01_2024-03-31,ok,4368.0,231605.0,2026-09-25T20:02:40+00:00
+carga_verificada,BAOE/2024-04-01_2024-06-30,ok,4368.0,250733.0,2026-09-25T20:02:40+00:00
+carga_verificada,BAOE/2024-07-01_2024-09-30,ok,4416.0,235231.0,2026-09-25T20:02:40+00:00
+carga_verificada,BAOE/2024-10-01_2024-12-31,ok,4416.0,235117.0,2026-09-25T20:02:41+00:00
+carga_verificada,BAOE/2025-01-01_2025-03-31,ok,4320.0,227864.0,2026-09-25T20:02:41+00:00
+carga_verificada,BAOE/2025-04-01_2025-06-30,ok,4368.0,251693.0,2026-09-25T20:02:41+00:00
+carga_verificada,BAOE/2025-07-01_2025-09-30,ok,4416.0,232350.0,2026-09-25T20:02:42+00:00
+carga_verificada,BAOE/2025-10-01_2025-12-31,ok,4416.0,251914.0,2026-09-25T20:02:42+00:00
+carga_verificada,BAOE/2026-01-01_2026-03-31,ok,4320.0,240773.0,2026-09-25T20:02:42+00:00
+carga_verificada,BAOE/2026-04-01_2026-06-30,ok,4368.0,239163.0,2026-09-25T20:02:43+00:00
+carga_verificada,BAOE/2026-07-01_2026-09-24,ok,4128.0,224122.0,2026-09-25T20:02:44+00:00
+carga_verificada,BASE/2016-01-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,BASE/2016-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BASE/2016-07-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,BASE/2016-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BASE/2017-01-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,BASE/2017-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BASE/2017-07-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,BASE/2017-10-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,BASE/2018-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,BASE/2018-04-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,BASE/2018-07-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,BASE/2018-10-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,BASE/2019-01-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,BASE/2019-04-01_2019-06-30,ok,4368.0,235464.0,2026-09-25T20:02:20+00:00
+carga_verificada,BASE/2019-07-01_2019-09-30,ok,4416.0,229777.0,2026-09-25T20:02:20+00:00
+carga_verificada,BASE/2019-10-01_2019-12-31,ok,4416.0,237131.0,2026-09-25T20:02:20+00:00
+carga_verificada,BASE/2020-01-01_2020-03-31,ok,4368.0,242328.0,2026-09-25T20:02:19+00:00
+carga_verificada,BASE/2020-04-01_2020-06-30,ok,4368.0,235570.0,2026-09-25T20:02:21+00:00
+carga_verificada,BASE/2020-07-01_2020-09-30,ok,4416.0,242455.0,2026-09-25T20:02:21+00:00
+carga_verificada,BASE/2020-10-01_2020-12-31,ok,4416.0,236181.0,2026-09-25T20:02:22+00:00
+carga_verificada,BASE/2021-01-01_2021-03-31,ok,4320.0,232925.0,2026-09-25T20:02:23+00:00
+carga_verificada,BASE/2021-04-01_2021-06-30,ok,4368.0,233189.0,2026-09-25T20:02:22+00:00
+carga_verificada,BASE/2021-07-01_2021-09-30,ok,4416.0,235418.0,2026-09-25T20:02:23+00:00
+carga_verificada,BASE/2021-10-01_2021-12-31,ok,4416.0,234416.0,2026-09-25T20:02:22+00:00
+carga_verificada,BASE/2022-01-01_2022-03-31,ok,4320.0,222125.0,2026-09-25T20:02:24+00:00
+carga_verificada,BASE/2022-04-01_2022-06-30,ok,4368.0,221244.0,2026-09-25T20:02:23+00:00
+carga_verificada,BASE/2022-07-01_2022-09-30,ok,4416.0,220031.0,2026-09-25T20:02:24+00:00
+carga_verificada,BASE/2022-10-01_2022-12-31,ok,4416.0,222205.0,2026-09-25T20:02:24+00:00
+carga_verificada,BASE/2023-01-01_2023-03-31,ok,4320.0,234417.0,2026-09-25T20:02:24+00:00
+carga_verificada,BASE/2023-04-01_2023-06-30,ok,4368.0,223950.0,2026-09-25T20:02:25+00:00
+carga_verificada,BASE/2023-07-01_2023-09-30,ok,4416.0,227275.0,2026-09-25T20:02:25+00:00
+carga_verificada,BASE/2023-10-01_2023-12-31,ok,4416.0,229658.0,2026-09-25T20:02:25+00:00
+carga_verificada,BASE/2024-01-01_2024-03-31,ok,4368.0,228217.0,2026-09-25T20:02:26+00:00
+carga_verificada,BASE/2024-04-01_2024-06-30,ok,4368.0,229668.0,2026-09-25T20:02:26+00:00
+carga_verificada,BASE/2024-07-01_2024-09-30,ok,4416.0,230135.0,2026-09-25T20:02:26+00:00
+carga_verificada,BASE/2024-10-01_2024-12-31,ok,4416.0,230612.0,2026-09-25T20:02:27+00:00
+carga_verificada,BASE/2025-01-01_2025-03-31,ok,4320.0,223813.0,2026-09-25T20:02:27+00:00
+carga_verificada,BASE/2025-04-01_2025-06-30,ok,4368.0,222588.0,2026-09-25T20:02:28+00:00
+carga_verificada,BASE/2025-07-01_2025-09-30,ok,4416.0,228962.0,2026-09-25T20:02:27+00:00
+carga_verificada,BASE/2025-10-01_2025-12-31,ok,4416.0,237754.0,2026-09-25T20:02:28+00:00
+carga_verificada,BASE/2026-01-01_2026-03-31,ok,4320.0,230067.0,2026-09-25T20:02:28+00:00
+carga_verificada,BASE/2026-04-01_2026-06-30,ok,4368.0,223610.0,2026-09-25T20:02:29+00:00
+carga_verificada,BASE/2026-07-01_2026-09-24,ok,4128.0,212413.0,2026-09-25T20:02:30+00:00
+carga_verificada,CE/2016-01-01_2016-03-31,ok,0.0,636.0,2026-09-25T20:03:15+00:00
+carga_verificada,CE/2016-04-01_2016-06-30,ok,0.0,636.0,2026-09-25T20:03:15+00:00
+carga_verificada,CE/2016-07-01_2016-09-30,ok,0.0,636.0,2026-09-25T20:03:15+00:00
+carga_verificada,CE/2016-10-01_2016-12-31,ok,0.0,636.0,2026-09-25T20:03:15+00:00
+carga_verificada,CE/2017-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,CE/2017-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,CE/2017-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,CE/2017-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,CE/2018-01-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,CE/2018-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,CE/2018-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,CE/2018-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,CE/2019-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,CE/2019-04-01_2019-06-30,ok,4368.0,241829.0,2026-09-25T20:03:19+00:00
+carga_verificada,CE/2019-07-01_2019-09-30,ok,4416.0,247667.0,2026-09-25T20:03:19+00:00
+carga_verificada,CE/2019-10-01_2019-12-31,ok,4416.0,239843.0,2026-09-25T20:03:19+00:00
+carga_verificada,CE/2020-01-01_2020-03-31,ok,4368.0,237249.0,2026-09-25T20:03:19+00:00
+carga_verificada,CE/2020-04-01_2020-06-30,ok,4368.0,254028.0,2026-09-25T20:03:20+00:00
+carga_verificada,CE/2020-07-01_2020-09-30,ok,4416.0,239617.0,2026-09-25T20:03:20+00:00
+carga_verificada,CE/2020-10-01_2020-12-31,ok,4416.0,238875.0,2026-09-25T20:03:20+00:00
+carga_verificada,CE/2021-01-01_2021-03-31,ok,4320.0,251185.0,2026-09-25T20:03:22+00:00
+carga_verificada,CE/2021-04-01_2021-06-30,ok,4368.0,252482.0,2026-09-25T20:03:21+00:00
+carga_verificada,CE/2021-07-01_2021-09-30,ok,4416.0,247470.0,2026-09-25T20:03:22+00:00
+carga_verificada,CE/2021-10-01_2021-12-31,ok,4416.0,238448.0,2026-09-25T20:03:22+00:00
+carga_verificada,CE/2022-01-01_2022-03-31,ok,4320.0,228456.0,2026-09-25T20:03:22+00:00
+carga_verificada,CE/2022-04-01_2022-06-30,ok,4368.0,228465.0,2026-09-25T20:03:28+00:00
+carga_verificada,CE/2022-07-01_2022-09-30,ok,4416.0,221419.0,2026-09-25T20:03:24+00:00
+carga_verificada,CE/2022-10-01_2022-12-31,ok,4416.0,224013.0,2026-09-25T20:03:23+00:00
+carga_verificada,CE/2023-01-01_2023-03-31,ok,4320.0,223229.0,2026-09-25T20:03:26+00:00
+carga_verificada,CE/2023-04-01_2023-06-30,ok,4368.0,236859.0,2026-09-25T20:03:29+00:00
+carga_verificada,CE/2023-07-01_2023-09-30,ok,4416.0,254153.0,2026-09-25T20:03:29+00:00
+carga_verificada,CE/2023-10-01_2023-12-31,ok,4416.0,248039.0,2026-09-25T20:03:29+00:00
+carga_verificada,CE/2024-01-01_2024-03-31,ok,4368.0,230930.0,2026-09-25T20:03:30+00:00
+carga_verificada,CE/2024-04-01_2024-06-30,ok,4368.0,236529.0,2026-09-25T20:03:30+00:00
+carga_verificada,CE/2024-07-01_2024-09-30,ok,4416.0,236150.0,2026-09-25T20:03:31+00:00
+carga_verificada,CE/2024-10-01_2024-12-31,ok,4416.0,231626.0,2026-09-25T20:03:31+00:00
+carga_verificada,CE/2025-01-01_2025-03-31,ok,4320.0,222051.0,2026-09-25T20:03:32+00:00
+carga_verificada,CE/2025-04-01_2025-06-30,ok,4368.0,230875.0,2026-09-25T20:03:32+00:00
+carga_verificada,CE/2025-07-01_2025-09-30,ok,4416.0,232808.0,2026-09-25T20:03:32+00:00
+carga_verificada,CE/2025-10-01_2025-12-31,ok,4416.0,230419.0,2026-09-25T20:03:32+00:00
+carga_verificada,CE/2026-01-01_2026-03-31,ok,4320.0,240351.0,2026-09-25T20:03:33+00:00
+carga_verificada,CE/2026-04-01_2026-06-30,ok,4368.0,242998.0,2026-09-25T20:03:33+00:00
+carga_verificada,CE/2026-07-01_2026-09-24,ok,4128.0,214787.0,2026-09-25T20:03:33+00:00
+carga_verificada,DF/2016-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,DF/2016-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,DF/2016-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,DF/2016-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,DF/2017-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,DF/2017-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,DF/2017-07-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,DF/2017-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,DF/2018-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,DF/2018-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,DF/2018-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,DF/2018-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,DF/2019-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,DF/2019-04-01_2019-06-30,ok,4368.0,251091.0,2026-09-25T20:00:40+00:00
+carga_verificada,DF/2019-07-01_2019-09-30,ok,4416.0,245126.0,2026-09-25T20:00:40+00:00
+carga_verificada,DF/2019-10-01_2019-12-31,ok,4416.0,251062.0,2026-09-25T20:00:41+00:00
+carga_verificada,DF/2020-01-01_2020-03-31,ok,4368.0,236653.0,2026-09-25T20:00:40+00:00
+carga_verificada,DF/2020-04-01_2020-06-30,ok,4368.0,234252.0,2026-09-25T20:00:41+00:00
+carga_verificada,DF/2020-07-01_2020-09-30,ok,4416.0,250989.0,2026-09-25T20:00:41+00:00
+carga_verificada,DF/2020-10-01_2020-12-31,ok,4416.0,249851.0,2026-09-25T20:00:42+00:00
+carga_verificada,DF/2021-01-01_2021-03-31,ok,4320.0,231545.0,2026-09-25T20:00:42+00:00
+carga_verificada,DF/2021-04-01_2021-06-30,ok,4368.0,235647.0,2026-09-25T20:00:42+00:00
+carga_verificada,DF/2021-07-01_2021-09-30,ok,4416.0,236180.0,2026-09-25T20:00:42+00:00
+carga_verificada,DF/2021-10-01_2021-12-31,ok,4416.0,239622.0,2026-09-25T20:00:43+00:00
+carga_verificada,DF/2022-01-01_2022-03-31,ok,4320.0,236289.0,2026-09-25T20:00:43+00:00
+carga_verificada,DF/2022-04-01_2022-06-30,ok,4368.0,219202.0,2026-09-25T20:00:43+00:00
+carga_verificada,DF/2022-07-01_2022-09-30,ok,4416.0,229928.0,2026-09-25T20:00:43+00:00
+carga_verificada,DF/2022-10-01_2022-12-31,ok,4416.0,226791.0,2026-09-25T20:00:44+00:00
+carga_verificada,DF/2023-01-01_2023-03-31,ok,4320.0,229845.0,2026-09-25T20:00:44+00:00
+carga_verificada,DF/2023-04-01_2023-06-30,ok,4368.0,236292.0,2026-09-25T20:00:44+00:00
+carga_verificada,DF/2023-07-01_2023-09-30,ok,4416.0,245824.0,2026-09-25T20:00:44+00:00
+carga_verificada,DF/2023-10-01_2023-12-31,ok,4416.0,246588.0,2026-09-25T20:00:45+00:00
+carga_verificada,DF/2024-01-01_2024-03-31,ok,4368.0,236988.0,2026-09-25T20:00:45+00:00
+carga_verificada,DF/2024-04-01_2024-06-30,ok,4368.0,230866.0,2026-09-25T20:00:45+00:00
+carga_verificada,DF/2024-07-01_2024-09-30,ok,4416.0,237401.0,2026-09-25T20:00:45+00:00
+carga_verificada,DF/2024-10-01_2024-12-31,ok,4416.0,238573.0,2026-09-25T20:00:47+00:00
+carga_verificada,DF/2025-01-01_2025-03-31,ok,4320.0,231771.0,2026-09-25T20:00:47+00:00
+carga_verificada,DF/2025-04-01_2025-06-30,ok,4368.0,232797.0,2026-09-25T20:00:47+00:00
+carga_verificada,DF/2025-07-01_2025-09-30,ok,4416.0,226033.0,2026-09-25T20:00:47+00:00
+carga_verificada,DF/2025-10-01_2025-12-31,ok,4416.0,254715.0,2026-09-25T20:00:48+00:00
+carga_verificada,DF/2026-01-01_2026-03-31,ok,4320.0,246460.0,2026-09-25T20:00:48+00:00
+carga_verificada,DF/2026-04-01_2026-06-30,ok,4368.0,233576.0,2026-09-25T20:00:48+00:00
+carga_verificada,DF/2026-07-01_2026-09-24,ok,4128.0,221340.0,2026-09-25T20:00:48+00:00
+carga_verificada,ES/2016-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ES/2016-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ES/2016-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ES/2016-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ES/2017-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ES/2017-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ES/2017-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ES/2017-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ES/2018-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ES/2018-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ES/2018-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ES/2018-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ES/2019-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,ES/2019-04-01_2019-06-30,ok,4368.0,234864.0,2026-09-25T20:00:07+00:00
+carga_verificada,ES/2019-07-01_2019-09-30,ok,4416.0,242178.0,2026-09-25T20:00:07+00:00
+carga_verificada,ES/2019-10-01_2019-12-31,ok,4416.0,238297.0,2026-09-25T20:00:08+00:00
+carga_verificada,ES/2020-01-01_2020-03-31,ok,4368.0,238732.0,2026-09-25T20:00:08+00:00
+carga_verificada,ES/2020-04-01_2020-06-30,ok,4368.0,253922.0,2026-09-25T20:00:08+00:00
+carga_verificada,ES/2020-07-01_2020-09-30,ok,4416.0,259427.0,2026-09-25T20:00:08+00:00
+carga_verificada,ES/2020-10-01_2020-12-31,ok,4416.0,249684.0,2026-09-25T20:00:09+00:00
+carga_verificada,ES/2021-01-01_2021-03-31,ok,4320.0,257480.0,2026-09-25T20:00:09+00:00
+carga_verificada,ES/2021-04-01_2021-06-30,ok,4368.0,240067.0,2026-09-25T20:00:09+00:00
+carga_verificada,ES/2021-07-01_2021-09-30,ok,4416.0,256870.0,2026-09-25T20:00:09+00:00
+carga_verificada,ES/2021-10-01_2021-12-31,ok,4416.0,261303.0,2026-09-25T20:00:10+00:00
+carga_verificada,ES/2022-01-01_2022-03-31,ok,4320.0,232000.0,2026-09-25T20:00:10+00:00
+carga_verificada,ES/2022-04-01_2022-06-30,ok,4368.0,225973.0,2026-09-25T20:00:10+00:00
+carga_verificada,ES/2022-07-01_2022-09-30,ok,4416.0,219604.0,2026-09-25T20:00:10+00:00
+carga_verificada,ES/2022-10-01_2022-12-31,ok,4416.0,239382.0,2026-09-25T20:00:11+00:00
+carga_verificada,ES/2023-01-01_2023-03-31,ok,4320.0,231323.0,2026-09-25T20:00:11+00:00
+carga_verificada,ES/2023-04-01_2023-06-30,ok,4368.0,236566.0,2026-09-25T20:00:11+00:00
+carga_verificada,ES/2023-07-01_2023-09-30,ok,4416.0,244108.0,2026-09-25T20:00:11+00:00
+carga_verificada,ES/2023-10-01_2023-12-31,ok,4416.0,241473.0,2026-09-25T20:00:12+00:00
+carga_verificada,ES/2024-01-01_2024-03-31,ok,4368.0,229729.0,2026-09-25T20:00:12+00:00
+carga_verificada,ES/2024-04-01_2024-06-30,ok,4368.0,244543.0,2026-09-25T20:00:12+00:00
+carga_verificada,ES/2024-07-01_2024-09-30,ok,4416.0,241170.0,2026-09-25T20:00:12+00:00
+carga_verificada,ES/2024-10-01_2024-12-31,ok,4416.0,232947.0,2026-09-25T20:00:13+00:00
+carga_verificada,ES/2025-01-01_2025-03-31,ok,4320.0,240607.0,2026-09-25T20:00:13+00:00
+carga_verificada,ES/2025-04-01_2025-06-30,ok,4368.0,233978.0,2026-09-25T20:00:13+00:00
+carga_verificada,ES/2025-07-01_2025-09-30,ok,4416.0,226138.0,2026-09-25T20:00:13+00:00
+carga_verificada,ES/2025-10-01_2025-12-31,ok,4416.0,248844.0,2026-09-25T20:00:14+00:00
+carga_verificada,ES/2026-01-01_2026-03-31,ok,4320.0,246133.0,2026-09-25T20:00:15+00:00
+carga_verificada,ES/2026-04-01_2026-06-30,ok,4368.0,237970.0,2026-09-25T20:00:15+00:00
+carga_verificada,ES/2026-07-01_2026-09-24,ok,4128.0,229644.0,2026-09-25T20:00:15+00:00
+carga_verificada,GO/2016-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,GO/2016-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,GO/2016-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,GO/2016-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,GO/2017-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,GO/2017-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,GO/2017-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,GO/2017-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,GO/2018-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,GO/2018-04-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,GO/2018-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,GO/2018-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,GO/2019-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,GO/2019-04-01_2019-06-30,ok,4368.0,237102.0,2026-09-25T20:00:52+00:00
+carga_verificada,GO/2019-07-01_2019-09-30,ok,4416.0,254171.0,2026-09-25T20:00:52+00:00
+carga_verificada,GO/2019-10-01_2019-12-31,ok,4416.0,257289.0,2026-09-25T20:00:53+00:00
+carga_verificada,GO/2020-01-01_2020-03-31,ok,4368.0,259060.0,2026-09-25T20:00:53+00:00
+carga_verificada,GO/2020-04-01_2020-06-30,ok,4368.0,238055.0,2026-09-25T20:00:53+00:00
+carga_verificada,GO/2020-07-01_2020-09-30,ok,4416.0,241916.0,2026-09-25T20:00:54+00:00
+carga_verificada,GO/2020-10-01_2020-12-31,ok,4416.0,245449.0,2026-09-25T20:00:54+00:00
+carga_verificada,GO/2021-01-01_2021-03-31,ok,4320.0,250253.0,2026-09-25T20:00:54+00:00
+carga_verificada,GO/2021-04-01_2021-06-30,ok,4368.0,251775.0,2026-09-25T20:00:54+00:00
+carga_verificada,GO/2021-07-01_2021-09-30,ok,4416.0,258289.0,2026-09-25T20:00:55+00:00
+carga_verificada,GO/2021-10-01_2021-12-31,ok,4416.0,244738.0,2026-09-25T20:00:55+00:00
+carga_verificada,GO/2022-01-01_2022-03-31,ok,4320.0,240266.0,2026-09-25T20:00:56+00:00
+carga_verificada,GO/2022-04-01_2022-06-30,ok,4368.0,227488.0,2026-09-25T20:00:55+00:00
+carga_verificada,GO/2022-07-01_2022-09-30,ok,4416.0,231678.0,2026-09-25T20:00:56+00:00
+carga_verificada,GO/2022-10-01_2022-12-31,ok,4416.0,238494.0,2026-09-25T20:00:56+00:00
+carga_verificada,GO/2023-01-01_2023-03-31,ok,4320.0,235774.0,2026-09-25T20:00:56+00:00
+carga_verificada,GO/2023-04-01_2023-06-30,ok,4368.0,241561.0,2026-09-25T20:00:57+00:00
+carga_verificada,GO/2023-07-01_2023-09-30,ok,4416.0,232863.0,2026-09-25T20:00:57+00:00
+carga_verificada,GO/2023-10-01_2023-12-31,ok,4416.0,239849.0,2026-09-25T20:00:57+00:00
+carga_verificada,GO/2024-01-01_2024-03-31,ok,4368.0,246745.0,2026-09-25T20:00:58+00:00
+carga_verificada,GO/2024-04-01_2024-06-30,ok,4368.0,237608.0,2026-09-25T20:00:58+00:00
+carga_verificada,GO/2024-07-01_2024-09-30,ok,4416.0,236024.0,2026-09-25T20:00:58+00:00
+carga_verificada,GO/2024-10-01_2024-12-31,ok,4416.0,234926.0,2026-09-25T20:00:58+00:00
+carga_verificada,GO/2025-01-01_2025-03-31,ok,4320.0,239510.0,2026-09-25T20:00:59+00:00
+carga_verificada,GO/2025-04-01_2025-06-30,ok,4368.0,231307.0,2026-09-25T20:00:59+00:00
+carga_verificada,GO/2025-07-01_2025-09-30,ok,4416.0,233172.0,2026-09-25T20:00:59+00:00
+carga_verificada,GO/2025-10-01_2025-12-31,ok,4416.0,245081.0,2026-09-25T20:01:00+00:00
+carga_verificada,GO/2026-01-01_2026-03-31,ok,4320.0,240920.0,2026-09-25T20:01:00+00:00
+carga_verificada,GO/2026-04-01_2026-06-30,ok,4368.0,235431.0,2026-09-25T20:01:00+00:00
+carga_verificada,GO/2026-07-01_2026-09-24,ok,4128.0,229510.0,2026-09-25T20:01:00+00:00
+carga_verificada,MA/2016-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MA/2016-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MA/2016-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MA/2016-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MA/2017-01-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,MA/2017-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MA/2017-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MA/2017-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MA/2018-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MA/2018-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MA/2018-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MA/2018-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MA/2019-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MA/2019-04-01_2019-06-30,ok,4368.0,229978.0,2026-09-25T20:04:23+00:00
+carga_verificada,MA/2019-07-01_2019-09-30,ok,4416.0,238056.0,2026-09-25T20:04:23+00:00
+carga_verificada,MA/2019-10-01_2019-12-31,ok,4416.0,249727.0,2026-09-25T20:04:25+00:00
+carga_verificada,MA/2020-01-01_2020-03-31,ok,4368.0,237880.0,2026-09-25T20:04:25+00:00
+carga_verificada,MA/2020-04-01_2020-06-30,ok,4368.0,231806.0,2026-09-25T20:04:25+00:00
+carga_verificada,MA/2020-07-01_2020-09-30,ok,4416.0,238183.0,2026-09-25T20:04:25+00:00
+carga_verificada,MA/2020-10-01_2020-12-31,ok,4416.0,254662.0,2026-09-25T20:04:27+00:00
+carga_verificada,MA/2021-01-01_2021-03-31,ok,4320.0,246529.0,2026-09-25T20:04:28+00:00
+carga_verificada,MA/2021-04-01_2021-06-30,ok,4368.0,243586.0,2026-09-25T20:04:27+00:00
+carga_verificada,MA/2021-07-01_2021-09-30,ok,4416.0,249067.0,2026-09-25T20:04:28+00:00
+carga_verificada,MA/2021-10-01_2021-12-31,ok,4416.0,243989.0,2026-09-25T20:04:29+00:00
+carga_verificada,MA/2022-01-01_2022-03-31,ok,4320.0,231660.0,2026-09-25T20:04:29+00:00
+carga_verificada,MA/2022-04-01_2022-06-30,ok,4368.0,226601.0,2026-09-25T20:04:31+00:00
+carga_verificada,MA/2022-07-01_2022-09-30,ok,4416.0,231031.0,2026-09-25T20:04:30+00:00
+carga_verificada,MA/2022-10-01_2022-12-31,ok,4416.0,229028.0,2026-09-25T20:04:33+00:00
+carga_verificada,MA/2023-01-01_2023-03-31,ok,4320.0,222928.0,2026-09-25T20:04:33+00:00
+carga_verificada,MA/2023-04-01_2023-06-30,ok,4368.0,223855.0,2026-09-25T20:04:33+00:00
+carga_verificada,MA/2023-07-01_2023-09-30,ok,4416.0,231054.0,2026-09-25T20:04:33+00:00
+carga_verificada,MA/2023-10-01_2023-12-31,ok,4416.0,243443.0,2026-09-25T20:04:35+00:00
+carga_verificada,MA/2024-01-01_2024-03-31,ok,4368.0,227617.0,2026-09-25T20:04:35+00:00
+carga_verificada,MA/2024-04-01_2024-06-30,ok,4368.0,217953.0,2026-09-25T20:04:35+00:00
+carga_verificada,MA/2024-07-01_2024-09-30,ok,4416.0,226781.0,2026-09-25T20:04:35+00:00
+carga_verificada,MA/2024-10-01_2024-12-31,ok,4416.0,224906.0,2026-09-25T20:04:36+00:00
+carga_verificada,MA/2025-01-01_2025-03-31,ok,4320.0,217988.0,2026-09-25T20:04:36+00:00
+carga_verificada,MA/2025-04-01_2025-06-30,ok,4368.0,222858.0,2026-09-25T20:04:37+00:00
+carga_verificada,MA/2025-07-01_2025-09-30,ok,4416.0,225641.0,2026-09-25T20:04:38+00:00
+carga_verificada,MA/2025-10-01_2025-12-31,ok,4416.0,225759.0,2026-09-25T20:04:37+00:00
+carga_verificada,MA/2026-01-01_2026-03-31,ok,4320.0,225279.0,2026-09-25T20:04:37+00:00
+carga_verificada,MA/2026-04-01_2026-06-30,ok,4368.0,227954.0,2026-09-25T20:04:39+00:00
+carga_verificada,MA/2026-07-01_2026-09-24,ok,4128.0,215011.0,2026-09-25T20:04:38+00:00
+carga_verificada,MG/2016-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MG/2016-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MG/2016-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MG/2016-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MG/2017-01-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,MG/2017-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MG/2017-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MG/2017-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MG/2018-01-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,MG/2018-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MG/2018-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MG/2018-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MG/2019-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MG/2019-04-01_2019-06-30,ok,4368.0,239585.0,2026-09-25T19:59:53+00:00
+carga_verificada,MG/2019-07-01_2019-09-30,ok,4416.0,237933.0,2026-09-25T19:59:54+00:00
+carga_verificada,MG/2019-10-01_2019-12-31,ok,4416.0,242504.0,2026-09-25T19:59:54+00:00
+carga_verificada,MG/2020-01-01_2020-03-31,ok,4368.0,242892.0,2026-09-25T19:59:54+00:00
+carga_verificada,MG/2020-04-01_2020-06-30,ok,4368.0,237282.0,2026-09-25T19:59:54+00:00
+carga_verificada,MG/2020-07-01_2020-09-30,ok,4416.0,239329.0,2026-09-25T19:59:55+00:00
+carga_verificada,MG/2020-10-01_2020-12-31,ok,4416.0,249235.0,2026-09-25T19:59:55+00:00
+carga_verificada,MG/2021-01-01_2021-03-31,ok,4320.0,236142.0,2026-09-25T19:59:55+00:00
+carga_verificada,MG/2021-04-01_2021-06-30,ok,4368.0,235386.0,2026-09-25T19:59:56+00:00
+carga_verificada,MG/2021-07-01_2021-09-30,ok,4416.0,238868.0,2026-09-25T19:59:56+00:00
+carga_verificada,MG/2021-10-01_2021-12-31,ok,4416.0,235167.0,2026-09-25T19:59:57+00:00
+carga_verificada,MG/2022-01-01_2022-03-31,ok,4320.0,229273.0,2026-09-25T19:59:57+00:00
+carga_verificada,MG/2022-04-01_2022-06-30,ok,4368.0,222140.0,2026-09-25T19:59:57+00:00
+carga_verificada,MG/2022-07-01_2022-09-30,ok,4416.0,219781.0,2026-09-25T19:59:57+00:00
+carga_verificada,MG/2022-10-01_2022-12-31,ok,4416.0,224925.0,2026-09-25T19:59:58+00:00
+carga_verificada,MG/2023-01-01_2023-03-31,ok,4320.0,216220.0,2026-09-25T19:59:59+00:00
+carga_verificada,MG/2023-04-01_2023-06-30,ok,4368.0,226638.0,2026-09-25T19:59:58+00:00
+carga_verificada,MG/2023-07-01_2023-09-30,ok,4416.0,226365.0,2026-09-25T19:59:59+00:00
+carga_verificada,MG/2023-10-01_2023-12-31,ok,4416.0,232033.0,2026-09-25T19:59:59+00:00
+carga_verificada,MG/2024-01-01_2024-03-31,ok,4368.0,223335.0,2026-09-25T20:00:00+00:00
+carga_verificada,MG/2024-04-01_2024-06-30,ok,4368.0,224255.0,2026-09-25T20:00:00+00:00
+carga_verificada,MG/2024-07-01_2024-09-30,ok,4416.0,229337.0,2026-09-25T20:00:00+00:00
+carga_verificada,MG/2024-10-01_2024-12-31,ok,4416.0,228869.0,2026-09-25T20:00:01+00:00
+carga_verificada,MG/2025-01-01_2025-03-31,ok,4320.0,221432.0,2026-09-25T20:00:01+00:00
+carga_verificada,MG/2025-04-01_2025-06-30,ok,4368.0,222742.0,2026-09-25T20:00:01+00:00
+carga_verificada,MG/2025-07-01_2025-09-30,ok,4416.0,224314.0,2026-09-25T20:00:02+00:00
+carga_verificada,MG/2025-10-01_2025-12-31,ok,4416.0,233711.0,2026-09-25T20:00:02+00:00
+carga_verificada,MG/2026-01-01_2026-03-31,ok,4320.0,225202.0,2026-09-25T20:00:02+00:00
+carga_verificada,MG/2026-04-01_2026-06-30,ok,4368.0,222998.0,2026-09-25T20:00:03+00:00
+carga_verificada,MG/2026-07-01_2026-09-24,ok,4128.0,212920.0,2026-09-25T20:00:03+00:00
+carga_verificada,MS/2016-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MS/2016-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MS/2016-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MS/2016-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MS/2017-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MS/2017-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MS/2017-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MS/2017-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MS/2018-01-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,MS/2018-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MS/2018-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MS/2018-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MS/2019-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MS/2019-04-01_2019-06-30,ok,4368.0,245033.0,2026-09-25T20:00:29+00:00
+carga_verificada,MS/2019-07-01_2019-09-30,ok,4416.0,265851.0,2026-09-25T20:00:30+00:00
+carga_verificada,MS/2019-10-01_2019-12-31,ok,4416.0,255011.0,2026-09-25T20:00:30+00:00
+carga_verificada,MS/2020-01-01_2020-03-31,ok,4368.0,240780.0,2026-09-25T20:00:30+00:00
+carga_verificada,MS/2020-04-01_2020-06-30,ok,4368.0,250581.0,2026-09-25T20:00:30+00:00
+carga_verificada,MS/2020-07-01_2020-09-30,ok,4416.0,249309.0,2026-09-25T20:00:31+00:00
+carga_verificada,MS/2020-10-01_2020-12-31,ok,4416.0,265964.0,2026-09-25T20:00:31+00:00
+carga_verificada,MS/2021-01-01_2021-03-31,ok,4320.0,254976.0,2026-09-25T20:00:31+00:00
+carga_verificada,MS/2021-04-01_2021-06-30,ok,4368.0,244927.0,2026-09-25T20:00:31+00:00
+carga_verificada,MS/2021-07-01_2021-09-30,ok,4416.0,249209.0,2026-09-25T20:00:32+00:00
+carga_verificada,MS/2021-10-01_2021-12-31,ok,4416.0,241920.0,2026-09-25T20:00:32+00:00
+carga_verificada,MS/2022-01-01_2022-03-31,ok,4320.0,227869.0,2026-09-25T20:00:32+00:00
+carga_verificada,MS/2022-04-01_2022-06-30,ok,4368.0,231287.0,2026-09-25T20:00:32+00:00
+carga_verificada,MS/2022-07-01_2022-09-30,ok,4416.0,239808.0,2026-09-25T20:00:33+00:00
+carga_verificada,MS/2022-10-01_2022-12-31,ok,4416.0,240043.0,2026-09-25T20:00:33+00:00
+carga_verificada,MS/2023-01-01_2023-03-31,ok,4320.0,236071.0,2026-09-25T20:00:33+00:00
+carga_verificada,MS/2023-04-01_2023-06-30,ok,4368.0,245005.0,2026-09-25T20:00:33+00:00
+carga_verificada,MS/2023-07-01_2023-09-30,ok,4416.0,249238.0,2026-09-25T20:00:34+00:00
+carga_verificada,MS/2023-10-01_2023-12-31,ok,4416.0,256631.0,2026-09-25T20:00:34+00:00
+carga_verificada,MS/2024-01-01_2024-03-31,ok,4368.0,243999.0,2026-09-25T20:00:34+00:00
+carga_verificada,MS/2024-04-01_2024-06-30,ok,4368.0,233982.0,2026-09-25T20:00:34+00:00
+carga_verificada,MS/2024-07-01_2024-09-30,ok,4416.0,249525.0,2026-09-25T20:00:35+00:00
+carga_verificada,MS/2024-10-01_2024-12-31,ok,4416.0,244100.0,2026-09-25T20:00:35+00:00
+carga_verificada,MS/2025-01-01_2025-03-31,ok,4320.0,243799.0,2026-09-25T20:00:35+00:00
+carga_verificada,MS/2025-04-01_2025-06-30,ok,4368.0,237506.0,2026-09-25T20:00:35+00:00
+carga_verificada,MS/2025-07-01_2025-09-30,ok,4416.0,242720.0,2026-09-25T20:00:36+00:00
+carga_verificada,MS/2025-10-01_2025-12-31,ok,4416.0,259291.0,2026-09-25T20:00:36+00:00
+carga_verificada,MS/2026-01-01_2026-03-31,ok,4320.0,240122.0,2026-09-25T20:00:36+00:00
+carga_verificada,MS/2026-04-01_2026-06-30,ok,4368.0,252443.0,2026-09-25T20:00:36+00:00
+carga_verificada,MS/2026-07-01_2026-09-24,ok,4128.0,234997.0,2026-09-25T20:00:37+00:00
+carga_verificada,MT/2016-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MT/2016-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MT/2016-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MT/2016-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MT/2017-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MT/2017-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MT/2017-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MT/2017-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MT/2018-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MT/2018-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MT/2018-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MT/2018-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,MT/2019-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,MT/2019-04-01_2019-06-30,ok,4368.0,244303.0,2026-09-25T20:00:18+00:00
+carga_verificada,MT/2019-07-01_2019-09-30,ok,4416.0,242207.0,2026-09-25T20:00:18+00:00
+carga_verificada,MT/2019-10-01_2019-12-31,ok,4416.0,264922.0,2026-09-25T20:00:18+00:00
+carga_verificada,MT/2020-01-01_2020-03-31,ok,4368.0,247826.0,2026-09-25T20:00:19+00:00
+carga_verificada,MT/2020-04-01_2020-06-30,ok,4368.0,259024.0,2026-09-25T20:00:19+00:00
+carga_verificada,MT/2020-07-01_2020-09-30,ok,4416.0,245641.0,2026-09-25T20:00:19+00:00
+carga_verificada,MT/2020-10-01_2020-12-31,ok,4416.0,246966.0,2026-09-25T20:00:19+00:00
+carga_verificada,MT/2021-01-01_2021-03-31,ok,4320.0,244983.0,2026-09-25T20:00:20+00:00
+carga_verificada,MT/2021-04-01_2021-06-30,ok,4368.0,252959.0,2026-09-25T20:00:20+00:00
+carga_verificada,MT/2021-07-01_2021-09-30,ok,4416.0,255669.0,2026-09-25T20:00:20+00:00
+carga_verificada,MT/2021-10-01_2021-12-31,ok,4416.0,241144.0,2026-09-25T20:00:20+00:00
+carga_verificada,MT/2022-01-01_2022-03-31,ok,4320.0,235277.0,2026-09-25T20:00:21+00:00
+carga_verificada,MT/2022-04-01_2022-06-30,ok,4368.0,223550.0,2026-09-25T20:00:21+00:00
+carga_verificada,MT/2022-07-01_2022-09-30,ok,4416.0,225628.0,2026-09-25T20:00:22+00:00
+carga_verificada,MT/2022-10-01_2022-12-31,ok,4416.0,230399.0,2026-09-25T20:00:22+00:00
+carga_verificada,MT/2023-01-01_2023-03-31,ok,4320.0,224273.0,2026-09-25T20:00:22+00:00
+carga_verificada,MT/2023-04-01_2023-06-30,ok,4368.0,240516.0,2026-09-25T20:00:22+00:00
+carga_verificada,MT/2023-07-01_2023-09-30,ok,4416.0,249905.0,2026-09-25T20:00:23+00:00
+carga_verificada,MT/2023-10-01_2023-12-31,ok,4416.0,239960.0,2026-09-25T20:00:23+00:00
+carga_verificada,MT/2024-01-01_2024-03-31,ok,4368.0,242813.0,2026-09-25T20:00:23+00:00
+carga_verificada,MT/2024-04-01_2024-06-30,ok,4368.0,238083.0,2026-09-25T20:00:23+00:00
+carga_verificada,MT/2024-07-01_2024-09-30,ok,4416.0,233836.0,2026-09-25T20:00:24+00:00
+carga_verificada,MT/2024-10-01_2024-12-31,ok,4416.0,235290.0,2026-09-25T20:00:24+00:00
+carga_verificada,MT/2025-01-01_2025-03-31,ok,4320.0,232751.0,2026-09-25T20:00:24+00:00
+carga_verificada,MT/2025-04-01_2025-06-30,ok,4368.0,239871.0,2026-09-25T20:00:24+00:00
+carga_verificada,MT/2025-07-01_2025-09-30,ok,4416.0,229217.0,2026-09-25T20:00:25+00:00
+carga_verificada,MT/2025-10-01_2025-12-31,ok,4416.0,248759.0,2026-09-25T20:00:25+00:00
+carga_verificada,MT/2026-01-01_2026-03-31,ok,4320.0,242525.0,2026-09-25T20:00:26+00:00
+carga_verificada,MT/2026-04-01_2026-06-30,ok,4368.0,237946.0,2026-09-25T20:00:26+00:00
+carga_verificada,MT/2026-07-01_2026-09-24,ok,4128.0,235264.0,2026-09-25T20:00:26+00:00
+carga_verificada,N/2016-01-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,N/2016-04-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,N/2016-07-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,N/2016-10-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,N/2017-01-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,N/2017-04-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,N/2017-07-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,N/2017-10-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,N/2018-01-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,N/2018-04-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,N/2018-07-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,N/2018-10-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,N/2019-01-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,N/2019-04-01_2019-06-30,ok,4368.0,196652.0,2026-09-25T19:59:09+00:00
+carga_verificada,N/2019-07-01_2019-09-30,ok,4416.0,196339.0,2026-09-25T19:59:09+00:00
+carga_verificada,N/2019-10-01_2019-12-31,ok,4416.0,201101.0,2026-09-25T19:59:09+00:00
+carga_verificada,N/2020-01-01_2020-03-31,ok,4368.0,190536.0,2026-09-25T19:59:09+00:00
+carga_verificada,N/2020-04-01_2020-06-30,ok,4368.0,192052.0,2026-09-25T19:59:10+00:00
+carga_verificada,N/2020-07-01_2020-09-30,ok,4416.0,191773.0,2026-09-25T19:59:09+00:00
+carga_verificada,N/2020-10-01_2020-12-31,ok,4416.0,215338.0,2026-09-25T19:59:10+00:00
+carga_verificada,N/2021-01-01_2021-03-31,ok,4320.0,228957.0,2026-09-25T19:59:10+00:00
+carga_verificada,N/2021-04-01_2021-06-30,ok,4368.0,222354.0,2026-09-25T19:59:10+00:00
+carga_verificada,N/2021-07-01_2021-09-30,ok,4416.0,227479.0,2026-09-25T19:59:11+00:00
+carga_verificada,N/2021-10-01_2021-12-31,ok,4416.0,242462.0,2026-09-25T19:59:11+00:00
+carga_verificada,N/2022-01-01_2022-03-31,ok,4320.0,216556.0,2026-09-25T19:59:11+00:00
+carga_verificada,N/2022-04-01_2022-06-30,ok,4368.0,212946.0,2026-09-25T19:59:11+00:00
+carga_verificada,N/2022-07-01_2022-09-30,ok,4416.0,219397.0,2026-09-25T19:59:12+00:00
+carga_verificada,N/2022-10-01_2022-12-31,ok,4416.0,227617.0,2026-09-25T19:59:12+00:00
+carga_verificada,N/2023-01-01_2023-03-31,ok,4320.0,217844.0,2026-09-25T19:59:13+00:00
+carga_verificada,N/2023-04-01_2023-06-30,ok,4368.0,226771.0,2026-09-25T19:59:13+00:00
+carga_verificada,N/2023-07-01_2023-09-30,ok,4416.0,230383.0,2026-09-25T19:59:13+00:00
+carga_verificada,N/2023-10-01_2023-12-31,ok,4416.0,234673.0,2026-09-25T19:59:13+00:00
+carga_verificada,N/2024-01-01_2024-03-31,ok,4368.0,222964.0,2026-09-25T19:59:14+00:00
+carga_verificada,N/2024-04-01_2024-06-30,ok,4368.0,225386.0,2026-09-25T19:59:14+00:00
+carga_verificada,N/2024-07-01_2024-09-30,ok,4416.0,226348.0,2026-09-25T19:59:14+00:00
+carga_verificada,N/2024-10-01_2024-12-31,ok,4416.0,224227.0,2026-09-25T19:59:14+00:00
+carga_verificada,N/2025-01-01_2025-03-31,ok,4320.0,227177.0,2026-09-25T19:59:15+00:00
+carga_verificada,N/2025-04-01_2025-06-30,ok,4368.0,221834.0,2026-09-25T19:59:15+00:00
+carga_verificada,N/2025-07-01_2025-09-30,ok,4416.0,219682.0,2026-09-25T19:59:15+00:00
+carga_verificada,N/2025-10-01_2025-12-31,ok,4416.0,226115.0,2026-09-25T19:59:16+00:00
+carga_verificada,N/2026-01-01_2026-03-31,ok,4320.0,220840.0,2026-09-25T19:59:16+00:00
+carga_verificada,N/2026-04-01_2026-06-30,ok,4368.0,226275.0,2026-09-25T19:59:16+00:00
+carga_verificada,N/2026-07-01_2026-09-24,ok,4128.0,206935.0,2026-09-25T19:59:16+00:00
+carga_verificada,NE/2016-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,NE/2016-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,NE/2016-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,NE/2016-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,NE/2017-01-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,NE/2017-04-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,NE/2017-07-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,NE/2017-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,NE/2018-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,NE/2018-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,NE/2018-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,NE/2018-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,NE/2019-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,NE/2019-04-01_2019-06-30,ok,4368.0,194330.0,2026-09-25T19:58:58+00:00
+carga_verificada,NE/2019-07-01_2019-09-30,ok,4416.0,196188.0,2026-09-25T19:58:58+00:00
+carga_verificada,NE/2019-10-01_2019-12-31,ok,4416.0,198193.0,2026-09-25T19:58:58+00:00
+carga_verificada,NE/2020-01-01_2020-03-31,ok,4368.0,186272.0,2026-09-25T19:58:58+00:00
+carga_verificada,NE/2020-04-01_2020-06-30,ok,4368.0,185471.0,2026-09-25T19:58:58+00:00
+carga_verificada,NE/2020-07-01_2020-09-30,ok,4416.0,190683.0,2026-09-25T19:58:59+00:00
+carga_verificada,NE/2020-10-01_2020-12-31,ok,4416.0,216114.0,2026-09-25T19:58:59+00:00
+carga_verificada,NE/2021-01-01_2021-03-31,ok,4320.0,226014.0,2026-09-25T19:58:59+00:00
+carga_verificada,NE/2021-04-01_2021-06-30,ok,4368.0,225624.0,2026-09-25T19:58:59+00:00
+carga_verificada,NE/2021-07-01_2021-09-30,ok,4416.0,228015.0,2026-09-25T19:59:00+00:00
+carga_verificada,NE/2021-10-01_2021-12-31,ok,4416.0,225011.0,2026-09-25T19:59:00+00:00
+carga_verificada,NE/2022-01-01_2022-03-31,ok,4320.0,217378.0,2026-09-25T19:59:01+00:00
+carga_verificada,NE/2022-04-01_2022-06-30,ok,4368.0,213672.0,2026-09-25T19:59:00+00:00
+carga_verificada,NE/2022-07-01_2022-09-30,ok,4416.0,213572.0,2026-09-25T19:59:00+00:00
+carga_verificada,NE/2022-10-01_2022-12-31,ok,4416.0,225656.0,2026-09-25T19:59:01+00:00
+carga_verificada,NE/2023-01-01_2023-03-31,ok,4320.0,219712.0,2026-09-25T19:59:01+00:00
+carga_verificada,NE/2023-04-01_2023-06-30,ok,4368.0,230538.0,2026-09-25T19:59:01+00:00
+carga_verificada,NE/2023-07-01_2023-09-30,ok,4416.0,226578.0,2026-09-25T19:59:02+00:00
+carga_verificada,NE/2023-10-01_2023-12-31,ok,4416.0,228689.0,2026-09-25T19:59:03+00:00
+carga_verificada,NE/2024-01-01_2024-03-31,ok,4368.0,221438.0,2026-09-25T19:59:02+00:00
+carga_verificada,NE/2024-04-01_2024-06-30,ok,4368.0,222434.0,2026-09-25T19:59:02+00:00
+carga_verificada,NE/2024-07-01_2024-09-30,ok,4416.0,221773.0,2026-09-25T19:59:03+00:00
+carga_verificada,NE/2024-10-01_2024-12-31,ok,4416.0,229367.0,2026-09-25T19:59:04+00:00
+carga_verificada,NE/2025-01-01_2025-03-31,ok,4320.0,216640.0,2026-09-25T19:59:03+00:00
+carga_verificada,NE/2025-04-01_2025-06-30,ok,4368.0,222728.0,2026-09-25T19:59:03+00:00
+carga_verificada,NE/2025-07-01_2025-09-30,ok,4416.0,216015.0,2026-09-25T19:59:04+00:00
+carga_verificada,NE/2025-10-01_2025-12-31,ok,4416.0,227899.0,2026-09-25T19:59:04+00:00
+carga_verificada,NE/2026-01-01_2026-03-31,ok,4320.0,222517.0,2026-09-25T19:59:04+00:00
+carga_verificada,NE/2026-04-01_2026-06-30,ok,4368.0,225117.0,2026-09-25T19:59:05+00:00
+carga_verificada,NE/2026-07-01_2026-09-24,ok,4128.0,210113.0,2026-09-25T19:59:05+00:00
+carga_verificada,PA/2016-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PA/2016-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PA/2016-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PA/2016-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PA/2017-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PA/2017-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PA/2017-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PA/2017-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PA/2018-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PA/2018-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PA/2018-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PA/2018-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PA/2019-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PA/2019-04-01_2019-06-30,ok,4368.0,212177.0,2026-09-25T20:04:06+00:00
+carga_verificada,PA/2019-07-01_2019-09-30,ok,4416.0,222899.0,2026-09-25T20:04:06+00:00
+carga_verificada,PA/2019-10-01_2019-12-31,ok,4416.0,218980.0,2026-09-25T20:04:07+00:00
+carga_verificada,PA/2020-01-01_2020-03-31,ok,4368.0,218752.0,2026-09-25T20:04:07+00:00
+carga_verificada,PA/2020-04-01_2020-06-30,ok,4368.0,229436.0,2026-09-25T20:04:07+00:00
+carga_verificada,PA/2020-07-01_2020-09-30,ok,4416.0,224267.0,2026-09-25T20:04:08+00:00
+carga_verificada,PA/2020-10-01_2020-12-31,ok,4416.0,225050.0,2026-09-25T20:04:08+00:00
+carga_verificada,PA/2021-01-01_2021-03-31,ok,4320.0,211894.0,2026-09-25T20:04:09+00:00
+carga_verificada,PA/2021-04-01_2021-06-30,ok,4368.0,206205.0,2026-09-25T20:04:08+00:00
+carga_verificada,PA/2021-07-01_2021-09-30,ok,4416.0,233461.0,2026-09-25T20:04:10+00:00
+carga_verificada,PA/2021-10-01_2021-12-31,ok,4416.0,230203.0,2026-09-25T20:04:10+00:00
+carga_verificada,PA/2022-01-01_2022-03-31,ok,4320.0,206891.0,2026-09-25T20:04:10+00:00
+carga_verificada,PA/2022-04-01_2022-06-30,ok,4368.0,215244.0,2026-09-25T20:04:11+00:00
+carga_verificada,PA/2022-07-01_2022-09-30,ok,4416.0,202660.0,2026-09-25T20:04:11+00:00
+carga_verificada,PA/2022-10-01_2022-12-31,ok,4416.0,206015.0,2026-09-25T20:04:12+00:00
+carga_verificada,PA/2023-01-01_2023-03-31,ok,4320.0,206679.0,2026-09-25T20:04:12+00:00
+carga_verificada,PA/2023-04-01_2023-06-30,ok,4368.0,210477.0,2026-09-25T20:04:12+00:00
+carga_verificada,PA/2023-07-01_2023-09-30,ok,4416.0,206855.0,2026-09-25T20:04:12+00:00
+carga_verificada,PA/2023-10-01_2023-12-31,ok,4416.0,209357.0,2026-09-25T20:04:13+00:00
+carga_verificada,PA/2024-01-01_2024-03-31,ok,4368.0,213766.0,2026-09-25T20:04:13+00:00
+carga_verificada,PA/2024-04-01_2024-06-30,ok,4368.0,202516.0,2026-09-25T20:04:13+00:00
+carga_verificada,PA/2024-07-01_2024-09-30,ok,4416.0,204105.0,2026-09-25T20:04:14+00:00
+carga_verificada,PA/2024-10-01_2024-12-31,ok,4416.0,213801.0,2026-09-25T20:04:15+00:00
+carga_verificada,PA/2025-01-01_2025-03-31,ok,4320.0,198044.0,2026-09-25T20:04:15+00:00
+carga_verificada,PA/2025-04-01_2025-06-30,ok,4368.0,198022.0,2026-09-25T20:04:14+00:00
+carga_verificada,PA/2025-07-01_2025-09-30,ok,4416.0,211539.0,2026-09-25T20:04:15+00:00
+carga_verificada,PA/2025-10-01_2025-12-31,ok,4416.0,212738.0,2026-09-25T20:04:16+00:00
+carga_verificada,PA/2026-01-01_2026-03-31,ok,4320.0,202659.0,2026-09-25T20:04:16+00:00
+carga_verificada,PA/2026-04-01_2026-06-30,ok,4368.0,219021.0,2026-09-25T20:04:16+00:00
+carga_verificada,PA/2026-07-01_2026-09-24,ok,4128.0,199114.0,2026-09-25T20:04:17+00:00
+carga_verificada,PBRN/2016-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PBRN/2016-04-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,PBRN/2016-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PBRN/2016-10-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,PBRN/2017-01-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,PBRN/2017-04-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,PBRN/2017-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PBRN/2017-10-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,PBRN/2018-01-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,PBRN/2018-04-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,PBRN/2018-07-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,PBRN/2018-10-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,PBRN/2019-01-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,PBRN/2019-04-01_2019-06-30,ok,4368.0,239492.0,2026-09-25T20:03:04+00:00
+carga_verificada,PBRN/2019-07-01_2019-09-30,ok,4416.0,263772.0,2026-09-25T20:03:05+00:00
+carga_verificada,PBRN/2019-10-01_2019-12-31,ok,4416.0,262882.0,2026-09-25T20:03:05+00:00
+carga_verificada,PBRN/2020-01-01_2020-03-31,ok,4368.0,247880.0,2026-09-25T20:03:05+00:00
+carga_verificada,PBRN/2020-04-01_2020-06-30,ok,4368.0,241185.0,2026-09-25T20:03:06+00:00
+carga_verificada,PBRN/2020-07-01_2020-09-30,ok,4416.0,240403.0,2026-09-25T20:03:07+00:00
+carga_verificada,PBRN/2020-10-01_2020-12-31,ok,4416.0,267033.0,2026-09-25T20:03:07+00:00
+carga_verificada,PBRN/2021-01-01_2021-03-31,ok,4320.0,236785.0,2026-09-25T20:03:07+00:00
+carga_verificada,PBRN/2021-04-01_2021-06-30,ok,4368.0,242649.0,2026-09-25T20:03:09+00:00
+carga_verificada,PBRN/2021-07-01_2021-09-30,ok,4416.0,240737.0,2026-09-25T20:03:08+00:00
+carga_verificada,PBRN/2021-10-01_2021-12-31,ok,4416.0,256624.0,2026-09-25T20:03:08+00:00
+carga_verificada,PBRN/2022-01-01_2022-03-31,ok,4320.0,240346.0,2026-09-25T20:03:09+00:00
+carga_verificada,PBRN/2022-04-01_2022-06-30,ok,4368.0,238959.0,2026-09-25T20:03:09+00:00
+carga_verificada,PBRN/2022-07-01_2022-09-30,ok,4416.0,231733.0,2026-09-25T20:03:10+00:00
+carga_verificada,PBRN/2022-10-01_2022-12-31,ok,4416.0,228806.0,2026-09-25T20:03:11+00:00
+carga_verificada,PBRN/2023-01-01_2023-03-31,ok,4320.0,219059.0,2026-09-25T20:03:10+00:00
+carga_verificada,PBRN/2023-04-01_2023-06-30,ok,4368.0,232554.0,2026-09-25T20:03:11+00:00
+carga_verificada,PBRN/2023-07-01_2023-09-30,ok,4416.0,240080.0,2026-09-25T20:03:11+00:00
+carga_verificada,PBRN/2023-10-01_2023-12-31,ok,4416.0,234655.0,2026-09-25T20:03:11+00:00
+carga_verificada,PBRN/2024-01-01_2024-03-31,ok,4368.0,233384.0,2026-09-25T20:03:12+00:00
+carga_verificada,PBRN/2024-04-01_2024-06-30,ok,4368.0,231436.0,2026-09-25T20:03:13+00:00
+carga_verificada,PBRN/2024-07-01_2024-09-30,ok,4416.0,248294.0,2026-09-25T20:03:13+00:00
+carga_verificada,PBRN/2024-10-01_2024-12-31,ok,4416.0,236928.0,2026-09-25T20:03:13+00:00
+carga_verificada,PBRN/2025-01-01_2025-03-31,ok,4320.0,232581.0,2026-09-25T20:03:14+00:00
+carga_verificada,PBRN/2025-04-01_2025-06-30,ok,4368.0,233913.0,2026-09-25T20:03:14+00:00
+carga_verificada,PBRN/2025-07-01_2025-09-30,ok,4416.0,235400.0,2026-09-25T20:03:14+00:00
+carga_verificada,PBRN/2025-10-01_2025-12-31,ok,4416.0,249637.0,2026-09-25T20:03:14+00:00
+carga_verificada,PBRN/2026-01-01_2026-03-31,ok,4320.0,236864.0,2026-09-25T20:03:15+00:00
+carga_verificada,PBRN/2026-04-01_2026-06-30,ok,4368.0,230497.0,2026-09-25T20:03:15+00:00
+carga_verificada,PBRN/2026-07-01_2026-09-24,ok,4128.0,224514.0,2026-09-25T20:03:16+00:00
+carga_verificada,PI/2016-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PI/2016-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PI/2016-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PI/2016-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PI/2017-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PI/2017-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PI/2017-07-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,PI/2017-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PI/2018-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PI/2018-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PI/2018-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PI/2018-10-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,PI/2019-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PI/2019-04-01_2019-06-30,ok,4368.0,239604.0,2026-09-25T20:03:37+00:00
+carga_verificada,PI/2019-07-01_2019-09-30,ok,4416.0,250229.0,2026-09-25T20:03:37+00:00
+carga_verificada,PI/2019-10-01_2019-12-31,ok,4416.0,246998.0,2026-09-25T20:03:38+00:00
+carga_verificada,PI/2020-01-01_2020-03-31,ok,4368.0,241573.0,2026-09-25T20:03:38+00:00
+carga_verificada,PI/2020-04-01_2020-06-30,ok,4368.0,231503.0,2026-09-25T20:03:38+00:00
+carga_verificada,PI/2020-07-01_2020-09-30,ok,4416.0,248769.0,2026-09-25T20:03:38+00:00
+carga_verificada,PI/2020-10-01_2020-12-31,ok,4416.0,242244.0,2026-09-25T20:03:39+00:00
+carga_verificada,PI/2021-01-01_2021-03-31,ok,4320.0,233429.0,2026-09-25T20:03:39+00:00
+carga_verificada,PI/2021-04-01_2021-06-30,ok,4368.0,231710.0,2026-09-25T20:03:40+00:00
+carga_verificada,PI/2021-07-01_2021-09-30,ok,4416.0,235009.0,2026-09-25T20:03:40+00:00
+carga_verificada,PI/2021-10-01_2021-12-31,ok,4416.0,253488.0,2026-09-25T20:03:41+00:00
+carga_verificada,PI/2022-01-01_2022-03-31,ok,4320.0,223068.0,2026-09-25T20:03:41+00:00
+carga_verificada,PI/2022-04-01_2022-06-30,ok,4368.0,219835.0,2026-09-25T20:03:41+00:00
+carga_verificada,PI/2022-07-01_2022-09-30,ok,4416.0,237076.0,2026-09-25T20:03:41+00:00
+carga_verificada,PI/2022-10-01_2022-12-31,ok,4416.0,226233.0,2026-09-25T20:03:42+00:00
+carga_verificada,PI/2023-01-01_2023-03-31,ok,4320.0,230131.0,2026-09-25T20:03:42+00:00
+carga_verificada,PI/2023-04-01_2023-06-30,ok,4368.0,242693.0,2026-09-25T20:03:42+00:00
+carga_verificada,PI/2023-07-01_2023-09-30,ok,4416.0,251769.0,2026-09-25T20:03:43+00:00
+carga_verificada,PI/2023-10-01_2023-12-31,ok,4416.0,254149.0,2026-09-25T20:03:43+00:00
+carga_verificada,PI/2024-01-01_2024-03-31,ok,4368.0,239932.0,2026-09-25T20:03:43+00:00
+carga_verificada,PI/2024-04-01_2024-06-30,ok,4368.0,239068.0,2026-09-25T20:03:43+00:00
+carga_verificada,PI/2024-07-01_2024-09-30,ok,4416.0,234149.0,2026-09-25T20:03:44+00:00
+carga_verificada,PI/2024-10-01_2024-12-31,ok,4416.0,237697.0,2026-09-25T20:03:45+00:00
+carga_verificada,PI/2025-01-01_2025-03-31,ok,4320.0,235353.0,2026-09-25T20:03:45+00:00
+carga_verificada,PI/2025-04-01_2025-06-30,ok,4368.0,234511.0,2026-09-25T20:03:46+00:00
+carga_verificada,PI/2025-07-01_2025-09-30,ok,4416.0,240590.0,2026-09-25T20:03:46+00:00
+carga_verificada,PI/2025-10-01_2025-12-31,ok,4416.0,237213.0,2026-09-25T20:03:47+00:00
+carga_verificada,PI/2026-01-01_2026-03-31,ok,4320.0,245918.0,2026-09-25T20:03:48+00:00
+carga_verificada,PI/2026-04-01_2026-06-30,ok,4368.0,241668.0,2026-09-25T20:03:47+00:00
+carga_verificada,PI/2026-07-01_2026-09-24,ok,4128.0,237332.0,2026-09-25T20:03:48+00:00
+carga_verificada,PR/2016-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PR/2016-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PR/2016-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PR/2016-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PR/2017-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PR/2017-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PR/2017-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PR/2017-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PR/2018-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PR/2018-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PR/2018-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PR/2018-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,PR/2019-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,PR/2019-04-01_2019-06-30,ok,4368.0,247778.0,2026-09-25T20:01:40+00:00
+carga_verificada,PR/2019-07-01_2019-09-30,ok,4416.0,244098.0,2026-09-25T20:01:40+00:00
+carga_verificada,PR/2019-10-01_2019-12-31,ok,4416.0,252841.0,2026-09-25T20:01:41+00:00
+carga_verificada,PR/2020-01-01_2020-03-31,ok,4368.0,238975.0,2026-09-25T20:01:41+00:00
+carga_verificada,PR/2020-04-01_2020-06-30,ok,4368.0,239456.0,2026-09-25T20:01:41+00:00
+carga_verificada,PR/2020-07-01_2020-09-30,ok,4416.0,244579.0,2026-09-25T20:01:42+00:00
+carga_verificada,PR/2020-10-01_2020-12-31,ok,4416.0,255180.0,2026-09-25T20:01:43+00:00
+carga_verificada,PR/2021-01-01_2021-03-31,ok,4320.0,249447.0,2026-09-25T20:01:42+00:00
+carga_verificada,PR/2021-04-01_2021-06-30,ok,4368.0,234302.0,2026-09-25T20:01:42+00:00
+carga_verificada,PR/2021-07-01_2021-09-30,ok,4416.0,243849.0,2026-09-25T20:01:43+00:00
+carga_verificada,PR/2021-10-01_2021-12-31,ok,4416.0,237785.0,2026-09-25T20:01:43+00:00
+carga_verificada,PR/2022-01-01_2022-03-31,ok,4320.0,222754.0,2026-09-25T20:01:43+00:00
+carga_verificada,PR/2022-04-01_2022-06-30,ok,4368.0,221367.0,2026-09-25T20:01:45+00:00
+carga_verificada,PR/2022-07-01_2022-09-30,ok,4416.0,226996.0,2026-09-25T20:01:44+00:00
+carga_verificada,PR/2022-10-01_2022-12-31,ok,4416.0,235710.0,2026-09-25T20:01:44+00:00
+carga_verificada,PR/2023-01-01_2023-03-31,ok,4320.0,220875.0,2026-09-25T20:01:44+00:00
+carga_verificada,PR/2023-04-01_2023-06-30,ok,4368.0,227109.0,2026-09-25T20:01:45+00:00
+carga_verificada,PR/2023-07-01_2023-09-30,ok,4416.0,232939.0,2026-09-25T20:01:46+00:00
+carga_verificada,PR/2023-10-01_2023-12-31,ok,4416.0,236037.0,2026-09-25T20:01:48+00:00
+carga_verificada,PR/2024-01-01_2024-03-31,ok,4368.0,226797.0,2026-09-25T20:01:46+00:00
+carga_verificada,PR/2024-04-01_2024-06-30,ok,4368.0,224622.0,2026-09-25T20:01:46+00:00
+carga_verificada,PR/2024-07-01_2024-09-30,ok,4416.0,230896.0,2026-09-25T20:01:48+00:00
+carga_verificada,PR/2024-10-01_2024-12-31,ok,4416.0,235542.0,2026-09-25T20:01:48+00:00
+carga_verificada,PR/2025-01-01_2025-03-31,ok,4320.0,226871.0,2026-09-25T20:01:48+00:00
+carga_verificada,PR/2025-04-01_2025-06-30,ok,4368.0,225661.0,2026-09-25T20:01:49+00:00
+carga_verificada,PR/2025-07-01_2025-09-30,ok,4416.0,221650.0,2026-09-25T20:01:49+00:00
+carga_verificada,PR/2025-10-01_2025-12-31,ok,4416.0,233805.0,2026-09-25T20:01:50+00:00
+carga_verificada,PR/2026-01-01_2026-03-31,ok,4320.0,224613.0,2026-09-25T20:01:49+00:00
+carga_verificada,PR/2026-04-01_2026-06-30,ok,4368.0,233020.0,2026-09-25T20:01:50+00:00
+carga_verificada,PR/2026-07-01_2026-09-24,ok,4128.0,215567.0,2026-09-25T20:01:50+00:00
+carga_verificada,RJ/2016-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RJ/2016-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RJ/2016-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RJ/2016-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RJ/2017-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RJ/2017-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RJ/2017-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RJ/2017-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RJ/2018-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RJ/2018-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RJ/2018-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RJ/2018-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RJ/2019-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RJ/2019-04-01_2019-06-30,ok,4368.0,229599.0,2026-09-25T19:59:21+00:00
+carga_verificada,RJ/2019-07-01_2019-09-30,ok,4416.0,257121.0,2026-09-25T19:59:20+00:00
+carga_verificada,RJ/2019-10-01_2019-12-31,ok,4416.0,240820.0,2026-09-25T19:59:21+00:00
+carga_verificada,RJ/2020-01-01_2020-03-31,ok,4368.0,234082.0,2026-09-25T19:59:21+00:00
+carga_verificada,RJ/2020-04-01_2020-06-30,ok,4368.0,232839.0,2026-09-25T19:59:23+00:00
+carga_verificada,RJ/2020-07-01_2020-09-30,ok,4416.0,240338.0,2026-09-25T19:59:23+00:00
+carga_verificada,RJ/2020-10-01_2020-12-31,ok,4416.0,241251.0,2026-09-25T19:59:23+00:00
+carga_verificada,RJ/2021-01-01_2021-03-31,ok,4320.0,235239.0,2026-09-25T19:59:23+00:00
+carga_verificada,RJ/2021-04-01_2021-06-30,ok,4368.0,236195.0,2026-09-25T19:59:25+00:00
+carga_verificada,RJ/2021-07-01_2021-09-30,ok,4416.0,234115.0,2026-09-25T19:59:24+00:00
+carga_verificada,RJ/2021-10-01_2021-12-31,ok,4416.0,232989.0,2026-09-25T19:59:25+00:00
+carga_verificada,RJ/2022-01-01_2022-03-31,ok,4320.0,225879.0,2026-09-25T19:59:27+00:00
+carga_verificada,RJ/2022-04-01_2022-06-30,ok,4368.0,215447.0,2026-09-25T19:59:25+00:00
+carga_verificada,RJ/2022-07-01_2022-09-30,ok,4416.0,217669.0,2026-09-25T19:59:26+00:00
+carga_verificada,RJ/2022-10-01_2022-12-31,ok,4416.0,223057.0,2026-09-25T19:59:28+00:00
+carga_verificada,RJ/2023-01-01_2023-03-31,ok,4320.0,219812.0,2026-09-25T19:59:27+00:00
+carga_verificada,RJ/2023-04-01_2023-06-30,ok,4368.0,227999.0,2026-09-25T19:59:28+00:00
+carga_verificada,RJ/2023-07-01_2023-09-30,ok,4416.0,226032.0,2026-09-25T19:59:30+00:00
+carga_verificada,RJ/2023-10-01_2023-12-31,ok,4416.0,232046.0,2026-09-25T19:59:29+00:00
+carga_verificada,RJ/2024-01-01_2024-03-31,ok,4368.0,225563.0,2026-09-25T19:59:30+00:00
+carga_verificada,RJ/2024-04-01_2024-06-30,ok,4368.0,222516.0,2026-09-25T19:59:30+00:00
+carga_verificada,RJ/2024-07-01_2024-09-30,ok,4416.0,223410.0,2026-09-25T19:59:32+00:00
+carga_verificada,RJ/2024-10-01_2024-12-31,ok,4416.0,228859.0,2026-09-25T19:59:32+00:00
+carga_verificada,RJ/2025-01-01_2025-03-31,ok,4320.0,217844.0,2026-09-25T19:59:34+00:00
+carga_verificada,RJ/2025-04-01_2025-06-30,ok,4368.0,224558.0,2026-09-25T19:59:35+00:00
+carga_verificada,RJ/2025-07-01_2025-09-30,ok,4416.0,228239.0,2026-09-25T19:59:34+00:00
+carga_verificada,RJ/2025-10-01_2025-12-31,ok,4416.0,231832.0,2026-09-25T19:59:35+00:00
+carga_verificada,RJ/2026-01-01_2026-03-31,ok,4320.0,225866.0,2026-09-25T19:59:36+00:00
+carga_verificada,RJ/2026-04-01_2026-06-30,ok,4368.0,227329.0,2026-09-25T19:59:36+00:00
+carga_verificada,RJ/2026-07-01_2026-09-24,ok,4128.0,213174.0,2026-09-25T19:59:36+00:00
+carga_verificada,RO/2016-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RO/2016-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RO/2016-07-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,RO/2016-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RO/2017-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RO/2017-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RO/2017-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RO/2017-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RO/2018-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RO/2018-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RO/2018-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RO/2018-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RO/2019-01-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,RO/2019-04-01_2019-06-30,ok,4368.0,228877.0,2026-09-25T20:01:26+00:00
+carga_verificada,RO/2019-07-01_2019-09-30,ok,4416.0,236080.0,2026-09-25T20:01:27+00:00
+carga_verificada,RO/2019-10-01_2019-12-31,ok,4416.0,240446.0,2026-09-25T20:01:27+00:00
+carga_verificada,RO/2020-01-01_2020-03-31,ok,4368.0,242955.0,2026-09-25T20:01:30+00:00
+carga_verificada,RO/2020-04-01_2020-06-30,ok,4368.0,241011.0,2026-09-25T20:01:28+00:00
+carga_verificada,RO/2020-07-01_2020-09-30,ok,4416.0,250542.0,2026-09-25T20:01:29+00:00
+carga_verificada,RO/2020-10-01_2020-12-31,ok,4416.0,249678.0,2026-09-25T20:01:29+00:00
+carga_verificada,RO/2021-01-01_2021-03-31,ok,4320.0,236664.0,2026-09-25T20:01:30+00:00
+carga_verificada,RO/2021-04-01_2021-06-30,ok,4368.0,244660.0,2026-09-25T20:01:30+00:00
+carga_verificada,RO/2021-07-01_2021-09-30,ok,4416.0,243848.0,2026-09-25T20:01:30+00:00
+carga_verificada,RO/2021-10-01_2021-12-31,ok,4416.0,257396.0,2026-09-25T20:01:31+00:00
+carga_verificada,RO/2022-01-01_2022-03-31,ok,4320.0,235596.0,2026-09-25T20:01:31+00:00
+carga_verificada,RO/2022-04-01_2022-06-30,ok,4368.0,229133.0,2026-09-25T20:01:33+00:00
+carga_verificada,RO/2022-07-01_2022-09-30,ok,4416.0,237832.0,2026-09-25T20:01:32+00:00
+carga_verificada,RO/2022-10-01_2022-12-31,ok,4416.0,233430.0,2026-09-25T20:01:31+00:00
+carga_verificada,RO/2023-01-01_2023-03-31,ok,4320.0,227097.0,2026-09-25T20:01:32+00:00
+carga_verificada,RO/2023-04-01_2023-06-30,ok,4368.0,235295.0,2026-09-25T20:01:32+00:00
+carga_verificada,RO/2023-07-01_2023-09-30,ok,4416.0,232025.0,2026-09-25T20:01:33+00:00
+carga_verificada,RO/2023-10-01_2023-12-31,ok,4416.0,235268.0,2026-09-25T20:01:33+00:00
+carga_verificada,RO/2024-01-01_2024-03-31,ok,4368.0,236114.0,2026-09-25T20:01:34+00:00
+carga_verificada,RO/2024-04-01_2024-06-30,ok,4368.0,229099.0,2026-09-25T20:01:34+00:00
+carga_verificada,RO/2024-07-01_2024-09-30,ok,4416.0,241743.0,2026-09-25T20:01:35+00:00
+carga_verificada,RO/2024-10-01_2024-12-31,ok,4416.0,257074.0,2026-09-25T20:01:34+00:00
+carga_verificada,RO/2025-01-01_2025-03-31,ok,4320.0,221753.0,2026-09-25T20:01:35+00:00
+carga_verificada,RO/2025-04-01_2025-06-30,ok,4368.0,234843.0,2026-09-25T20:01:35+00:00
+carga_verificada,RO/2025-07-01_2025-09-30,ok,4416.0,228474.0,2026-09-25T20:01:36+00:00
+carga_verificada,RO/2025-10-01_2025-12-31,ok,4416.0,243037.0,2026-09-25T20:01:36+00:00
+carga_verificada,RO/2026-01-01_2026-03-31,ok,4320.0,237150.0,2026-09-25T20:01:37+00:00
+carga_verificada,RO/2026-04-01_2026-06-30,ok,4368.0,227692.0,2026-09-25T20:01:36+00:00
+carga_verificada,RO/2026-07-01_2026-09-24,ok,4128.0,223761.0,2026-09-25T20:01:37+00:00
+carga_verificada,RR/2016-01-01_2016-03-31,ok,0.0,636.0,2026-09-25T20:05:01+00:00
+carga_verificada,RR/2016-04-01_2016-06-30,ok,0.0,636.0,2026-09-25T20:05:01+00:00
+carga_verificada,RR/2016-07-01_2016-09-30,ok,0.0,636.0,2026-09-25T20:05:01+00:00
+carga_verificada,RR/2016-10-01_2016-12-31,ok,0.0,636.0,2026-09-25T20:05:01+00:00
+carga_verificada,RR/2017-01-01_2017-03-31,ok,0.0,636.0,2026-09-25T20:05:01+00:00
+carga_verificada,RR/2017-04-01_2017-06-30,ok,0.0,636.0,2026-09-25T20:05:01+00:00
+carga_verificada,RR/2017-07-01_2017-09-30,ok,0.0,636.0,2026-09-25T20:05:02+00:00
+carga_verificada,RR/2017-10-01_2017-12-31,ok,0.0,636.0,2026-09-25T20:05:02+00:00
+carga_verificada,RR/2018-01-01_2018-03-31,ok,0.0,636.0,2026-09-25T20:05:02+00:00
+carga_verificada,RR/2018-04-01_2018-06-30,ok,0.0,636.0,2026-09-25T20:05:02+00:00
+carga_verificada,RR/2018-07-01_2018-09-30,ok,0.0,636.0,2026-09-25T20:05:02+00:00
+carga_verificada,RR/2018-10-01_2018-12-31,ok,0.0,636.0,2026-09-25T20:05:02+00:00
+carga_verificada,RR/2019-01-01_2019-03-31,ok,0.0,636.0,2026-09-25T20:05:02+00:00
+carga_verificada,RR/2019-04-01_2019-06-30,ok,0.0,636.0,2026-09-25T20:05:02+00:00
+carga_verificada,RR/2019-07-01_2019-09-30,ok,0.0,636.0,2026-09-25T20:05:02+00:00
+carga_verificada,RR/2019-10-01_2019-12-31,ok,0.0,636.0,2026-09-25T20:05:02+00:00
+carga_verificada,RR/2020-01-01_2020-03-31,ok,0.0,636.0,2026-09-25T20:05:02+00:00
+carga_verificada,RR/2020-04-01_2020-06-30,ok,0.0,636.0,2026-09-25T20:05:02+00:00
+carga_verificada,RR/2020-07-01_2020-09-30,ok,0.0,636.0,2026-09-25T20:05:02+00:00
+carga_verificada,RR/2020-10-01_2020-12-31,ok,1776.0,82302.0,2026-09-25T20:05:03+00:00
+carga_verificada,RR/2021-01-01_2021-03-31,ok,4320.0,187393.0,2026-09-25T20:05:04+00:00
+carga_verificada,RR/2021-04-01_2021-06-30,ok,4368.0,203182.0,2026-09-25T20:05:03+00:00
+carga_verificada,RR/2021-07-01_2021-09-30,ok,4416.0,205800.0,2026-09-25T20:05:03+00:00
+carga_verificada,RR/2021-10-01_2021-12-31,ok,4416.0,189630.0,2026-09-25T20:05:04+00:00
+carga_verificada,RR/2022-01-01_2022-03-31,ok,4320.0,178025.0,2026-09-25T20:05:04+00:00
+carga_verificada,RR/2022-04-01_2022-06-30,ok,4368.0,191323.0,2026-09-25T20:05:05+00:00
+carga_verificada,RR/2022-07-01_2022-09-30,ok,4416.0,195721.0,2026-09-25T20:05:05+00:00
+carga_verificada,RR/2022-10-01_2022-12-31,ok,4416.0,181681.0,2026-09-25T20:05:05+00:00
+carga_verificada,RR/2023-01-01_2023-03-31,ok,4320.0,203817.0,2026-09-25T20:05:05+00:00
+carga_verificada,RR/2023-04-01_2023-06-30,ok,4368.0,190235.0,2026-09-25T20:05:06+00:00
+carga_verificada,RR/2023-07-01_2023-09-30,ok,4416.0,224354.0,2026-09-25T20:05:06+00:00
+carga_verificada,RR/2023-10-01_2023-12-31,ok,4416.0,195328.0,2026-09-25T20:05:06+00:00
+carga_verificada,RR/2024-01-01_2024-03-31,ok,4368.0,202580.0,2026-09-25T20:05:06+00:00
+carga_verificada,RR/2024-04-01_2024-06-30,ok,4368.0,207900.0,2026-09-25T20:05:07+00:00
+carga_verificada,RR/2024-07-01_2024-09-30,ok,4416.0,206019.0,2026-09-25T20:05:07+00:00
+carga_verificada,RR/2024-10-01_2024-12-31,ok,4416.0,196588.0,2026-09-25T20:05:07+00:00
+carga_verificada,RR/2025-01-01_2025-03-31,ok,4320.0,192008.0,2026-09-25T20:05:08+00:00
+carga_verificada,RR/2025-04-01_2025-06-30,ok,4368.0,190045.0,2026-09-25T20:05:08+00:00
+carga_verificada,RR/2025-07-01_2025-09-30,ok,4416.0,197082.0,2026-09-25T20:05:08+00:00
+carga_verificada,RR/2025-10-01_2025-12-31,ok,4416.0,199716.0,2026-09-25T20:05:08+00:00
+carga_verificada,RR/2026-01-01_2026-03-31,ok,4320.0,208406.0,2026-09-25T20:05:09+00:00
+carga_verificada,RR/2026-04-01_2026-06-30,ok,4368.0,196796.0,2026-09-25T20:05:09+00:00
+carga_verificada,RR/2026-07-01_2026-09-24,ok,4128.0,181567.0,2026-09-25T20:05:09+00:00
+carga_verificada,RS/2016-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RS/2016-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RS/2016-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RS/2016-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RS/2017-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RS/2017-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RS/2017-07-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RS/2017-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RS/2018-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RS/2018-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RS/2018-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RS/2018-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,RS/2019-01-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,RS/2019-04-01_2019-06-30,ok,4368.0,241357.0,2026-09-25T20:02:06+00:00
+carga_verificada,RS/2019-07-01_2019-09-30,ok,4416.0,243154.0,2026-09-25T20:02:05+00:00
+carga_verificada,RS/2019-10-01_2019-12-31,ok,4416.0,239848.0,2026-09-25T20:02:06+00:00
+carga_verificada,RS/2020-01-01_2020-03-31,ok,4368.0,239550.0,2026-09-25T20:02:06+00:00
+carga_verificada,RS/2020-04-01_2020-06-30,ok,4368.0,234648.0,2026-09-25T20:02:06+00:00
+carga_verificada,RS/2020-07-01_2020-09-30,ok,4416.0,241529.0,2026-09-25T20:02:07+00:00
+carga_verificada,RS/2020-10-01_2020-12-31,ok,4416.0,264571.0,2026-09-25T20:02:07+00:00
+carga_verificada,RS/2021-01-01_2021-03-31,ok,4320.0,236257.0,2026-09-25T20:02:07+00:00
+carga_verificada,RS/2021-04-01_2021-06-30,ok,4368.0,239888.0,2026-09-25T20:02:07+00:00
+carga_verificada,RS/2021-07-01_2021-09-30,ok,4416.0,238537.0,2026-09-25T20:02:08+00:00
+carga_verificada,RS/2021-10-01_2021-12-31,ok,4416.0,237576.0,2026-09-25T20:02:09+00:00
+carga_verificada,RS/2022-01-01_2022-03-31,ok,4320.0,225654.0,2026-09-25T20:02:08+00:00
+carga_verificada,RS/2022-04-01_2022-06-30,ok,4368.0,220553.0,2026-09-25T20:02:09+00:00
+carga_verificada,RS/2022-07-01_2022-09-30,ok,4416.0,224101.0,2026-09-25T20:02:09+00:00
+carga_verificada,RS/2022-10-01_2022-12-31,ok,4416.0,230523.0,2026-09-25T20:02:10+00:00
+carga_verificada,RS/2023-01-01_2023-03-31,ok,4320.0,220515.0,2026-09-25T20:02:10+00:00
+carga_verificada,RS/2023-04-01_2023-06-30,ok,4368.0,234129.0,2026-09-25T20:02:10+00:00
+carga_verificada,RS/2023-07-01_2023-09-30,ok,4416.0,230161.0,2026-09-25T20:02:10+00:00
+carga_verificada,RS/2023-10-01_2023-12-31,ok,4416.0,242839.0,2026-09-25T20:02:11+00:00
+carga_verificada,RS/2024-01-01_2024-03-31,ok,4368.0,232401.0,2026-09-25T20:02:11+00:00
+carga_verificada,RS/2024-04-01_2024-06-30,ok,4368.0,245138.0,2026-09-25T20:02:11+00:00
+carga_verificada,RS/2024-07-01_2024-09-30,ok,4416.0,229739.0,2026-09-25T20:02:11+00:00
+carga_verificada,RS/2024-10-01_2024-12-31,ok,4416.0,232765.0,2026-09-25T20:02:12+00:00
+carga_verificada,RS/2025-01-01_2025-03-31,ok,4320.0,227942.0,2026-09-25T20:02:12+00:00
+carga_verificada,RS/2025-04-01_2025-06-30,ok,4368.0,226819.0,2026-09-25T20:02:12+00:00
+carga_verificada,RS/2025-07-01_2025-09-30,ok,4416.0,224855.0,2026-09-25T20:02:12+00:00
+carga_verificada,RS/2025-10-01_2025-12-31,ok,4416.0,234446.0,2026-09-25T20:02:13+00:00
+carga_verificada,RS/2026-01-01_2026-03-31,ok,4320.0,231884.0,2026-09-25T20:02:14+00:00
+carga_verificada,RS/2026-04-01_2026-06-30,ok,4368.0,224064.0,2026-09-25T20:02:13+00:00
+carga_verificada,RS/2026-07-01_2026-09-24,ok,4128.0,222086.0,2026-09-25T20:02:14+00:00
+carga_verificada,S/2016-01-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,S/2016-04-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,S/2016-07-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,S/2016-10-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,S/2017-01-01,erro: Expecting value: line 9 column 33 (char 309),,,
+carga_verificada,S/2017-04-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,S/2017-07-01,erro: Expecting value: line 9 column 33 (char 311),,,
+carga_verificada,S/2017-10-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,S/2018-01-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,S/2018-04-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,S/2018-07-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,S/2018-10-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,S/2019-01-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,S/2019-04-01_2019-06-30,ok,4368.0,198971.0,2026-09-25T19:58:47+00:00
+carga_verificada,S/2019-07-01_2019-09-30,ok,4416.0,201242.0,2026-09-25T19:58:48+00:00
+carga_verificada,S/2019-10-01_2019-12-31,ok,4416.0,204263.0,2026-09-25T19:58:48+00:00
+carga_verificada,S/2020-01-01_2020-03-31,ok,4368.0,190004.0,2026-09-25T19:58:48+00:00
+carga_verificada,S/2020-04-01_2020-06-30,ok,4368.0,188135.0,2026-09-25T19:58:48+00:00
+carga_verificada,S/2020-07-01_2020-09-30,ok,4416.0,190603.0,2026-09-25T19:58:49+00:00
+carga_verificada,S/2020-10-01_2020-12-31,ok,4416.0,220828.0,2026-09-25T19:58:49+00:00
+carga_verificada,S/2021-01-01_2021-03-31,ok,4320.0,227539.0,2026-09-25T19:58:49+00:00
+carga_verificada,S/2021-04-01_2021-06-30,ok,4368.0,219913.0,2026-09-25T19:58:49+00:00
+carga_verificada,S/2021-07-01_2021-09-30,ok,4416.0,230477.0,2026-09-25T19:58:49+00:00
+carga_verificada,S/2021-10-01_2021-12-31,ok,4416.0,225412.0,2026-09-25T19:58:50+00:00
+carga_verificada,S/2022-01-01_2022-03-31,ok,4320.0,217480.0,2026-09-25T19:58:50+00:00
+carga_verificada,S/2022-04-01_2022-06-30,ok,4368.0,217342.0,2026-09-25T19:58:50+00:00
+carga_verificada,S/2022-07-01_2022-09-30,ok,4416.0,215703.0,2026-09-25T19:58:51+00:00
+carga_verificada,S/2022-10-01_2022-12-31,ok,4416.0,226313.0,2026-09-25T19:58:50+00:00
+carga_verificada,S/2023-01-01_2023-03-31,ok,4320.0,215320.0,2026-09-25T19:58:51+00:00
+carga_verificada,S/2023-04-01_2023-06-30,ok,4368.0,225260.0,2026-09-25T19:58:51+00:00
+carga_verificada,S/2023-07-01_2023-09-30,ok,4416.0,226336.0,2026-09-25T19:58:51+00:00
+carga_verificada,S/2023-10-01_2023-12-31,ok,4416.0,230426.0,2026-09-25T19:58:52+00:00
+carga_verificada,S/2024-01-01_2024-03-31,ok,4368.0,232266.0,2026-09-25T19:58:52+00:00
+carga_verificada,S/2024-04-01_2024-06-30,ok,4368.0,226611.0,2026-09-25T19:58:52+00:00
+carga_verificada,S/2024-07-01_2024-09-30,ok,4416.0,223077.0,2026-09-25T19:58:53+00:00
+carga_verificada,S/2024-10-01_2024-12-31,ok,4416.0,232061.0,2026-09-25T19:58:53+00:00
+carga_verificada,S/2025-01-01_2025-03-31,ok,4320.0,217532.0,2026-09-25T19:58:53+00:00
+carga_verificada,S/2025-04-01_2025-06-30,ok,4368.0,224702.0,2026-09-25T19:58:53+00:00
+carga_verificada,S/2025-07-01_2025-09-30,ok,4416.0,216719.0,2026-09-25T19:58:54+00:00
+carga_verificada,S/2025-10-01_2025-12-31,ok,4416.0,227263.0,2026-09-25T19:58:54+00:00
+carga_verificada,S/2026-01-01_2026-03-31,ok,4320.0,223900.0,2026-09-25T19:58:54+00:00
+carga_verificada,S/2026-04-01_2026-06-30,ok,4368.0,220431.0,2026-09-25T19:58:54+00:00
+carga_verificada,S/2026-07-01_2026-09-24,ok,4128.0,209406.0,2026-09-25T19:58:55+00:00
+carga_verificada,SC/2016-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SC/2016-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,SC/2016-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SC/2016-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SC/2017-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SC/2017-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SC/2017-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SC/2017-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,SC/2018-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SC/2018-04-01,erro: Expecting value: line 9 column 33 (char 312),,,
+carga_verificada,SC/2018-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SC/2018-10-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,SC/2019-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SC/2019-04-01_2019-06-30,ok,4368.0,241785.0,2026-09-25T20:01:54+00:00
+carga_verificada,SC/2019-07-01_2019-09-30,ok,4416.0,243876.0,2026-09-25T20:01:54+00:00
+carga_verificada,SC/2019-10-01_2019-12-31,ok,4416.0,245007.0,2026-09-25T20:01:54+00:00
+carga_verificada,SC/2020-01-01_2020-03-31,ok,4368.0,240154.0,2026-09-25T20:01:56+00:00
+carga_verificada,SC/2020-04-01_2020-06-30,ok,4368.0,239344.0,2026-09-25T20:01:55+00:00
+carga_verificada,SC/2020-07-01_2020-09-30,ok,4416.0,244055.0,2026-09-25T20:01:55+00:00
+carga_verificada,SC/2020-10-01_2020-12-31,ok,4416.0,250977.0,2026-09-25T20:01:56+00:00
+carga_verificada,SC/2021-01-01_2021-03-31,ok,4320.0,246115.0,2026-09-25T20:01:56+00:00
+carga_verificada,SC/2021-04-01_2021-06-30,ok,4368.0,244851.0,2026-09-25T20:01:56+00:00
+carga_verificada,SC/2021-07-01_2021-09-30,ok,4416.0,261639.0,2026-09-25T20:01:57+00:00
+carga_verificada,SC/2021-10-01_2021-12-31,ok,4416.0,237874.0,2026-09-25T20:01:58+00:00
+carga_verificada,SC/2022-01-01_2022-03-31,ok,4320.0,226144.0,2026-09-25T20:01:57+00:00
+carga_verificada,SC/2022-04-01_2022-06-30,ok,4368.0,218843.0,2026-09-25T20:01:57+00:00
+carga_verificada,SC/2022-07-01_2022-09-30,ok,4416.0,228306.0,2026-09-25T20:01:58+00:00
+carga_verificada,SC/2022-10-01_2022-12-31,ok,4416.0,233889.0,2026-09-25T20:01:59+00:00
+carga_verificada,SC/2023-01-01_2023-03-31,ok,4320.0,225961.0,2026-09-25T20:01:58+00:00
+carga_verificada,SC/2023-04-01_2023-06-30,ok,4368.0,229211.0,2026-09-25T20:01:59+00:00
+carga_verificada,SC/2023-07-01_2023-09-30,ok,4416.0,238078.0,2026-09-25T20:01:59+00:00
+carga_verificada,SC/2023-10-01_2023-12-31,ok,4416.0,244114.0,2026-09-25T20:01:59+00:00
+carga_verificada,SC/2024-01-01_2024-03-31,ok,4368.0,231155.0,2026-09-25T20:02:00+00:00
+carga_verificada,SC/2024-04-01_2024-06-30,ok,4368.0,227333.0,2026-09-25T20:02:00+00:00
+carga_verificada,SC/2024-07-01_2024-09-30,ok,4416.0,242982.0,2026-09-25T20:02:00+00:00
+carga_verificada,SC/2024-10-01_2024-12-31,ok,4416.0,237811.0,2026-09-25T20:02:00+00:00
+carga_verificada,SC/2025-01-01_2025-03-31,ok,4320.0,225364.0,2026-09-25T20:02:01+00:00
+carga_verificada,SC/2025-04-01_2025-06-30,ok,4368.0,227776.0,2026-09-25T20:02:01+00:00
+carga_verificada,SC/2025-07-01_2025-09-30,ok,4416.0,223222.0,2026-09-25T20:02:02+00:00
+carga_verificada,SC/2025-10-01_2025-12-31,ok,4416.0,232524.0,2026-09-25T20:02:01+00:00
+carga_verificada,SC/2026-01-01_2026-03-31,ok,4320.0,241860.0,2026-09-25T20:02:02+00:00
+carga_verificada,SC/2026-04-01_2026-06-30,ok,4368.0,244038.0,2026-09-25T20:02:02+00:00
+carga_verificada,SC/2026-07-01_2026-09-24,ok,4128.0,216035.0,2026-09-25T20:02:02+00:00
+carga_verificada,SECO/2016-01-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,SECO/2016-04-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,SECO/2016-07-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,SECO/2016-10-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,SECO/2017-01-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,SECO/2017-04-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,SECO/2017-07-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,SECO/2017-10-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,SECO/2018-01-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,SECO/2018-04-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,SECO/2018-07-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,SECO/2018-10-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,SECO/2019-01-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,SECO/2019-04-01_2019-06-30,ok,4368.0,191670.0,2026-09-25T19:58:35+00:00
+carga_verificada,SECO/2019-07-01_2019-09-30,ok,4416.0,202480.0,2026-09-25T19:58:35+00:00
+carga_verificada,SECO/2019-10-01_2019-12-31,ok,4416.0,203786.0,2026-09-25T19:58:35+00:00
+carga_verificada,SECO/2020-01-01_2020-03-31,ok,4368.0,184301.0,2026-09-25T19:58:36+00:00
+carga_verificada,SECO/2020-04-01_2020-06-30,ok,4368.0,185156.0,2026-09-25T19:58:36+00:00
+carga_verificada,SECO/2020-07-01_2020-09-30,ok,4416.0,189777.0,2026-09-25T19:58:36+00:00
+carga_verificada,SECO/2020-10-01_2020-12-31,ok,4416.0,213034.0,2026-09-25T19:58:37+00:00
+carga_verificada,SECO/2021-01-01_2021-03-31,ok,4320.0,215942.0,2026-09-25T19:58:36+00:00
+carga_verificada,SECO/2021-04-01_2021-06-30,ok,4368.0,216320.0,2026-09-25T19:58:37+00:00
+carga_verificada,SECO/2021-07-01_2021-09-30,ok,4416.0,221486.0,2026-09-25T19:58:37+00:00
+carga_verificada,SECO/2021-10-01_2021-12-31,ok,4416.0,217200.0,2026-09-25T19:58:37+00:00
+carga_verificada,SECO/2022-01-01_2022-03-31,ok,4320.0,210237.0,2026-09-25T19:58:38+00:00
+carga_verificada,SECO/2022-04-01_2022-06-30,ok,4368.0,206608.0,2026-09-25T19:58:38+00:00
+carga_verificada,SECO/2022-07-01_2022-09-30,ok,4416.0,209742.0,2026-09-25T19:58:38+00:00
+carga_verificada,SECO/2022-10-01_2022-12-31,ok,4416.0,213783.0,2026-09-25T19:58:39+00:00
+carga_verificada,SECO/2023-01-01_2023-03-31,ok,4320.0,207900.0,2026-09-25T19:58:39+00:00
+carga_verificada,SECO/2023-04-01_2023-06-30,ok,4368.0,218611.0,2026-09-25T19:58:39+00:00
+carga_verificada,SECO/2023-07-01_2023-09-30,ok,4416.0,219681.0,2026-09-25T19:58:40+00:00
+carga_verificada,SECO/2023-10-01_2023-12-31,ok,4416.0,226924.0,2026-09-25T19:58:40+00:00
+carga_verificada,SECO/2024-01-01_2024-03-31,ok,4368.0,219587.0,2026-09-25T19:58:41+00:00
+carga_verificada,SECO/2024-04-01_2024-06-30,ok,4368.0,216271.0,2026-09-25T19:58:40+00:00
+carga_verificada,SECO/2024-07-01_2024-09-30,ok,4416.0,215910.0,2026-09-25T19:58:41+00:00
+carga_verificada,SECO/2024-10-01_2024-12-31,ok,4416.0,219219.0,2026-09-25T19:58:41+00:00
+carga_verificada,SECO/2025-01-01_2025-03-31,ok,4320.0,210411.0,2026-09-25T19:58:42+00:00
+carga_verificada,SECO/2025-04-01_2025-06-30,ok,4368.0,216371.0,2026-09-25T19:58:42+00:00
+carga_verificada,SECO/2025-07-01_2025-09-30,ok,4416.0,210180.0,2026-09-25T19:58:43+00:00
+carga_verificada,SECO/2025-10-01_2025-12-31,ok,4416.0,220863.0,2026-09-25T19:58:42+00:00
+carga_verificada,SECO/2026-01-01_2026-03-31,ok,4320.0,214217.0,2026-09-25T19:58:43+00:00
+carga_verificada,SECO/2026-04-01_2026-06-30,ok,4368.0,215055.0,2026-09-25T19:58:43+00:00
+carga_verificada,SECO/2026-07-01_2026-09-24,ok,4128.0,203202.0,2026-09-25T19:58:43+00:00
+carga_verificada,SP/2016-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SP/2016-04-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SP/2016-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SP/2016-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SP/2017-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SP/2017-04-01,erro: Expecting value: line 9 column 33 (char 318),,,
+carga_verificada,SP/2017-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SP/2017-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SP/2018-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SP/2018-04-01,erro: Expecting value: line 9 column 33 (char 314),,,
+carga_verificada,SP/2018-07-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SP/2018-10-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SP/2019-01-01,erro: Expecting value: line 9 column 33 (char 316),,,
+carga_verificada,SP/2019-04-01_2019-06-30,ok,4368.0,236041.0,2026-09-25T19:59:41+00:00
+carga_verificada,SP/2019-07-01_2019-09-30,ok,4416.0,239691.0,2026-09-25T19:59:42+00:00
+carga_verificada,SP/2019-10-01_2019-12-31,ok,4416.0,237036.0,2026-09-25T19:59:42+00:00
+carga_verificada,SP/2020-01-01_2020-03-31,ok,4368.0,230305.0,2026-09-25T19:59:42+00:00
+carga_verificada,SP/2020-04-01_2020-06-30,ok,4368.0,235333.0,2026-09-25T19:59:43+00:00
+carga_verificada,SP/2020-07-01_2020-09-30,ok,4416.0,240701.0,2026-09-25T19:59:43+00:00
+carga_verificada,SP/2020-10-01_2020-12-31,ok,4416.0,245112.0,2026-09-25T19:59:43+00:00
+carga_verificada,SP/2021-01-01_2021-03-31,ok,4320.0,228436.0,2026-09-25T19:59:44+00:00
+carga_verificada,SP/2021-04-01_2021-06-30,ok,4368.0,230141.0,2026-09-25T19:59:44+00:00
+carga_verificada,SP/2021-07-01_2021-09-30,ok,4416.0,231658.0,2026-09-25T19:59:45+00:00
+carga_verificada,SP/2021-10-01_2021-12-31,ok,4416.0,231819.0,2026-09-25T19:59:44+00:00
+carga_verificada,SP/2022-01-01_2022-03-31,ok,4320.0,225806.0,2026-09-25T19:59:45+00:00
+carga_verificada,SP/2022-04-01_2022-06-30,ok,4368.0,217906.0,2026-09-25T19:59:46+00:00
+carga_verificada,SP/2022-07-01_2022-09-30,ok,4416.0,216213.0,2026-09-25T19:59:45+00:00
+carga_verificada,SP/2022-10-01_2022-12-31,ok,4416.0,222414.0,2026-09-25T19:59:46+00:00
+carga_verificada,SP/2023-01-01_2023-03-31,ok,4320.0,214984.0,2026-09-25T19:59:46+00:00
+carga_verificada,SP/2023-04-01_2023-06-30,ok,4368.0,229741.0,2026-09-25T19:59:47+00:00
+carga_verificada,SP/2023-07-01_2023-09-30,ok,4416.0,222645.0,2026-09-25T19:59:47+00:00
+carga_verificada,SP/2023-10-01_2023-12-31,ok,4416.0,231669.0,2026-09-25T19:59:47+00:00
+carga_verificada,SP/2024-01-01_2024-03-31,ok,4368.0,218693.0,2026-09-25T19:59:47+00:00
+carga_verificada,SP/2024-04-01_2024-06-30,ok,4368.0,220915.0,2026-09-25T19:59:48+00:00
+carga_verificada,SP/2024-07-01_2024-09-30,ok,4416.0,222380.0,2026-09-25T19:59:48+00:00
+carga_verificada,SP/2024-10-01_2024-12-31,ok,4416.0,230180.0,2026-09-25T19:59:49+00:00
+carga_verificada,SP/2025-01-01_2025-03-31,ok,4320.0,216041.0,2026-09-25T19:59:49+00:00
+carga_verificada,SP/2025-04-01_2025-06-30,ok,4368.0,216932.0,2026-09-25T19:59:49+00:00
+carga_verificada,SP/2025-07-01_2025-09-30,ok,4416.0,218310.0,2026-09-25T19:59:50+00:00
+carga_verificada,SP/2025-10-01_2025-12-31,ok,4416.0,223752.0,2026-09-25T19:59:50+00:00
+carga_verificada,SP/2026-01-01_2026-03-31,ok,4320.0,225174.0,2026-09-25T19:59:50+00:00
+carga_verificada,SP/2026-04-01_2026-06-30,ok,4368.0,217383.0,2026-09-25T19:59:50+00:00
+carga_verificada,SP/2026-07-01_2026-09-24,ok,4128.0,206877.0,2026-09-25T19:59:50+00:00
+carga_verificada,TON/2016-01-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,TON/2016-04-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,TON/2016-07-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,TON/2016-10-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,TON/2017-01-01,erro: Expecting value: line 9 column 33 (char 313),,,
+carga_verificada,TON/2017-04-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,TON/2017-07-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,TON/2017-10-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,TON/2018-01-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,TON/2018-04-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,TON/2018-07-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,TON/2018-10-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,TON/2019-01-01,erro: Expecting value: line 9 column 33 (char 315),,,
+carga_verificada,TON/2019-04-01_2019-06-30,ok,4368.0,240537.0,2026-09-25T20:03:53+00:00
+carga_verificada,TON/2019-07-01_2019-09-30,ok,4416.0,239627.0,2026-09-25T20:03:52+00:00
+carga_verificada,TON/2019-10-01_2019-12-31,ok,4416.0,245886.0,2026-09-25T20:03:52+00:00
+carga_verificada,TON/2020-01-01_2020-03-31,ok,4368.0,232524.0,2026-09-25T20:03:54+00:00
+carga_verificada,TON/2020-04-01_2020-06-30,ok,4368.0,247117.0,2026-09-25T20:03:53+00:00
+carga_verificada,TON/2020-07-01_2020-09-30,ok,4416.0,236252.0,2026-09-25T20:03:53+00:00
+carga_verificada,TON/2020-10-01_2020-12-31,ok,4416.0,257257.0,2026-09-25T20:03:55+00:00
+carga_verificada,TON/2021-01-01_2021-03-31,ok,4320.0,232421.0,2026-09-25T20:03:54+00:00
+carga_verificada,TON/2021-04-01_2021-06-30,ok,4368.0,229727.0,2026-09-25T20:03:55+00:00
+carga_verificada,TON/2021-07-01_2021-09-30,ok,4416.0,233080.0,2026-09-25T20:03:55+00:00
+carga_verificada,TON/2021-10-01_2021-12-31,ok,4416.0,251100.0,2026-09-25T20:03:56+00:00
+carga_verificada,TON/2022-01-01_2022-03-31,ok,4320.0,226570.0,2026-09-25T20:03:56+00:00
+carga_verificada,TON/2022-04-01_2022-06-30,ok,4368.0,229310.0,2026-09-25T20:03:56+00:00
+carga_verificada,TON/2022-07-01_2022-09-30,ok,4416.0,232025.0,2026-09-25T20:03:56+00:00
+carga_verificada,TON/2022-10-01_2022-12-31,ok,4416.0,231804.0,2026-09-25T20:03:56+00:00
+carga_verificada,TON/2023-01-01_2023-03-31,ok,4320.0,217214.0,2026-09-25T20:03:58+00:00
+carga_verificada,TON/2023-04-01_2023-06-30,ok,4368.0,241006.0,2026-09-25T20:03:57+00:00
+carga_verificada,TON/2023-07-01_2023-09-30,ok,4416.0,238467.0,2026-09-25T20:03:57+00:00
+carga_verificada,TON/2023-10-01_2023-12-31,ok,4416.0,261603.0,2026-09-25T20:03:58+00:00
+carga_verificada,TON/2024-01-01_2024-03-31,ok,4368.0,235619.0,2026-09-25T20:03:58+00:00
+carga_verificada,TON/2024-04-01_2024-06-30,ok,4368.0,238160.0,2026-09-25T20:03:58+00:00
+carga_verificada,TON/2024-07-01_2024-09-30,ok,4416.0,236742.0,2026-09-25T20:04:00+00:00
+carga_verificada,TON/2024-10-01_2024-12-31,ok,4416.0,245770.0,2026-09-25T20:03:59+00:00
+carga_verificada,TON/2025-01-01_2025-03-31,ok,4320.0,230501.0,2026-09-25T20:03:59+00:00
+carga_verificada,TON/2025-04-01_2025-06-30,ok,4368.0,227853.0,2026-09-25T20:03:59+00:00
+carga_verificada,TON/2025-07-01_2025-09-30,ok,4416.0,228866.0,2026-09-25T20:04:00+00:00
+carga_verificada,TON/2025-10-01_2025-12-31,ok,4416.0,244658.0,2026-09-25T20:04:01+00:00
+carga_verificada,TON/2026-01-01_2026-03-31,ok,4320.0,233567.0,2026-09-25T20:04:01+00:00
+carga_verificada,TON/2026-04-01_2026-06-30,ok,4368.0,234007.0,2026-09-25T20:04:01+00:00
+carga_verificada,TON/2026-07-01_2026-09-24,ok,4128.0,234149.0,2026-09-25T20:04:01+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2021_10.parquet,ok,1007280.0,6624799.0,2026-09-25T19:54:24+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2021_11.parquet,ok,1004736.0,6516713.0,2026-09-25T19:54:21+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2021_12.parquet,ok,1030272.0,6615612.0,2026-09-25T19:54:26+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2022_01.parquet,ok,1065744.0,6805439.0,2026-09-25T19:54:22+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2022_02.parquet,ok,978576.0,6402622.0,2026-09-25T19:54:22+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2022_03.parquet,ok,1089648.0,6926470.0,2026-09-25T19:54:22+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2022_04.parquet,ok,1049760.0,6767340.0,2026-09-25T19:54:25+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2022_05.parquet,ok,1100640.0,7132727.0,2026-09-25T19:54:28+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2022_06.parquet,ok,1072608.0,6993895.0,2026-09-25T19:54:31+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2022_07.parquet,ok,1115904.0,7754938.0,2026-09-25T19:54:32+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2022_08.parquet,ok,1125648.0,7809967.0,2026-09-25T19:54:31+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2022_09.parquet,ok,1102176.0,7446677.0,2026-09-25T19:54:31+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2022_10.parquet,ok,1157088.0,8048210.0,2026-09-25T19:54:49+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2022_11.parquet,ok,1138272.0,7989037.0,2026-09-25T19:54:36+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2022_12.parquet,ok,1187568.0,7890520.0,2026-09-25T19:54:44+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2023_01.parquet,ok,1211328.0,8096267.0,2026-09-25T19:54:40+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2023_02.parquet,ok,1108416.0,8065124.0,2026-09-25T19:54:50+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2023_03.parquet,ok,1234416.0,8510754.0,2026-09-25T19:54:44+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2023_04.parquet,ok,1201248.0,8249979.0,2026-09-25T19:54:49+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2023_05.parquet,ok,1258944.0,8413353.0,2026-09-25T19:54:47+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2023_06.parquet,ok,1223760.0,8790583.0,2026-09-25T19:54:59+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2023_07.parquet,ok,1280160.0,8913626.0,2026-09-25T19:55:03+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2023_08.parquet,ok,1289856.0,9195911.0,2026-09-25T19:54:52+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2023_09.parquet,ok,1256112.0,8909712.0,2026-09-25T19:54:59+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2023_10.parquet,ok,1307136.0,9971512.0,2026-09-25T19:55:14+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2023_11.parquet,ok,1277136.0,8976938.0,2026-09-25T19:55:15+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2023_12.parquet,ok,1342080.0,9442636.0,2026-09-25T19:55:03+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2024_01.parquet,ok,1381728.0,9487499.0,2026-09-25T19:55:08+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2024_02.parquet,ok,1306752.0,9103988.0,2026-09-25T19:55:06+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2024_03.parquet,ok,1406880.0,9577410.0,2026-09-25T19:55:20+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2024_04.parquet,ok,1382640.0,9747652.0,2026-09-25T19:55:11+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2024_05.parquet,ok,1437360.0,9879134.0,2026-09-25T19:55:11+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2024_06.parquet,ok,1398528.0,10114222.0,2026-09-25T19:55:12+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2024_07.parquet,ok,1452624.0,10728345.0,2026-09-25T19:55:14+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2024_08.parquet,ok,1464528.0,10611991.0,2026-09-25T19:55:20+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2024_09.parquet,ok,1427712.0,10175026.0,2026-09-25T19:55:19+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2024_10.parquet,ok,1491217.0,10803266.0,2026-09-25T19:55:34+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2024_11.parquet,ok,1454400.0,10753871.0,2026-09-25T19:55:22+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2024_12.parquet,ok,1506341.0,11014550.0,2026-09-25T19:55:33+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2025_01.parquet,ok,1520736.0,12621204.0,2026-09-25T19:55:33+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2025_02.parquet,ok,1377936.0,14090589.0,2026-09-25T19:55:43+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2025_03.parquet,ok,1527264.0,11465749.0,2026-09-25T19:55:28+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2025_04.parquet,ok,1482864.0,11293493.0,2026-09-25T19:55:30+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2025_05.parquet,ok,1532640.0,11375165.0,2026-09-25T19:55:35+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2025_06.parquet,ok,1486992.0,12700670.0,2026-09-25T19:55:37+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2025_07.parquet,ok,1539744.0,15090771.0,2026-09-25T19:55:42+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2025_08.parquet,ok,1545168.0,13750498.0,2026-09-25T19:55:40+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2025_09.parquet,ok,1504320.0,12609078.0,2026-09-25T19:55:41+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2025_10.parquet,ok,1554960.0,13156022.0,2026-09-25T19:55:41+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2025_11.parquet,ok,1504800.0,12640152.0,2026-09-25T19:55:41+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2025_12.parquet,ok,1560528.0,12231843.0,2026-09-25T19:55:47+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2026_01.parquet,ok,1565376.0,11478122.0,2026-09-25T19:55:47+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2026_02.parquet,ok,1414800.0,11770904.0,2026-09-25T19:55:46+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2026_03.parquet,ok,1566864.0,13830685.0,2026-09-25T19:55:47+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2026_04.parquet,ok,1516320.0,13635942.0,2026-09-25T19:55:51+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2026_05.parquet,ok,1566864.0,14237419.0,2026-09-25T19:55:53+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2026_06.parquet,ok,1516320.0,13746141.0,2026-09-25T19:55:52+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2026_07.parquet,ok,1567632.0,13246231.0,2026-09-25T19:55:53+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2026_08.parquet,ok,1568544.0,12772610.0,2026-09-25T19:55:52+00:00
+coff_eolica_detail,RESTRICAO_COFF_EOLICA_DETAIL_2026_09.parquet,ok,1215360.0,11955605.0,2026-09-25T19:55:55+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2021_10.parquet,ok,188976.0,2238414.0,2026-09-25T19:53:32+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2021_11.parquet,ok,186720.0,2088750.0,2026-09-25T19:53:34+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2021_12.parquet,ok,196080.0,2143247.0,2026-09-25T19:53:32+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2022_01.parquet,ok,200880.0,2160624.0,2026-09-25T19:53:34+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2022_02.parquet,ok,183648.0,2057766.0,2026-09-25T19:53:34+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2022_03.parquet,ok,203856.0,2255479.0,2026-09-25T19:53:36+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2022_04.parquet,ok,197328.0,2155872.0,2026-09-25T19:53:34+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2022_05.parquet,ok,206592.0,2287728.0,2026-09-25T19:53:34+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2022_06.parquet,ok,198576.0,2158369.0,2026-09-25T19:53:35+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2022_07.parquet,ok,206832.0,2502303.0,2026-09-25T19:53:35+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2022_08.parquet,ok,209616.0,2576713.0,2026-09-25T19:53:35+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2022_09.parquet,ok,204432.0,2509194.0,2026-09-25T19:53:35+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2022_10.parquet,ok,214272.0,2679439.0,2026-09-25T19:53:36+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2022_11.parquet,ok,209904.0,2362463.0,2026-09-25T19:53:36+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2022_12.parquet,ok,216048.0,2499956.0,2026-09-25T19:53:36+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2023_01.parquet,ok,219696.0,2533150.0,2026-09-25T19:53:36+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2023_02.parquet,ok,196320.0,2406856.0,2026-09-25T19:53:37+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2023_03.parquet,ok,217728.0,2613881.0,2026-09-25T19:53:39+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2023_04.parquet,ok,211680.0,2367275.0,2026-09-25T19:53:37+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2023_05.parquet,ok,221088.0,2564945.0,2026-09-25T19:53:37+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2023_06.parquet,ok,214752.0,2905822.0,2026-09-25T19:53:38+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2023_07.parquet,ok,224400.0,3111835.0,2026-09-25T19:53:38+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2023_08.parquet,ok,226320.0,3118391.0,2026-09-25T19:53:38+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2023_09.parquet,ok,220320.0,3326215.0,2026-09-25T19:53:39+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2023_10.parquet,ok,227664.0,3318833.0,2026-09-25T19:53:39+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2023_11.parquet,ok,220320.0,3018375.0,2026-09-25T19:53:39+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2023_12.parquet,ok,230016.0,3098734.0,2026-09-25T19:53:39+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2024_01.parquet,ok,231984.0,2702440.0,2026-09-25T19:53:39+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2024_02.parquet,ok,219888.0,2726660.0,2026-09-25T19:53:40+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2024_03.parquet,ok,235680.0,2795723.0,2026-09-25T19:53:40+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2024_04.parquet,ok,228960.0,2830457.0,2026-09-25T19:53:41+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2024_05.parquet,ok,236592.0,3272193.0,2026-09-25T19:53:47+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2024_06.parquet,ok,228960.0,3462283.0,2026-09-25T19:53:42+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2024_07.parquet,ok,237264.0,3971926.0,2026-09-25T19:53:41+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2024_08.parquet,ok,239328.0,4360354.0,2026-09-25T19:53:42+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2024_09.parquet,ok,231120.0,4324853.0,2026-09-25T19:53:42+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2024_10.parquet,ok,234048.0,3911506.0,2026-09-25T19:53:47+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2024_11.parquet,ok,221136.0,3525276.0,2026-09-25T19:53:46+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2024_12.parquet,ok,229776.0,3719705.0,2026-09-25T19:53:47+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2025_01.parquet,ok,232128.0,3253368.0,2026-09-25T19:53:46+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2025_02.parquet,ok,209664.0,3722753.0,2026-09-25T19:53:48+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2025_03.parquet,ok,231840.0,3498526.0,2026-09-25T19:53:50+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2025_04.parquet,ok,223200.0,3225522.0,2026-09-25T19:53:49+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2025_05.parquet,ok,230640.0,4105618.0,2026-09-25T19:53:53+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2025_06.parquet,ok,223536.0,3973542.0,2026-09-25T19:53:51+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2025_07.parquet,ok,230592.0,4273457.0,2026-09-25T19:53:51+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2025_08.parquet,ok,229152.0,4509482.0,2026-09-25T19:53:53+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2025_09.parquet,ok,222096.0,4453066.0,2026-09-25T19:53:51+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2025_10.parquet,ok,229152.0,4649456.0,2026-09-25T19:53:58+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2025_11.parquet,ok,221760.0,4106610.0,2026-09-25T19:53:57+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2025_12.parquet,ok,229152.0,3971259.0,2026-09-25T19:53:54+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2026_01.parquet,ok,229152.0,4165544.0,2026-09-25T19:53:58+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2026_02.parquet,ok,205824.0,2934696.0,2026-09-25T19:53:57+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2026_03.parquet,ok,227664.0,3462171.0,2026-09-25T19:53:58+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2026_04.parquet,ok,220320.0,3547016.0,2026-09-25T19:53:58+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2026_05.parquet,ok,227664.0,4050889.0,2026-09-25T19:54:06+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2026_06.parquet,ok,220320.0,3696290.0,2026-09-25T19:54:03+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2026_07.parquet,ok,227664.0,4234747.0,2026-09-25T19:54:04+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2026_08.parquet,ok,227664.0,4419674.0,2026-09-25T19:54:10+00:00
+coff_eolica_tm,RESTRICAO_COFF_EOLICA_2026_09.parquet,ok,175488.0,3400978.0,2026-09-25T19:54:06+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2024_04.parquet,ok,479952.0,3224844.0,2026-09-25T19:56:00+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2024_05.parquet,ok,516728.0,3406434.0,2026-09-25T19:56:00+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2024_06.parquet,ok,516672.0,3404529.0,2026-09-25T19:55:59+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2024_07.parquet,ok,549264.0,3560793.0,2026-09-25T19:56:01+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2024_08.parquet,ok,558960.0,3664284.0,2026-09-25T19:56:01+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2024_09.parquet,ok,554016.0,3706048.0,2026-09-25T19:56:00+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2024_10.parquet,ok,587280.0,4126619.0,2026-09-25T19:56:01+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2024_11.parquet,ok,596880.0,4145005.0,2026-09-25T19:56:03+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2024_12.parquet,ok,633024.0,4529189.0,2026-09-25T19:56:03+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2025_01.parquet,ok,653520.0,4793503.0,2026-09-25T19:56:03+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2025_02.parquet,ok,594048.0,4371606.0,2026-09-25T19:56:03+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2025_03.parquet,ok,657696.0,4607680.0,2026-09-25T19:56:05+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2025_04.parquet,ok,637824.0,4357027.0,2026-09-25T19:56:04+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2025_05.parquet,ok,660672.0,4328380.0,2026-09-25T19:56:07+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2025_06.parquet,ok,639360.0,4229410.0,2026-09-25T19:56:07+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2025_07.parquet,ok,660672.0,4369707.0,2026-09-25T19:56:06+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2025_08.parquet,ok,660672.0,4413712.0,2026-09-25T19:56:09+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2025_09.parquet,ok,654528.0,4741251.0,2026-09-25T19:56:09+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2025_10.parquet,ok,688944.0,5148031.0,2026-09-25T19:56:08+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2025_11.parquet,ok,688128.0,5048141.0,2026-09-25T19:56:11+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2025_12.parquet,ok,720480.0,5405812.0,2026-09-25T19:56:11+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2026_01.parquet,ok,723648.0,5520928.0,2026-09-25T19:56:11+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2026_02.parquet,ok,679344.0,4826107.0,2026-09-25T19:56:11+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2026_03.parquet,ok,781920.0,5495803.0,2026-09-25T19:56:13+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2026_04.parquet,ok,770400.0,5353906.0,2026-09-25T19:56:13+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2026_05.parquet,ok,796080.0,5432214.0,2026-09-25T19:56:15+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2026_06.parquet,ok,776208.0,5346163.0,2026-09-25T19:56:14+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2026_07.parquet,ok,808128.0,5304542.0,2026-09-25T19:56:14+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2026_08.parquet,ok,817920.0,5405652.0,2026-09-25T19:56:15+00:00
+coff_solar_detail,RESTRICAO_COFF_FOTOVOLTAICA_DETAIL_2026_09.parquet,ok,647568.0,4474725.0,2026-09-25T19:56:15+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2024_04.parquet,ok,79776.0,677734.0,2026-09-25T19:54:11+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2024_05.parquet,ok,85920.0,713779.0,2026-09-25T19:54:11+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2024_06.parquet,ok,85728.0,727389.0,2026-09-25T19:54:13+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2024_07.parquet,ok,90528.0,787740.0,2026-09-25T19:54:13+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2024_08.parquet,ok,90768.0,824058.0,2026-09-25T19:54:13+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2024_09.parquet,ok,86640.0,808610.0,2026-09-25T19:54:13+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2024_10.parquet,ok,91344.0,846289.0,2026-09-25T19:54:12+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2024_11.parquet,ok,89280.0,823475.0,2026-09-25T19:54:12+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2024_12.parquet,ok,93168.0,906837.0,2026-09-25T19:54:13+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2025_01.parquet,ok,96000.0,1030629.0,2026-09-25T19:54:14+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2025_02.parquet,ok,87360.0,991484.0,2026-09-25T19:54:13+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2025_03.parquet,ok,96720.0,1016432.0,2026-09-25T19:54:13+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2025_04.parquet,ok,93600.0,957849.0,2026-09-25T19:54:13+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2025_05.parquet,ok,96720.0,1125095.0,2026-09-25T19:54:13+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2025_06.parquet,ok,93600.0,1055413.0,2026-09-25T19:54:14+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2025_07.parquet,ok,96720.0,1147572.0,2026-09-25T19:54:14+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2025_08.parquet,ok,96720.0,1185801.0,2026-09-25T19:54:14+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2025_09.parquet,ok,96864.0,1200817.0,2026-09-25T19:54:14+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2025_10.parquet,ok,102288.0,1277532.0,2026-09-25T19:54:14+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2025_11.parquet,ok,99360.0,1225806.0,2026-09-25T19:54:16+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2025_12.parquet,ok,105168.0,1232727.0,2026-09-25T19:54:14+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2026_01.parquet,ok,106464.0,1257823.0,2026-09-25T19:54:14+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2026_02.parquet,ok,98112.0,1028057.0,2026-09-25T19:54:15+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2026_03.parquet,ok,112992.0,1301640.0,2026-09-25T19:54:15+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2026_04.parquet,ok,112320.0,1311407.0,2026-09-25T19:54:16+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2026_05.parquet,ok,116064.0,1345985.0,2026-09-25T19:54:16+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2026_06.parquet,ok,113904.0,1231733.0,2026-09-25T19:54:16+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2026_07.parquet,ok,119136.0,1339148.0,2026-09-25T19:54:16+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2026_08.parquet,ok,121536.0,1417630.0,2026-09-25T19:54:16+00:00
+coff_solar_tm,RESTRICAO_COFF_FOTOVOLTAICA_2026_09.parquet,ok,95616.0,1153122.0,2026-09-25T19:54:16+00:00
+curva_carga,CURVA_CARGA_2000.parquet,ok,35132.0,369816.0,2026-09-25T19:58:27+00:00
+curva_carga,CURVA_CARGA_2001.parquet,ok,35036.0,394135.0,2026-09-25T19:58:27+00:00
+curva_carga,CURVA_CARGA_2002.parquet,ok,35036.0,443960.0,2026-09-25T19:58:27+00:00
+curva_carga,CURVA_CARGA_2003.parquet,ok,35036.0,445752.0,2026-09-25T19:58:27+00:00
+curva_carga,CURVA_CARGA_2004.parquet,ok,35132.0,443536.0,2026-09-25T19:58:27+00:00
+curva_carga,CURVA_CARGA_2005.parquet,ok,35036.0,452481.0,2026-09-25T19:58:27+00:00
+curva_carga,CURVA_CARGA_2006.parquet,ok,35036.0,436688.0,2026-09-25T19:58:27+00:00
+curva_carga,CURVA_CARGA_2007.parquet,ok,35036.0,440051.0,2026-09-25T19:58:27+00:00
+curva_carga,CURVA_CARGA_2008.parquet,ok,35132.0,442302.0,2026-09-25T19:58:27+00:00
+curva_carga,CURVA_CARGA_2009.parquet,ok,35036.0,443486.0,2026-09-25T19:58:27+00:00
+curva_carga,CURVA_CARGA_2010.parquet,ok,35036.0,455744.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2011.parquet,ok,35036.0,444170.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2012.parquet,ok,35132.0,483280.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2013.parquet,ok,35036.0,488442.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2014.parquet,ok,35016.0,551720.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2015.parquet,ok,35016.0,536941.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2016.parquet,ok,35136.0,507019.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2017.parquet,ok,35040.0,490357.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2018.parquet,ok,35040.0,491029.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2019.parquet,ok,35040.0,491284.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2020.parquet,ok,35136.0,492028.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2021.parquet,ok,35040.0,492643.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2022.parquet,ok,35040.0,498130.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2023.parquet,ok,35040.0,492541.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2024.parquet,ok,35136.0,489394.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2025.parquet,ok,35040.0,383346.0,2026-09-25T19:58:28+00:00
+curva_carga,CURVA_CARGA_2026.parquet,ok,25536.0,288803.0,2026-09-25T19:58:28+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2022_01.parquet,ok,121272.0,2587692.0,2026-09-25T19:57:51+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2022_02.parquet,ok,110232.0,2395493.0,2026-09-25T19:57:51+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2022_03.parquet,ok,123456.0,2665620.0,2026-09-25T19:57:52+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2022_04.parquet,ok,120864.0,2554067.0,2026-09-25T19:57:52+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2022_05.parquet,ok,125304.0,2701263.0,2026-09-25T19:57:51+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2022_06.parquet,ok,120696.0,2603111.0,2026-09-25T19:57:51+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2022_07.parquet,ok,130704.0,2898114.0,2026-09-25T19:57:52+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2022_08.parquet,ok,132336.0,2947870.0,2026-09-25T19:57:52+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2022_09.parquet,ok,129360.0,2918907.0,2026-09-25T19:57:52+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2022_10.parquet,ok,136440.0,3143876.0,2026-09-25T19:57:52+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2022_11.parquet,ok,133512.0,2948147.0,2026-09-25T19:57:53+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2022_12.parquet,ok,137496.0,3028818.0,2026-09-25T19:57:53+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2023_01.parquet,ok,138624.0,3102731.0,2026-09-25T19:57:53+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2023_02.parquet,ok,126960.0,2862852.0,2026-09-25T19:57:55+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2023_03.parquet,ok,142920.0,3018831.0,2026-09-25T19:57:53+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2023_04.parquet,ok,140400.0,2893029.0,2026-09-25T19:57:54+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2023_05.parquet,ok,145080.0,3139673.0,2026-09-25T19:57:54+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2023_06.parquet,ok,140400.0,3165623.0,2026-09-25T19:57:54+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2023_07.parquet,ok,146496.0,3340759.0,2026-09-25T19:57:55+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2023_08.parquet,ok,148800.0,3343341.0,2026-09-25T19:57:55+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2023_09.parquet,ok,144216.0,3192273.0,2026-09-25T19:57:55+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2023_10.parquet,ok,149544.0,3428020.0,2026-09-25T19:57:55+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2023_11.parquet,ok,144720.0,3290328.0,2026-09-25T19:57:55+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2023_12.parquet,ok,151272.0,3463040.0,2026-09-25T19:57:56+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2024_01.parquet,ok,153528.0,3346631.0,2026-09-25T19:57:57+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2024_02.parquet,ok,147912.0,3209825.0,2026-09-25T19:57:57+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2024_03.parquet,ok,160536.0,3344134.0,2026-09-25T19:57:57+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2024_04.parquet,ok,156816.0,3323288.0,2026-09-25T19:57:56+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2024_05.parquet,ok,163152.0,3607635.0,2026-09-25T19:57:57+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2024_06.parquet,ok,158832.0,3542078.0,2026-09-25T19:57:57+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2024_07.parquet,ok,165528.0,3674187.0,2026-09-25T19:57:58+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2024_08.parquet,ok,166752.0,3742345.0,2026-09-25T19:57:58+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2024_09.parquet,ok,160728.0,3610522.0,2026-09-25T19:57:58+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2024_10.parquet,ok,163176.0,3617476.0,2026-09-25T19:57:58+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2024_11.parquet,ok,157080.0,3486004.0,2026-09-25T19:57:59+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2024_12.parquet,ok,163680.0,3631707.0,2026-09-25T19:58:00+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2025_01.parquet,ok,165072.0,3452601.0,2026-09-25T19:57:59+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2025_02.parquet,ok,149184.0,3078139.0,2026-09-25T19:57:59+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2025_03.parquet,ok,165024.0,3564826.0,2026-09-25T19:57:59+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2025_04.parquet,ok,159840.0,3423768.0,2026-09-25T19:57:59+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2025_05.parquet,ok,164424.0,3589423.0,2026-09-25T19:58:00+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2025_06.parquet,ok,159120.0,3490239.0,2026-09-25T19:58:00+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2025_07.parquet,ok,164400.0,3604879.0,2026-09-25T19:58:00+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2025_08.parquet,ok,163680.0,3599513.0,2026-09-25T19:58:01+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2025_09.parquet,ok,159552.0,3552625.0,2026-09-25T19:58:01+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2025_10.parquet,ok,165720.0,3656261.0,2026-09-25T19:58:02+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2025_11.parquet,ok,160560.0,3496423.0,2026-09-25T19:58:01+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2025_12.parquet,ok,167160.0,3640264.0,2026-09-25T19:58:02+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2026_01.parquet,ok,167808.0,2644014.0,2026-09-25T19:58:01+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2026_02.parquet,ok,151968.0,2331071.0,2026-09-25T19:58:02+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2026_03.parquet,ok,170328.0,2571119.0,2026-09-25T19:58:02+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2026_04.parquet,ok,166320.0,2502087.0,2026-09-25T19:58:02+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2026_05.parquet,ok,171864.0,2633481.0,2026-09-25T19:58:02+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2026_06.parquet,ok,167112.0,2600842.0,2026-09-25T19:58:03+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2026_07.parquet,ok,173400.0,2707103.0,2026-09-25T19:58:03+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2026_08.parquet,ok,174600.0,2728651.0,2026-09-25T19:58:04+00:00
+fator_capacidade,FATOR_CAPACIDADE-2_2026_09.parquet,ok,129888.0,2080203.0,2026-09-25T19:58:03+00:00
+fator_capacidade,FATOR_CAPACIDADE_2009.parquet,ok,6958.0,118456.0,2026-09-25T19:58:03+00:00
+fator_capacidade,FATOR_CAPACIDADE_2010.parquet,ok,17518.0,277331.0,2026-09-25T19:58:03+00:00
+fator_capacidade,FATOR_CAPACIDADE_2011.parquet,ok,31820.0,359674.0,2026-09-25T19:58:03+00:00
+fator_capacidade,FATOR_CAPACIDADE_2012.parquet,ok,43915.0,867209.0,2026-09-25T19:58:03+00:00
+fator_capacidade,FATOR_CAPACIDADE_2013.parquet,ok,48619.0,937880.0,2026-09-25T19:58:04+00:00
+fator_capacidade,FATOR_CAPACIDADE_2014.parquet,ok,169835.0,3723467.0,2026-09-25T19:58:05+00:00
+fator_capacidade,FATOR_CAPACIDADE_2015.parquet,ok,361249.0,8179333.0,2026-09-25T19:58:06+00:00
+fator_capacidade,FATOR_CAPACIDADE_2016.parquet,ok,558293.0,11458411.0,2026-09-25T19:58:08+00:00
+fator_capacidade,FATOR_CAPACIDADE_2017.parquet,ok,757152.0,16204465.0,2026-09-25T19:58:09+00:00
+fator_capacidade,FATOR_CAPACIDADE_2018.parquet,ok,937135.0,19956050.0,2026-09-25T19:58:16+00:00
+fator_capacidade,FATOR_CAPACIDADE_2019.parquet,ok,1056456.0,22441438.0,2026-09-25T19:58:19+00:00
+fator_capacidade,FATOR_CAPACIDADE_2020.parquet,ok,1156848.0,23957260.0,2026-09-25T19:58:14+00:00
+fator_capacidade,FATOR_CAPACIDADE_2021.parquet,ok,1301472.0,27816756.0,2026-09-25T19:58:14+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2000.csv,ok,26349.0,1367327.0,2026-09-25T19:57:46+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2001.csv,ok,26277.0,1378311.0,2026-09-25T19:57:47+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2002.csv,ok,26277.0,1374979.0,2026-09-25T19:57:47+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2003.csv,ok,34316.0,1814147.0,2026-09-25T19:57:47+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2004.csv,ok,35132.0,1872432.0,2026-09-25T19:57:48+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2005.csv,ok,35036.0,1860880.0,2026-09-25T19:57:47+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2006.csv,ok,35036.0,1865006.0,2026-09-25T19:57:47+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2007.csv,ok,35036.0,1874032.0,2026-09-25T19:57:48+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2008.csv,ok,35132.0,1888603.0,2026-09-25T19:57:48+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2009.csv,ok,35036.0,1873760.0,2026-09-25T19:57:48+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2010.csv,ok,35036.0,1885269.0,2026-09-25T19:57:48+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2011.csv,ok,35036.0,1884209.0,2026-09-25T19:57:48+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2012.csv,ok,35132.0,1885451.0,2026-09-25T19:57:48+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2013.csv,ok,34940.0,1882304.0,2026-09-25T19:57:49+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2014.csv,ok,34940.0,1868012.0,2026-09-25T19:57:50+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2015.csv,ok,34940.0,1872453.0,2026-09-25T19:57:49+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2016.csv,ok,35132.0,1891991.0,2026-09-25T19:57:49+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2017.csv,ok,35036.0,1878643.0,2026-09-25T19:57:49+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2018.csv,ok,35036.0,1878445.0,2026-09-25T19:57:50+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2019.csv,ok,35040.0,1878201.0,2026-09-25T19:57:49+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2020.csv,ok,35136.0,1889456.0,2026-09-25T19:57:50+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2021.csv,ok,35040.0,1886367.0,2026-09-25T19:57:50+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2022.csv,ok,34944.0,1882399.0,2026-09-25T19:57:50+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2023.parquet,ok,35040.0,377008.0,2026-09-25T19:52:55+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2024.parquet,ok,35136.0,377408.0,2026-09-25T19:52:55+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2025.parquet,ok,35040.0,377333.0,2026-09-25T19:52:55+00:00
+intercambio_nacional,INTERCAMBIO_NACIONAL_2026.parquet,ok,25632.0,554829.0,2026-09-25T19:52:55+00:00
+modalidade_usina,MODALIDADE_USINA.parquet,ok,6001.0,200578.0,2026-09-25T19:58:29+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2022_01.parquet,ok,79440.0,790255.0,2026-09-25T19:57:36+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2022_02.parquet,ok,71232.0,607554.0,2026-09-25T19:57:36+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2022_03.parquet,ok,78864.0,620607.0,2026-09-25T19:57:36+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2022_04.parquet,ok,76272.0,517165.0,2026-09-25T19:57:36+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2022_05.parquet,ok,78024.0,539077.0,2026-09-25T19:57:36+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2022_06.parquet,ok,74520.0,583527.0,2026-09-25T19:57:36+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2022_07.parquet,ok,78456.0,608371.0,2026-09-25T19:57:36+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2022_08.parquet,ok,75288.0,696072.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2022_09.parquet,ok,69888.0,652160.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2022_10.parquet,ok,74472.0,662150.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2022_11.parquet,ok,73176.0,613151.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2022_12.parquet,ok,75888.0,616495.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2023_01.parquet,ok,73656.0,579849.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2023_02.parquet,ok,66528.0,518069.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2023_03.parquet,ok,73656.0,578553.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2023_04.parquet,ok,71280.0,653487.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2023_05.parquet,ok,74544.0,615777.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2023_06.parquet,ok,72720.0,729891.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2023_07.parquet,ok,75144.0,619448.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2023_08.parquet,ok,75144.0,629954.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2023_09.parquet,ok,72720.0,630706.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2023_10.parquet,ok,75120.0,632645.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2023_11.parquet,ok,72720.0,709937.0,2026-09-25T19:57:37+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2023_12.parquet,ok,75864.0,727788.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2024_01.parquet,ok,72024.0,575334.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2024_02.parquet,ok,64824.0,490016.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2024_03.parquet,ok,69192.0,464204.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2024_04.parquet,ok,66960.0,415814.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2024_05.parquet,ok,69192.0,442824.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2024_06.parquet,ok,66960.0,490355.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2024_07.parquet,ok,69192.0,625086.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2024_08.parquet,ok,69192.0,717939.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2024_09.parquet,ok,66960.0,892080.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2024_10.parquet,ok,70656.0,960844.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2024_11.parquet,ok,68400.0,769909.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2024_12.parquet,ok,93432.0,626685.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2025_01.parquet,ok,99480.0,637579.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2025_02.parquet,ok,90720.0,596696.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2025_03.parquet,ok,102456.0,631277.0,2026-09-25T19:57:38+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2025_04.parquet,ok,97392.0,621970.0,2026-09-25T19:57:39+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2025_05.parquet,ok,97440.0,708928.0,2026-09-25T19:57:39+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2025_06.parquet,ok,96312.0,824582.0,2026-09-25T19:57:39+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2025_07.parquet,ok,99336.0,963264.0,2026-09-25T19:57:39+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2025_08.parquet,ok,98952.0,956417.0,2026-09-25T19:57:39+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2025_09.parquet,ok,93864.0,746727.0,2026-09-25T19:57:39+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2025_10.parquet,ok,98952.0,846712.0,2026-09-25T19:57:39+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2025_11.parquet,ok,95760.0,869945.0,2026-09-25T19:57:39+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2025_12.parquet,ok,98952.0,773098.0,2026-09-25T19:57:39+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2026_01.parquet,ok,98520.0,747483.0,2026-09-25T19:57:39+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2026_02.parquet,ok,87696.0,702618.0,2026-09-25T19:57:39+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2026_03.parquet,ok,96720.0,855537.0,2026-09-25T19:57:39+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2026_04.parquet,ok,98424.0,850765.0,2026-09-25T19:57:39+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2026_05.parquet,ok,102672.0,811538.0,2026-09-25T19:57:39+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2026_06.parquet,ok,99360.0,847124.0,2026-09-25T19:57:40+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2026_07.parquet,ok,102672.0,843551.0,2026-09-25T19:57:40+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2026_08.parquet,ok,104976.0,927403.0,2026-09-25T19:57:40+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO-2_2026_09.parquet,ok,82368.0,742294.0,2026-09-25T19:57:40+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO_2013.parquet,ok,801455.0,6754204.0,2026-09-25T19:57:44+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO_2014.parquet,ok,941224.0,13303542.0,2026-09-25T19:57:43+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO_2015.parquet,ok,991770.0,13706487.0,2026-09-25T19:57:42+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO_2016.parquet,ok,1025755.0,9376141.0,2026-09-25T19:57:41+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO_2017.parquet,ok,978141.0,9807732.0,2026-09-25T19:57:41+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO_2018.parquet,ok,973126.0,7896813.0,2026-09-25T19:57:45+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO_2019.parquet,ok,935904.0,7850173.0,2026-09-25T19:57:43+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO_2020.parquet,ok,902496.0,7931130.0,2026-09-25T19:57:43+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO_2021.parquet,ok,928656.0,11530710.0,2026-09-25T19:57:46+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO_2022.parquet,ok,905520.0,5490663.0,2026-09-25T19:57:45+00:00
+termica_despacho,GERACAO_TERMICA_DESPACHO_2023.parquet,ok,879096.0,5352767.0,2026-09-25T19:57:45+00:00
+usina_conjunto,RELACIONAMENTO_USINA_CONJUNTO.parquet,ok,2143.0,69712.0,2026-09-25T19:52:57+00:00

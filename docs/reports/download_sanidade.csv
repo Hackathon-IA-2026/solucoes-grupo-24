@@ -1,0 +1,15 @@
+conjunto,arquivos,linhas,arquivos_com_erro,linhas_esperadas,razao,divergencia
+balanco_subsistema,27,1171437.0,0,,,False
+capacidade_geracao,1,5686.0,0,,,False
+carga_programada,92,389520.0,0,,,False
+carga_verificada,887,3776736.0,360,,,False
+coff_eolica_detail,60,79963254.0,0,63000000.0,1.269258,False
+coff_eolica_tm,60,13103472.0,0,8000000.0,1.637934,False
+coff_solar_detail,30,19710536.0,0,19000000.0,1.0373966315789473,False
+coff_solar_tm,30,2950416.0,0,2900000.0,1.017384827586207,False
+curva_carga,27,937144.0,0,,,False
+fator_capacidade,70,15023118.0,0,,,False
+intercambio_nacional,27,909863.0,0,,,False
+modalidade_usina,1,6001.0,0,,,False
+termica_despacho,68,14937767.0,0,,,False
+usina_conjunto,1,2143.0,0,,,False

@@ -7,6 +7,13 @@ data/raw/
 *.duckdb
 *.duckdb.wal
 data/processed/**/*.csv
+# exceção: tabela pequena e de referência, versionada para o time todo usar
+!data/processed/mapeamento_subsistema_area.csv
+
+# banco SQLite do Backend (recriado pelo carregador)
+Backend/**/*.db
+Backend/**/*.sqlite
+Backend/**/*.sqlite3
 
 # checkpoints e artefatos de modelo
 *.ckpt

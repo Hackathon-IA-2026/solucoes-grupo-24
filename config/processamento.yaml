@@ -1,0 +1,30 @@
+# Parâmetros das tabelas processadas (src/processing/*). Nada disso fica hardcoded no código.
+
+tempo:
+  # Fuso único do projeto: UTC-3 FIXO (sem horário de verão). O horário civil com DST
+  # (até fev/2019) tem hora duplicada e hora faltante, o que quebraria a unicidade de
+  # timestamps. De 2019 em diante é idêntico ao horário de Brasília.
+  fuso: Etc/GMT+3            # (sinal invertido por convenção POSIX: Etc/GMT+3 == UTC-3)
+  resolucao: 30min
+  # Convenção: todo timestamp marca o INÍCIO do intervalo de 30 min (19:00 = 19:00–19:30).
+
+calendario:
+  inicio: "2016-01-01"       # início da API de carga verificada
+  fim: "2027-12-31"          # inclui futuro para montar features de previsão D+1
+  # Intervalos semiabertos [inicio, fim) em horas locais.
+  patamares:
+    ponta_noturna: [19, 22]
+    minima_diurna: [9, 16]
+  faixas_curtailment:        # rótulo -> lista de intervalos
+    "00-07": [[0, 7]]
+    "07-09|16-18": [[7, 9], [16, 18]]
+    "09-16": [[9, 16]]
+    "18-24": [[18, 24]]
+
+carga:
+  subsistemas_api: [SECO, S, NE, N]       # códigos da API de carga
+  # Tolerância (MW) para conferir carga_global - mmgd contra val_cargaglobalsmmgd do ONS
+  tolerancia_checagem_mw: 1.0
+
+curtailment:
+  inicio_rotulos: "2021-10-01"            # início da base tm eólica

@@ -1,0 +1,52 @@
+# Áreas de carga do ONS e seu subsistema.
+# FONTE OFICIAL: especificação OpenAPI "Carga Global OpenAPI 3.0" v1.0.0 do ONS, parâmetro
+# `cod_areacarga` do endpoint /cargaverificada (https://apicarga.ons.org.br/prd; documentação
+# em http://ons-dl-prod-opendata-swagger.s3-website-us-east-1.amazonaws.com), consultada em
+# 2026-09-25. A especificação lista "Subsistemas, Áreas Geoelétricas e Perdas" agrupadas por
+# subsistema. O agrupamento é CONFERIDO numericamente por src/processing/mapeamento.py
+# (soma das áreas + perdas = carga do subsistema) e o resultado vai em
+# docs/mapeamento_subsistema_area.md.
+#
+# Códigos de subsistema: a API usa SECO/S/NE/N; as bases do portal (constrained-off,
+# balanço, térmicas) usam SE/S/NE/N. As duas colunas existem para que nenhum join precise
+# "adivinhar" a tradução.
+
+subsistemas:
+  SECO: {id_subsistema: SE, nome: Sudeste/Centro-Oeste}
+  S:    {id_subsistema: S,  nome: Sul}
+  NE:   {id_subsistema: NE, nome: Nordeste}
+  N:    {id_subsistema: N,  nome: Norte}
+
+areas:
+  # cod: [subsistema_api, nome oficial, UFs cobertas]
+  RJ:   [SECO, Rio de Janeiro, [RJ]]
+  SP:   [SECO, São Paulo, [SP]]
+  MG:   [SECO, Minas Gerais, [MG]]
+  ES:   [SECO, Espírito Santo, [ES]]
+  MT:   [SECO, Mato Grosso, [MT]]
+  MS:   [SECO, Mato Grosso do Sul, [MS]]
+  DF:   [SECO, Distrito Federal, [DF]]
+  GO:   [SECO, Goiás, [GO]]
+  AC:   [SECO, Acre, [AC]]
+  RO:   [SECO, Rondônia, [RO]]
+  PR:   [S, Paraná, [PR]]
+  SC:   [S, Santa Catarina, [SC]]
+  RS:   [S, Rio Grande do Sul, [RS]]
+  BASE: [NE, Bahia/Sergipe, [BA, SE]]
+  BAOE: [NE, Bahia Oeste, [BA]]
+  ALPE: [NE, Alagoas/Pernambuco, [AL, PE]]
+  PBRN: [NE, Paraíba/Rio Grande do Norte, [PB, RN]]
+  CE:   [NE, Ceará, [CE]]
+  PI:   [NE, Piauí, [PI]]
+  TON:  [N, Tocantins, [TO]]
+  PA:   [N, Pará, [PA]]
+  MA:   [N, Maranhão, [MA]]
+  AP:   [N, Amapá, [AP]]
+  AM:   [N, Amazonas, [AM]]
+  RR:   [N, Roraima, [RR]]
+
+perdas:
+  PESE: SECO
+  PES:  S
+  PENE: NE
+  PEN:  N

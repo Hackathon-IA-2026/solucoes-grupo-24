@@ -1,17 +1,27 @@
-"""Caminhos do projeto, derivados da raiz do repositório (nada hardcoded)."""
+"""Único ponto de definição de caminhos do projeto.
 
+Decisão: tudo é relativo à raiz do repositório (dois níveis acima deste arquivo),
+para que scripts, notebooks e testes funcionem de qualquer diretório de trabalho.
+Nenhum outro módulo deve montar caminhos "na mão" a partir de strings soltas.
+"""
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+# Raiz do repositório: src/utils/paths.py -> parents[2]
+RAIZ = Path(__file__).resolve().parents[2]
 
-DATA = ROOT / "data"
+CONFIG = RAIZ / "config"
+DATA = RAIZ / "data"
 DATA_RAW = DATA / "raw"
 DATA_PROCESSED = DATA / "processed"
-CONFIG = ROOT / "config"
-DOCS = ROOT / "docs"
-NOTEBOOKS = ROOT / "notebooks"
-REPORTS = ROOT / "reports"
-OUTPUT = ROOT / "output"
+DOCS = RAIZ / "docs"
+DOCS_REPORTS = DOCS / "reports"
+NOTEBOOKS = RAIZ / "notebooks"
+OUTPUT = RAIZ / "output"
+BACKEND = RAIZ / "Backend"
+TESTS = RAIZ / "tests"
+
+# Bases brutas do ONS (Parquet particionado, fora do git)
+RAW_ONS = DATA_RAW / "ons"
 
 
 def ensure(path: Path) -> Path:
@@ -21,6 +31,8 @@ def ensure(path: Path) -> Path:
 
 
 if __name__ == "__main__":
-    assert (ROOT / "pyproject.toml").is_file(), f"raiz errada: {ROOT}"
-    assert DATA_RAW == ROOT / "data" / "raw"
-    print(ROOT)
+    # Auto-checagem rápida: a raiz precisa conter o pyproject.toml
+    assert (RAIZ / "pyproject.toml").exists(), f"raiz inesperada: {RAIZ}"
+    for nome, valor in sorted(globals().items()):
+        if isinstance(valor, Path):
+            print(f"{nome:15s} {valor}")

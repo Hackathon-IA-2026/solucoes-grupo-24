@@ -20,10 +20,13 @@ dependencies = [
     "pytorch-forecasting",
     "pyyaml",
     "jsonschema",
+    "requests",
+    "holidays",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest"]
+dev = ["pytest", "jupyter", "nbconvert", "ipykernel"]
+era5 = ["cdsapi", "xarray", "netcdf4"]
 
 [tool.setuptools.packages.find]
 include = ["src*"]
