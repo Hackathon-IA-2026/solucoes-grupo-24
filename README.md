@@ -1,35 +1,38 @@
-# Nome do Projeto
+# O.R.A.C.U.L.O.
 
-> Descrição curta (1-2 frases): o que o projeto faz e qual problema ele resolve.
+> Previsão de carga e de risco de curtailment para o SIN, usando dados do ONS e a MMGD vista pela rede de distribuição.
 
 ## Demo
 
-- **Link da demo:** (se houver, ex: Vercel, Netlify, etc.)
+- **Link da demo:** TODO (Luiz)
 
 ## Tecnologias utilizadas
 
-- Linguagem: (ex: Python, JavaScript, Go...)
-- Framework(s): (ex: React, Flask, Node...)
-- Banco de dados: 
-- APIs / Serviços externos: (se houver)
+- Linguagem: Python 3.11+
+- Framework(s): pandas, LightGBM, pytorch-forecasting, geopandas
+- Banco de dados: DuckDB + Parquet particionado
+- APIs / Serviços externos: dados.ons.org.br, MCP do ONS, ERA5 (Copernicus CDS), BDGD (ANEEL), Open Buildings, IBGE, OSM
+- Dashboard: TODO (Luiz)
 
 ## Como rodar o projeto
 
 ```bash
 # Clone o repositório
-git clone https://github.com/usuario/repo.git
-cd repo
+git clone https://github.com/Hackathon-IA-2026/solucoes-grupo-24.git
+cd solucoes-grupo-24
 
 # Instale as dependências
-# (ex: npm install / pip install -r requirements.txt)
+pip install -e .
 
 # Rode o projeto
-# (ex: npm run dev / python app.py)
+# pipeline em construção
 ```
 
 ## Pré-requisitos
 
-Liste aqui o que precisa estar instalado antes de rodar o projeto (ex: Node 18+, Python 3.10+, Docker, etc.)
+- Python 3.11 ou 3.12
+- Credencial do Copernicus CDS (arquivo `~/.cdsapirc`) para baixar o ERA5
+- Documentação detalhada (schema do contrato de dados, inventário do portal ONS, status): [`docs/`](./docs)
 
 ## Licença
 

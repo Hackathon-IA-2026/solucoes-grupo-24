@@ -1,0 +1,42 @@
+# dados brutos (nunca versionar)
+data/raw/
+
+# derivados grandes
+*.parquet
+*.feather
+*.duckdb
+*.duckdb.wal
+data/processed/**/*.csv
+
+# checkpoints e artefatos de modelo
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.joblib
+*.pkl
+lightning_logs/
+mlruns/
+
+# segredos
+.env
+.env.*
+!.env.example
+.cdsapirc
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# editores / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
