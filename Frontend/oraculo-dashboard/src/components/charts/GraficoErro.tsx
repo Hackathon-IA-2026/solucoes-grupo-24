@@ -89,7 +89,7 @@ function TooltipErro({ active, payload, metrica, baselineNome }: TooltipContentP
   const p = payload[0].payload as PontoErro
   const ganho = p.baseline > 0 ? (1 - p.modelo / p.baseline) * 100 : 0
   return (
-    <div className="rounded border border-line bg-base px-3 py-2 text-xs shadow-lg">
+    <div className="rounded border border-line bg-fundo px-3 py-2 text-xs shadow-lg">
       <p className="mb-1 text-ink-muted">
         {diaMes(p.data)} · {metrica}
       </p>

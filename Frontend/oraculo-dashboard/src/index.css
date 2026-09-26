@@ -4,14 +4,28 @@
  * Decisão: as tokens vivem SÓ aqui, no bloco @theme do Tailwind v4. Cada token vira
  * utilitário automaticamente (ex.: --color-risk-high -> bg-risk-high, text-risk-high,
  * border-risk-high). Componentes nunca usam hex solto: trocar uma cor é mudar uma linha.
+ *
+ * Revisão 2026-09-26 (referência: protótipo Figma "SCADA Dashboard Design"):
+ * - Tipografia do Figma: IBM Plex Sans (texto; desenho técnico/industrial, bom em tamanho
+ *   pequeno) + JetBrains Mono (números). Empacotadas via @fontsource (funcionam offline,
+ *   ao contrário do @import do Google Fonts do protótipo).
+ * - Densidade de console: escala de texto própria (label 11px, corpo 13px, KPI 30px) em vez
+ *   dos números gigantes de antes; cantos quase retos (2px) e bordas de 1px.
+ * - NÃO adotado do Figma: a paleta de cinzas (#4D5A72 sobre #0D1018 dá contraste ~2,6:1,
+ *   abaixo do mínimo WCAG) e rótulos de 9px. Mantidas as cores do Prompt 1, já validadas.
  */
-@import "@fontsource-variable/inter";
+@import "@fontsource-variable/ibm-plex-sans";
 @import "@fontsource-variable/jetbrains-mono";
 @import "tailwindcss";
 
 @theme {
-  /* Fundos: navy quase preto. "base" é o fundo da página; "surface" é o de cards e barras. */
-  --color-base: #0a0e17;
+  /*
+   * Fundos: navy quase preto. "fundo" é o da página; "surface" é o de cards e barras.
+   * Decisão (2026-09-26): este token se chamava "base", e `text-base` virava AO MESMO TEMPO o
+   * tamanho de fonte padrão do Tailwind e a cor quase preta — texto sumia na tela. Nenhuma cor
+   * pode ter nome de tamanho de fonte (teste: src/theme/tokens.test.ts).
+   */
+  --color-fundo: #0a0e17;
   --color-surface: #0f1524;
   --color-surface-raised: #151c2e; /* hover/seleção sobre surface */
   --color-line: #1e293b;           /* bordas e divisórias finas */
@@ -54,9 +68,40 @@
   --color-shap-up: #ea580c;
   --color-shap-down: #0284c7;
 
+  /*
+   * Patamares da curva de carga (faixas de FUNDO no gráfico de previsão): tom de dia (âmbar,
+   * mínima diurna / janela solar, como no Figma) e tom de noite (índigo, ponta noturna).
+   * Uso restrito a tinta translúcida (≤ 8% de opacidade) SEMPRE com rótulo de texto, para
+   * nunca serem lidos como status de risco nem como série.
+   */
+  --color-patamar-dia: #f59e0b;
+  --color-patamar-noite: #6366f1;
+
   /* Tipografia: sans para texto corrido, mono para números/KPIs (painel de operação) */
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", monospace;
+
+  /*
+   * Escala de texto do console (utilitários text-label, text-body, text-kpi...). Um nome por
+   * PAPEL, não por tamanho: rótulo de painel é sempre text-label, em qualquer tela.
+   */
+  --text-label: 0.6875rem; /* 11px: títulos de painel, cabeçalhos de coluna, rótulos */
+  --text-label--line-height: 1rem;
+  --text-label--letter-spacing: 0.08em;
+  --text-label--font-weight: 600;
+  --text-body: 0.8125rem; /* 13px: texto corrido e células de tabela */
+  --text-body--line-height: 1.25rem;
+  --text-kpi: 1.875rem; /* 30px: número de destaque dos cards */
+  --text-kpi--line-height: 1;
+  --text-kpi-xl: 2.5rem; /* 40px: equação da carga no Despacho Preditivo */
+  --text-kpi-xl--line-height: 1;
+
+  /* Cantos quase retos (SCADA): todo `rounded*` do projeto passa por estas tokens. */
+  --radius: 2px;
+  --radius-xs: 1px;
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 3px;
 }
 
 @layer base {
@@ -67,9 +112,19 @@
   }
 
   body {
-    @apply bg-base text-ink font-sans antialiased;
+    @apply bg-fundo text-ink font-sans text-body antialiased;
     color-scheme: dark;
   }
+}
+
+/* Rótulo de painel/coluna: caixa alta, espaçado, cor secundária (padrão único do console). */
+@utility rotulo {
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  letter-spacing: var(--text-label--letter-spacing);
+  font-weight: var(--text-label--font-weight);
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
 }
 
 /*
@@ -86,11 +141,11 @@
    e controles/tooltips no tema escuro. Prefixo `:root` = especificidade maior que a do
    leaflet.css, que é carregado DEPOIS (no chunk da página) e senão venceria a cascata. */
 :root .leaflet-container {
-  background: var(--color-base);
+  background: var(--color-fundo);
   font-family: var(--font-sans);
 }
 :root .leaflet-tooltip {
-  background: var(--color-base);
+  background: var(--color-fundo);
   color: var(--color-ink);
   border: 1px solid var(--color-line);
   box-shadow: none;
@@ -99,11 +154,11 @@
 :root .leaflet-tooltip-top::before {
   border-top-color: var(--color-line);
 }
-:root .leaflet-control-attribution {
-  background: color-mix(in srgb, var(--color-base) 80%, transparent);
+:root .leaflet-container .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--color-fundo) 80%, transparent);
   color: var(--color-ink-faint);
 }
-:root .leaflet-control-attribution a {
+:root .leaflet-container .leaflet-control-attribution a {
   color: var(--color-ink-muted);
 }
 :root .leaflet-bar a {

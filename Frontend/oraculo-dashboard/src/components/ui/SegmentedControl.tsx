@@ -11,7 +11,7 @@ interface SegmentedControlProps<T extends string> {
 
 export function SegmentedControl<T extends string>({ label, options, value, onChange }: SegmentedControlProps<T>) {
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex rounded border border-line bg-base p-0.5">
+    <div role="radiogroup" aria-label={label} className="inline-flex gap-px rounded-sm border border-line bg-fundo p-0.5">
       {options.map((o) => {
         const on = o === value
         return (
@@ -21,8 +21,8 @@ export function SegmentedControl<T extends string>({ label, options, value, onCh
             role="radio"
             aria-checked={on}
             onClick={() => onChange(o)}
-            className={`rounded-sm px-3 py-1 font-mono text-xs font-semibold tracking-wider transition-colors ${
-              on ? 'bg-accent/15 text-accent' : 'text-ink-muted hover:text-ink'
+            className={`rounded-sm px-3 py-1 font-mono text-[11px] font-semibold tracking-wider transition-colors ${
+              on ? 'bg-accent/15 text-accent' : 'text-ink-muted hover:bg-surface-raised hover:text-ink'
             }`}
           >
             {o}

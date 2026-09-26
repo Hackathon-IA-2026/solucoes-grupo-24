@@ -49,7 +49,7 @@ export default function DetalheAlerta() {
   if (!alerta.data || !risco) {
     return (
       <Card title="Alerta não encontrado">
-        <p className="text-sm text-ink-muted">
+        <p className="text-body text-ink-muted">
           Não há alerta para <span className="font-mono text-ink">{alertId}</span>.
         </p>
         <VoltarLista />
@@ -80,6 +80,7 @@ function Alerta({ alerta, risco }: { alerta: AlertaDetalhado; risco: RiscoUsina 
         </Card>
 
         <div className="space-y-4">
+          <AcaoRecomendada risco={risco} />
           <Motivos alerta={alerta} />
           <Rastreabilidade alerta={alerta} risco={risco} />
         </div>
@@ -91,7 +92,7 @@ function Alerta({ alerta, risco }: { alerta: AlertaDetalhado; risco: RiscoUsina 
 /** Bloco estilo terminal com o texto exatamente como o Backend gerou. */
 function TextoAlerta({ texto, barra }: { texto: string; barra: string }) {
   return (
-    <section aria-label="Texto do alerta" className={`overflow-hidden rounded-md border border-line border-l-4 bg-base ${barra}`}>
+    <section aria-label="Texto do alerta" className={`overflow-hidden border border-line border-l-4 bg-fundo ${barra}`}>
       <header className="flex items-center gap-2 border-b border-line bg-surface px-4 py-1.5">
         <span className="size-2 rounded-full bg-ink-faint" aria-hidden />
         <span className="size-2 rounded-full bg-ink-faint" aria-hidden />
@@ -101,6 +102,22 @@ function TextoAlerta({ texto, barra }: { texto: string; barra: string }) {
       {/* pre: preserva as quebras de linha do texto gerado; sem reformatação na tela */}
       <pre className="overflow-x-auto whitespace-pre-wrap px-4 py-3 font-mono text-sm leading-relaxed text-ink">{texto}</pre>
     </section>
+  )
+}
+
+/**
+ * A ação que o alerta sugere (pitch, slide 10: "explicar e recomendar"). O texto vem do
+ * contrato (RiscoUsina.acaoRecomendada); a ressalva repete o limite declarado no slide 7: o
+ * produto apoia a decisão, não automatiza o despacho.
+ */
+function AcaoRecomendada({ risco }: { risco: RiscoUsina }) {
+  return (
+    <Card title="Ação recomendada" accent={RISK_STYLES[risco.severidade].topo} actions={<MockTag mock={risco.mock} />}>
+      <p className="text-body text-ink">{risco.acaoRecomendada}</p>
+      <p className="mt-2 text-xs text-ink-faint">
+        Apoio à decisão: não automatiza o despacho nem substitui procedimentos operativos.
+      </p>
+    </Card>
   )
 }
 
@@ -139,8 +156,8 @@ function Rastreabilidade({ alerta, risco }: { alerta: AlertaDetalhado; risco: Ri
       <dl className="space-y-3">
         {itens.map(([k, v]) => (
           <div key={k}>
-            <dt className="text-[11px] uppercase tracking-widest text-ink-faint">{k}</dt>
-            <dd className="mt-0.5 break-words text-sm text-ink">{v}</dd>
+            <dt className="rotulo text-[10px] text-ink-faint">{k}</dt>
+            <dd className="mt-0.5 break-words text-body text-ink">{v}</dd>
           </div>
         ))}
       </dl>
@@ -150,7 +167,7 @@ function Rastreabilidade({ alerta, risco }: { alerta: AlertaDetalhado; risco: Ri
 
 function VoltarLista() {
   return (
-    <Link to={LISTA.path} className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
+    <Link to={LISTA.path} className="inline-flex items-center gap-1 text-body text-accent hover:underline">
       <ArrowLeft className="size-4" aria-hidden /> {LISTA.label}
     </Link>
   )
@@ -166,7 +183,7 @@ function EscolherAlerta({ riscos }: { riscos: RiscoUsina[] }) {
             <Link to={rotaDetalheAlerta(r.id)} className="flex items-center gap-3 px-1 py-2.5 hover:bg-surface-raised">
               <SeverityBadge level={r.severidade} />
               <span className="font-mono text-xs text-ink-muted">{r.uf}</span>
-              <span className="flex-1 text-sm text-ink">{r.nome}</span>
+              <span className="flex-1 text-body text-ink">{r.nome}</span>
               <span className="kpi text-sm text-ink-muted">{formatPct(r.probabilidadePct, 0)}%</span>
               <ChevronRight className="size-4 text-ink-faint" aria-hidden />
             </Link>

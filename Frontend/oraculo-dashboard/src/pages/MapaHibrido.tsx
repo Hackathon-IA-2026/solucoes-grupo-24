@@ -8,16 +8,22 @@
  * - clicar num item do painel centraliza o mapa nele;
  * - clicar no marcador de risco abre o Detalhe do Alerta; no de excedente, a tela Excedentes.
  *
- * Fundo: o contorno do Brasil (GeoJSON local, Natural Earth) é sempre desenhado, então o mapa
- * funciona offline. Os tiles escuros da CARTO ficam por baixo quando a rede permite.
+ * Fundo 100% local: contorno do Brasil (Natural Earth, npm run geo:brasil) + divisas das UFs
+ * (IBGE, npm run geo:ufs). Decisão (2026-09-26): os tiles da CARTO que ficavam por baixo
+ * passaram a exigir chave e cobriam o mapa com "API KEY REQUIRED". O mapa não depende mais de
+ * nenhum serviço externo em tempo de execução — funciona offline, na rede do ONS e na demo — e
+ * um teste (src/pages/semServicoExterno.test.ts) impede a volta de camada de tiles remota.
+ *
+ * Filtros de severidade da topbar valem para usinas e excedentes (e para o painel lateral).
  */
 import 'leaflet/dist/leaflet.css'
 import { useMemo, useRef, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import L from 'leaflet'
-import { CircleMarker, GeoJSON, MapContainer, Marker, TileLayer, Tooltip } from 'react-leaflet'
+import { AttributionControl, CircleMarker, GeoJSON, MapContainer, Marker, Tooltip } from 'react-leaflet'
 import { useNavigate } from 'react-router-dom'
 import { CamadaCalor } from '../components/mapa/CamadaCalor'
+import { AvisoFiltro } from '../components/ui/AvisoFiltro'
 import { Card } from '../components/ui/Card'
 import { Carregando, ErroDados } from '../components/ui/Estado'
 import { MockTag } from '../components/ui/MockTag'
@@ -26,9 +32,11 @@ import { ToggleChip } from '../components/ui/ToggleChip'
 import { getDensidadeMmgd, getExcedentes, getRiscos } from '../data/dataSource'
 import { ordenarExcedentes, ordenarPorSeveridade } from '../data/derivados'
 import brasil from '../data/geo/brasil.geo.json'
+import ufs from '../data/geo/ufs.geo.json'
 import type { DensidadeMmgd, ExcedenteTsoDso, RiscoUsina } from '../data/types'
 import { useDados } from '../data/useDados'
 import { MODULES, rotaDetalheAlerta } from '../modules'
+import { useFiltradosPorSeveridade } from '../state/useSeverityFilter'
 import { RISK_STYLES } from '../theme/severity'
 import { corToken } from '../theme/tokens'
 import { formatMw, formatPct } from '../utils/format'
@@ -59,8 +67,11 @@ export default function MapaHibrido() {
   return <Mapa riscos={ordenarPorSeveridade(riscos.data)} excedentes={ordenarExcedentes(excedentes.data)} mmgd={mmgd.data} />
 }
 
-function Mapa({ riscos, excedentes, mmgd }: { riscos: RiscoUsina[]; excedentes: ExcedenteTsoDso[]; mmgd: DensidadeMmgd }) {
+function Mapa({ riscos: todosRiscos, excedentes: todosExcedentes, mmgd }: { riscos: RiscoUsina[]; excedentes: ExcedenteTsoDso[]; mmgd: DensidadeMmgd }) {
   const navigate = useNavigate()
+  // Filtros de severidade da topbar: marcadores e painel mostram só o que está ligado.
+  const { visiveis: riscos, ocultos: riscosOcultos } = useFiltradosPorSeveridade(todosRiscos, (r) => r.severidade)
+  const { visiveis: excedentes, ocultos: excedentesOcultos } = useFiltradosPorSeveridade(todosExcedentes, (e) => e.prioridade)
   const mapaRef = useRef<L.Map | null>(null)
   // id do risco em destaque — estado ÚNICO compartilhado por marcadores e painel (sincronia).
   const [destaque, setDestaque] = useState<string | null>(null)
@@ -71,6 +82,7 @@ function Mapa({ riscos, excedentes, mmgd }: { riscos: RiscoUsina[]; excedentes: 
   const cores = useMemo(
     () => ({
       contorno: corToken('--color-ink-faint'),
+      divisa: corToken('--color-line'),
       preenchimento: corToken('--color-surface-raised'),
       anel: corToken('--color-ink'),
       risco: (r: RiscoUsina) => corToken(RISK_STYLES[r.severidade].token),
@@ -79,7 +91,7 @@ function Mapa({ riscos, excedentes, mmgd }: { riscos: RiscoUsina[]; excedentes: 
   )
 
   const centralizar = (r: RiscoUsina) => mapaRef.current?.flyTo([r.lat, r.lon], 7, { duration: 0.6 })
-  const mock = riscos.some((r) => r.mock) || excedentes.some((e) => e.mock)
+  const mock = todosRiscos.some((r) => r.mock) || todosExcedentes.some((e) => e.mock)
 
   return (
     <div className="space-y-3">
@@ -95,11 +107,13 @@ function Mapa({ riscos, excedentes, mmgd }: { riscos: RiscoUsina[]; excedentes: 
           />
         ))}
         {camadas.mmgd && <MockTag mock={mmgd.mock} />}
+        <AvisoFiltro ocultos={riscosOcultos + excedentesOcultos} className="ml-auto" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_20rem]">
-        <Card title="Brasil · usinas, excedentes e MMGD" actions={<MockTag mock={mock} />} className="overflow-hidden">
-          <div className="relative -m-4 h-[calc(100vh-15rem)] min-h-[30rem]">
+        <Card flush title="Brasil · usinas, excedentes e MMGD" actions={<MockTag mock={mock} />} className="overflow-hidden">
+          {/* altura = janela − topbar − cabeçalho do módulo − chips − margens (conteúdo rola no <main>) */}
+          <div className="relative h-[calc(100dvh-13rem)] min-h-[28rem]">
             <MapContainer
               ref={mapaRef}
               bounds={LIMITES_BR}
@@ -108,17 +122,18 @@ function Mapa({ riscos, excedentes, mmgd }: { riscos: RiscoUsina[]; excedentes: 
               minZoom={3}
               zoomSnap={0.25}
               className="size-full"
-              attributionControl
+              attributionControl={false}
             >
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a> · Natural Earth'
-              />
+              {/* prefixo só com o nome do Leaflet (o padrão traz uma bandeira sem relação com o painel) */}
+              <AttributionControl prefix='<a href="https://leafletjs.com">Leaflet</a>' />
+              {/* divisas estaduais (IBGE) por baixo, contorno do país (Natural Earth) por cima */}
               <GeoJSON
-                data={brasil as GeoJSON.Feature}
-                style={{ color: cores.contorno, weight: 1, fillColor: cores.preenchimento, fillOpacity: 0.9 }}
+                data={ufs as GeoJSON.FeatureCollection}
+                style={{ color: cores.divisa, weight: 0.8, fillColor: cores.preenchimento, fillOpacity: 0.9 }}
                 interactive={false}
+                attribution="Divisas: IBGE · Contorno: Natural Earth"
               />
+              <GeoJSON data={brasil as GeoJSON.Feature} style={{ color: cores.contorno, weight: 1.2, fill: false }} interactive={false} />
 
               {camadas.mmgd && <CamadaCalor pontos={mmgd.pontos} />}
 
@@ -194,7 +209,7 @@ function iconeLosango(cor: string): L.DivIcon {
   return L.divIcon({
     className: '',
     iconSize: [14, 14],
-    html: `<div style="width:12px;height:12px;transform:rotate(45deg);background:${cor};border:1.5px solid var(--color-base);opacity:.9"></div>`,
+    html: `<div style="width:12px;height:12px;transform:rotate(45deg);background:${cor};border:1.5px solid var(--color-fundo);opacity:.9"></div>`,
   })
 }
 
@@ -212,8 +227,8 @@ function PainelRiscos({
   onAbrir: (r: RiscoUsina) => void
 }) {
   return (
-    <Card title="Subestações em risco" actions={<span className="kpi text-xs text-ink-muted">{riscos.length}</span>}>
-      <ul className="-mx-4 -my-4 divide-y divide-line">
+    <Card flush title="Subestações em risco" actions={<span className="kpi text-xs text-ink-muted">{riscos.length}</span>}>
+      <ul className="divide-y divide-line/60">
         {riscos.map((r) => (
           <li
             key={r.id}
@@ -226,7 +241,7 @@ function PainelRiscos({
                 <SeverityBadge level={r.severidade} />
                 <span className="font-mono text-[11px] text-ink-muted">{r.uf}</span>
               </span>
-              <span className="text-sm text-ink">{r.nome}</span>
+              <span className="text-body text-ink">{r.nome}</span>
               <span className="kpi text-xs text-ink-muted">
                 {formatPct(r.probabilidadePct, 0)}% · {formatMw(r.montanteMw)} MW · {r.horizonte}
               </span>
@@ -235,7 +250,7 @@ function PainelRiscos({
               type="button"
               onClick={() => onAbrir(r)}
               aria-label={`Abrir alerta de ${r.nome}`}
-              className="rounded p-1 text-ink-faint hover:bg-base hover:text-accent"
+              className="rounded p-1 text-ink-faint hover:bg-fundo hover:text-accent"
             >
               <ChevronRight className="size-4" aria-hidden />
             </button>
@@ -250,7 +265,7 @@ function PainelRiscos({
 function Legenda({ mmgd }: { mmgd: boolean }) {
   const niveis = ['critical', 'high', 'medium', 'low'] as const
   return (
-    <div className="pointer-events-none absolute bottom-6 left-3 z-[1000] space-y-2 rounded border border-line bg-base/90 px-3 py-2 text-[11px] text-ink-muted">
+    <div className="pointer-events-none absolute bottom-6 left-3 z-[1000] space-y-2 rounded border border-line bg-fundo/90 px-3 py-2 text-[11px] text-ink-muted">
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
         {niveis.map((n) => (
           <span key={n} className="flex items-center gap-1.5">

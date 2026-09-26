@@ -23,5 +23,7 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  // testes rodam no Node (vitest) e têm config própria: tsconfig.test.json
+  "exclude": ["src/**/*.test.ts"]
 }

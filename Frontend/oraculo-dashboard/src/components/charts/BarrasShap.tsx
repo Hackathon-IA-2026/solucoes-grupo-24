@@ -28,7 +28,7 @@ export function BarrasShap({ valores }: { valores: readonly ShapValue[] }) {
               title={`${v.variavel}: ${sobe ? 'aumenta' : 'reduz'} o risco (${rotulo} do peso total)`}
               className="grid grid-cols-[minmax(9rem,14rem)_1fr_1fr] items-center gap-x-0 rounded px-1 py-1 hover:bg-surface-raised"
             >
-              <span className="truncate pr-3 text-sm text-ink-muted">{v.variavel}</span>
+              <span className="truncate pr-3 text-body text-ink-muted">{v.variavel}</span>
               {/* metade esquerda: "reduz" cresce da direita (eixo) para a esquerda */}
               <div className="flex h-5 items-center justify-end border-r border-ink-faint">
                 {!sobe && (

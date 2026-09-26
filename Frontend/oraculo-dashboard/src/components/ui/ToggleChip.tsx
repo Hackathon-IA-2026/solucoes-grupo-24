@@ -19,7 +19,7 @@ export function ToggleChip({ label, ativo, onToggle, classeAtivo, classePonto }:
       type="button"
       aria-pressed={ativo}
       onClick={onToggle}
-      className={`inline-flex items-center gap-1.5 rounded-sm border px-2.5 py-1 font-mono text-[11px] font-semibold tracking-wider transition-colors ${
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm border px-2 py-0.5 font-mono text-[10px] font-semibold tracking-wider transition-colors ${
         ativo ? classeAtivo : 'border-line text-ink-faint line-through decoration-ink-faint/60 hover:text-ink-muted'
       }`}
     >

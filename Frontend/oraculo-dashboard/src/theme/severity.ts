@@ -9,6 +9,7 @@
  * badge nunca divergem. As classes Tailwind ficam escritas por extenso (e não montadas com
  * template string) porque o Tailwind só gera utilitários que encontra literalmente no código.
  */
+import type { Severidade } from '../data/types'
 
 export type RiskLevel = 'low' | 'medium' | 'high' | 'critical' | 'none'
 
@@ -20,6 +21,8 @@ interface RiskStyle {
   dot: string
   /** borda esquerda grossa (blocos de destaque, ex.: texto do alerta) */
   barra: string
+  /** cor da borda superior de identidade de um Card (Card.accent) */
+  topo: string
   /** nome da CSS var da cor (para canvas/Leaflet, que não usam classes Tailwind) */
   token: string
 }
@@ -30,6 +33,7 @@ export const RISK_STYLES: Record<RiskLevel, RiskStyle> = {
     chip: 'text-risk-low border-risk-low/40 bg-risk-low/10',
     dot: 'bg-risk-low',
     barra: 'border-l-risk-low',
+    topo: 'border-t-risk-low',
     token: '--color-risk-low',
   },
   medium: {
@@ -37,6 +41,7 @@ export const RISK_STYLES: Record<RiskLevel, RiskStyle> = {
     chip: 'text-risk-medium border-risk-medium/40 bg-risk-medium/10',
     dot: 'bg-risk-medium',
     barra: 'border-l-risk-medium',
+    topo: 'border-t-risk-medium',
     token: '--color-risk-medium',
   },
   high: {
@@ -44,6 +49,7 @@ export const RISK_STYLES: Record<RiskLevel, RiskStyle> = {
     chip: 'text-risk-high border-risk-high/40 bg-risk-high/10',
     dot: 'bg-risk-high',
     barra: 'border-l-risk-high',
+    topo: 'border-t-risk-high',
     token: '--color-risk-high',
   },
   critical: {
@@ -51,6 +57,7 @@ export const RISK_STYLES: Record<RiskLevel, RiskStyle> = {
     chip: 'text-risk-critical border-risk-critical/40 bg-risk-critical/10',
     dot: 'bg-risk-critical',
     barra: 'border-l-risk-critical',
+    topo: 'border-t-risk-critical',
     token: '--color-risk-critical',
   },
   none: {
@@ -58,6 +65,7 @@ export const RISK_STYLES: Record<RiskLevel, RiskStyle> = {
     chip: 'text-ink-muted border-risk-none/40 bg-risk-none/10',
     dot: 'bg-risk-none',
     barra: 'border-l-risk-none',
+    topo: 'border-t-risk-none',
     token: '--color-risk-none',
   },
 }
@@ -79,4 +87,20 @@ export const STATUS_RISK: Record<OperationalStatus, RiskLevel> = {
   LOADING: 'medium',
   CRITICAL: 'critical',
   'NO-RISK': 'none',
+}
+
+/**
+ * Qual filtro da topbar controla cada severidade dos dados (sentido inverso do STATUS_RISK).
+ *
+ * Decisão: `Record` exaustivo sobre Severidade. Se o contrato ganhar uma severidade nova, o
+ * TypeScript recusa o build até ela ter filtro — a classe de bug "item que nenhum filtro
+ * esconde nem mostra" não compila. "high" fica sob CRITICAL: alto e crítico são os níveis que
+ * pedem ação (laranja e vermelho); desligar CRITICAL esconde os dois.
+ * NO-RISK não controla nenhuma severidade dos dados (o contrato não publica item "sem risco").
+ */
+export const SEVERIDADE_STATUS: Record<Severidade, OperationalStatus> = {
+  low: 'NORMAL',
+  medium: 'LOADING',
+  high: 'CRITICAL',
+  critical: 'CRITICAL',
 }

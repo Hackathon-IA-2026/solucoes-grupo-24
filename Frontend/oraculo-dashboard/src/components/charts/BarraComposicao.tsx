@@ -26,9 +26,9 @@ export function BarraComposicao({ parcelas, titulo }: { parcelas: readonly Parce
   const ativa = parcelas.find((p) => p.chave === foco)
 
   return (
-    <figure className="space-y-4">
+    <figure className="space-y-3">
       <div className="relative">
-        <div role="img" aria-label={titulo} className="flex h-12 gap-0.5 overflow-hidden rounded">
+        <div role="img" aria-label={titulo} className="flex h-10 gap-0.5 overflow-hidden rounded">
           {parcelas.map((p) => (
             <div
               key={p.chave}
@@ -50,7 +50,7 @@ export function BarraComposicao({ parcelas, titulo }: { parcelas: readonly Parce
         {ativa && (
           <div
             role="tooltip"
-            className="pointer-events-none absolute -top-2 left-1/2 z-10 -translate-x-1/2 -translate-y-full rounded border border-line bg-base px-3 py-2 text-xs shadow-lg"
+            className="pointer-events-none absolute -top-2 left-1/2 z-10 -translate-x-1/2 -translate-y-full rounded border border-line bg-fundo px-3 py-2 text-xs shadow-lg"
           >
             <p className="text-ink-muted">{ativa.rotulo}</p>
             <p className="kpi text-ink">
@@ -67,10 +67,10 @@ export function BarraComposicao({ parcelas, titulo }: { parcelas: readonly Parce
               key={p.chave}
               onMouseEnter={() => setFoco(p.chave)}
               onMouseLeave={() => setFoco(null)}
-              className="flex items-center gap-3 rounded border border-line px-3 py-2"
+              className="flex items-center gap-3 border border-line px-3 py-1.5"
             >
               <span className={`size-3 shrink-0 rounded-sm ${p.cor}`} aria-hidden />
-              <span className="flex-1 text-sm text-ink-muted">{p.rotulo}</span>
+              <span className="flex-1 text-body text-ink-muted">{p.rotulo}</span>
               <span className="kpi text-sm text-ink">{formatMw(p.mw)} MW</span>
               <span className="kpi w-14 text-right text-sm text-ink-muted">{formatPct(p.pct)}%</span>
             </li>

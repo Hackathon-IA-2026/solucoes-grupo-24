@@ -3,7 +3,9 @@
  * derivados.test.ts). As telas calculam por aqui para que o mesmo KPI nunca tenha duas
  * fórmulas diferentes em telas diferentes.
  */
-import type { CargaSnapshot, ExcedenteTsoDso, PontoPrevisao, RiscoUsina, Severidade } from './types'
+import { SEVERIDADE_STATUS, type OperationalStatus } from '../theme/severity'
+import { horaDecimalBrt } from '../utils/format'
+import type { CargaSnapshot, ExcedenteTsoDso, PontoPrevisao, Razao, RiscoUsina, Severidade } from './types'
 
 /**
  * Risco agregado de curtailment (%): média das probabilidades PONDERADA pelo montante (MW).
@@ -79,6 +81,47 @@ export function ordenarPorSeveridade(riscos: readonly RiscoUsina[]): RiscoUsina[
       b.montanteMw - a.montanteMw ||
       a.id.localeCompare(b.id),
   )
+}
+
+/**
+ * Trechos CONTÍGUOS da curva cujos pontos caem num intervalo de horas BRT [ini, fim)
+ * (patamar da curva de carga). Devolve índices [inicio, fim] inclusivos; uma curva D+1 que
+ * começa às 21h e passa pela ponta de novo no fim gera dois trechos, nunca um só atravessando
+ * a madrugada.
+ */
+export function trechosNoIntervalo(
+  pontos: readonly PontoPrevisao[],
+  [ini, fim]: readonly [number, number],
+): { inicio: number; fim: number }[] {
+  const trechos: { inicio: number; fim: number }[] = []
+  pontos.forEach((p, i) => {
+    const h = horaDecimalBrt(p.timestamp)
+    if (h < ini || h >= fim) return
+    const ultimo = trechos.at(-1)
+    if (ultimo && ultimo.fim === i - 1) ultimo.fim = i
+    else trechos.push({ inicio: i, fim: i })
+  })
+  return trechos
+}
+
+/**
+ * Aplica os filtros de severidade da topbar a uma lista. Devolve também quantos itens ficaram
+ * ocultos: as telas mostram esse número, para dado filtrado nunca parecer dado inexistente.
+ */
+export function filtrarPorSeveridade<T>(
+  itens: readonly T[],
+  severidade: (item: T) => Severidade,
+  ativos: ReadonlySet<OperationalStatus>,
+): { visiveis: T[]; ocultos: number } {
+  const visiveis = itens.filter((it) => ativos.has(SEVERIDADE_STATUS[severidade(it)]))
+  return { visiveis, ocultos: itens.length - visiveis.length }
+}
+
+/** Montante previsto (MW) por razão, com zero para razão sem risco (ordem fixa ENE, CNF, REL). */
+export function montantePorRazao(riscos: readonly RiscoUsina[]): Record<Razao, number> {
+  const total: Record<Razao, number> = { ENE: 0, CNF: 0, REL: 0 }
+  for (const r of riscos) total[r.razao] += r.montanteMw
+  return total
 }
 
 /** Excedentes por prioridade (high no topo), depois maior excedente e nome da área. */

@@ -5,7 +5,7 @@ import { Card } from './Card'
  * useDados. Erro mostra a mensagem do dataSource (que já diz qual recurso e por quê).
  */
 export function Carregando({ altura = 'h-32' }: { altura?: string }) {
-  return <div className={`${altura} animate-pulse rounded-md border border-line bg-surface`} aria-busy="true" />
+  return <div className={`${altura} animate-pulse border border-line bg-surface`} aria-busy="true" />
 }
 
 export function ErroDados({ erro }: { erro: Error }) {

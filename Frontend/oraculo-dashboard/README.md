@@ -10,20 +10,31 @@ npm run build    # typecheck + build de produção em dist/ (servido pelo `pytho
 npm run lint     # oxlint
 npm test         # vitest (contrato de dados)
 npm run mocks:series  # regenera src/data/mock/previsao.json e validacao.json
+npm run geo:brasil    # contorno do Brasil (Natural Earth, offline)
+npm run geo:ufs       # divisas das UFs (API de malhas do IBGE; precisa de internet só aqui)
 ```
+
+Design (revisão de 2026-09-26, com o protótipo Figma "SCADA Dashboard Design" como referência):
+tipografia IBM Plex Sans + JetBrains Mono, escala de texto por papel (`text-label`, `text-body`,
+`text-kpi`), cantos retos, topbar de largura total e sidebar de 13rem (ícones abaixo de `lg`).
+Do Figma NÃO entraram: números sem fonte (frequência do SIN, ciclo DESSEM, mínimo técnico,
+"extrapolação de tendências"), a semântica errada das razões (CNF é confiabilidade, não
+intercâmbio) e a paleta de cinzas de baixo contraste.
 
 ## Estrutura
 
 ```
 src/
   index.css                 tokens do design system (@theme do Tailwind v4) — única fonte de cores/fontes
-  theme/severity.ts         níveis de risco e filtros NORMAL/LOADING/CRITICAL/NO-RISK → classes
+  theme/severity.ts         níveis de risco, filtros NORMAL/LOADING/CRITICAL/NO-RISK e SEVERIDADE_STATUS (que filtro controla cada severidade)
   modules.ts                registro único dos 8 módulos (gera menu lateral E rotas)
-  state/severityFilter.tsx  contexto com os filtros de severidade ativos (useSeverityFilter)
-  components/ui/            Card, KpiCard, MiniStat, SegmentedControl, Tabela, ToggleChip, SeverityBadge, RazaoBadge, StatusPill, MockTag, Carregando/ErroDados
+  state/severityFilter.tsx  contexto com os filtros de severidade ativos (useSeverityFilter / useFiltradosPorSeveridade)
+  content/calendario.ts     patamares e faixas de curtailment LIDOS de Backend/config/processamento.yaml no build
+  content/limitacoes.ts     limitações declaradas (dados e escopo), fonte única da Validação e da Metodologia
+  components/ui/            Card, KpiCard, MiniStat, SegmentedControl, Tabela, ToggleChip, SeverityBadge, RazaoBadge, StatusPill, MockTag, AvisoFiltro, ListaLimitacoes, Carregando/ErroDados
   components/charts/        gráficos (BarraComposicao, GraficoPrevisao, GraficoErro, BarrasShap)
   components/mapa/          camadas do Mapa Híbrido (CamadaCalor / leaflet.heat)
-  data/geo/                 contorno do Brasil offline (npm run geo:brasil)
+  data/geo/                 contorno do Brasil (npm run geo:brasil) e divisas das UFs (npm run geo:ufs): fundo do mapa 100% local
   utils/format.ts           formatação pt-BR de MW/GW/% e horário BRT
   components/layout/        AppLayout, Sidebar, Topbar, Clock, SeverityFilters, ModuleFrame
   pages/                    uma página por módulo (+ NotFound)
@@ -38,7 +49,7 @@ src/
 
 | Token | Valor | Uso |
 |---|---|---|
-| `base` / `surface` | `#0a0e17` / `#0f1524` | fundo da página / cards e barras |
+| `fundo` / `surface` | `#0a0e17` / `#0f1524` | fundo da página / cards e barras (o token se chamava `base` e colidia com o tamanho `text-base`) |
 | `accent` | `#22d3ee` | dados, linhas, item ativo |
 | `risk-low` | `#22c55e` | risco baixo, NORMAL |
 | `risk-medium` | `#eab308` | risco médio, LOADING |
@@ -46,7 +57,10 @@ src/
 | `risk-critical` | `#ef4444` | risco crítico, CRITICAL |
 | `risk-none` | `#64748b` | NO-RISK |
 | `chart-1` / `chart-2` / `chart-3` | `#0891b2` / `#8b5cf6` / `#db2777` | séries de gráfico e razões ENE/CNF/REL, ordem fixa |
+| `patamar-dia` / `patamar-noite` | `#f59e0b` / `#6366f1` | só tinta translúcida das faixas de mínima diurna / ponta noturna |
+| `font-sans` | IBM Plex Sans | texto |
 | `font-mono` / `kpi` | JetBrains Mono, algarismos tabulares | números e KPIs |
+| `text-label` / `text-body` / `text-kpi` / `text-kpi-xl` | 11 / 13 / 30 / 40 px | rótulo de painel / corpo / KPI / equação da carga |
 
 ## Como adicionar conteúdo a um módulo
 

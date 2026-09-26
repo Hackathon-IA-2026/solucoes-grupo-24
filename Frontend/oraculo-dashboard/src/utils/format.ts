@@ -27,6 +27,17 @@ const fmtDataHora = new Intl.DateTimeFormat('pt-BR', {
 /** ISO UTC -> "14:30" em BRT */
 export const formatHoraBrt = (isoUtc: string) => fmtHora.format(new Date(isoUtc))
 
+/**
+ * ISO UTC -> hora do dia em BRT como número decimal (14:30 -> 14.5). Usado para saber em que
+ * patamar/faixa horária um ponto cai; mesmo fuso de exibição de todo o dashboard.
+ */
+export function horaDecimalBrt(isoUtc: string): number {
+  const partes = fmtHora.formatToParts(new Date(isoUtc))
+  const h = Number(partes.find((p) => p.type === 'hour')?.value) % 24 // "24" -> 0 em alguns motores
+  const m = Number(partes.find((p) => p.type === 'minute')?.value)
+  return h + m / 60
+}
+
 /** ISO UTC -> "25/09 14:30" em BRT */
 export const formatDataHoraBrt = (isoUtc: string) => fmtDataHora.format(new Date(isoUtc))
 

@@ -11,3 +11,10 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+/**
+ * Patamares e faixas de curtailment injetados no build por vite.config.ts a partir de
+ * Backend/config/processamento.yaml. `unknown` de propósito: quem consome valida o formato
+ * em src/content/calendario.ts (um YAML mal editado falha lá, com mensagem, e não no gráfico).
+ */
+declare const __CALENDARIO__: { patamares: unknown; faixasCurtailment: unknown }

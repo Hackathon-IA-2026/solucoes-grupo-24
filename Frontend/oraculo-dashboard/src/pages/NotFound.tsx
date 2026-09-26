@@ -6,7 +6,7 @@ import { SeverityBadge } from '../components/ui/SeverityBadge'
 export default function NotFound() {
   return (
     <Card title="Rota não encontrada" actions={<SeverityBadge level="high" label="404" />}>
-      <Link to="/" className="text-sm text-accent hover:underline">
+      <Link to="/" className="text-body text-accent hover:underline">
         Voltar para a Visão Geral
       </Link>
     </Card>

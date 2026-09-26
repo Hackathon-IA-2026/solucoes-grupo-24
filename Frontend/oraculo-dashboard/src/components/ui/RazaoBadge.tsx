@@ -10,7 +10,7 @@ export function RazaoBadge({ razao }: { razao: Razao }) {
   return (
     <span
       title={r.nome}
-      className={`inline-flex items-center gap-1.5 rounded-sm border bg-surface-raised px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wider text-ink ${r.borda}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm border bg-surface-raised px-1.5 py-px font-mono text-[10px] font-semibold tracking-wider text-ink ${r.borda}`}
     >
       <span className={`size-1.5 rounded-full ${r.dot}`} aria-hidden />
       {razao}

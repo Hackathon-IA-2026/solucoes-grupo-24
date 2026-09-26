@@ -1,0 +1,11 @@
+{
+  // Testes do Vitest: rodam no Node, então podem ler arquivos do repositório (ex.: a config do
+  // Backend) — por isso têm os tipos do Node, que o código do navegador (tsconfig.app.json) não tem.
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
+    "types": ["vite/client", "node"]
+  },
+  "include": ["src/**/*.test.ts", "src/vite-env.d.ts"],
+  "exclude": []
+}

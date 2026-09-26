@@ -4,7 +4,8 @@
  * marcadas com `quebra` (textos longos como "Ação recomendada").
  *
  * Centralizado para as tabelas do dashboard terem exatamente o mesmo visual e o mesmo
- * comportamento; cada página só descreve colunas e linhas.
+ * comportamento; cada página só descreve colunas e linhas. Vai dentro de <Card flush>
+ * (a tabela encosta nas bordas do painel, como num console).
  */
 import type { ReactNode } from 'react'
 
@@ -18,19 +19,12 @@ export interface ColunaTabela {
 
 export function Tabela({ colunas, children }: { colunas: readonly ColunaTabela[]; children: ReactNode }) {
   return (
-    // -mx/-my anulam o padding do Card: a tabela encosta nas bordas como num console.
-    <div className="-mx-4 -my-4 overflow-x-auto">
-      <table className="w-full border-collapse text-sm">
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-body">
         <thead>
-          <tr className="border-b border-line text-left">
+          <tr className="border-b border-line bg-fundo/60 text-left">
             {colunas.map((c) => (
-              <th
-                key={c.rotulo}
-                scope="col"
-                className={`px-3 py-2.5 align-bottom text-[11px] font-semibold uppercase tracking-widest text-ink-muted ${
-                  c.num ? 'text-right' : ''
-                }`}
-              >
+              <th key={c.rotulo} scope="col" className={`rotulo px-3 py-2 align-bottom ${c.num ? 'text-right' : ''}`}>
                 <span className={c.semRotulo ? 'sr-only' : undefined}>{c.rotulo}</span>
               </th>
             ))}
@@ -45,4 +39,4 @@ export function Tabela({ colunas, children }: { colunas: readonly ColunaTabela[]
 
 /** Classes padrão de linha e célula, para as páginas não repetirem espaçamento e bordas. */
 export const LINHA = 'border-b border-line/60 last:border-b-0'
-export const CELULA = 'px-3 py-3'
+export const CELULA = 'px-3 py-2.5'

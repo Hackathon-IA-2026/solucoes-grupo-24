@@ -6,6 +6,7 @@ import { GraficoErro, type PontoErro } from '../components/charts/GraficoErro'
 import { Card } from '../components/ui/Card'
 import { Carregando, ErroDados } from '../components/ui/Estado'
 import { KpiCard } from '../components/ui/KpiCard'
+import { ListaLimitacoes } from '../components/ui/ListaLimitacoes'
 import { MockTag } from '../components/ui/MockTag'
 import { StatusPill } from '../components/ui/StatusPill'
 import { LIMITACOES } from '../content/limitacoes'
@@ -27,7 +28,7 @@ export default function Validacao() {
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="MAE" value={formatMw(v.erroMedioAbsolutoMw)} unit="MW" actions={<MockTag mock={v.mock} />} hint="erro médio absoluto, 30 dias" />
+        <KpiCard label="MAE" accent="border-t-chart-1" value={formatMw(v.erroMedioAbsolutoMw)} unit="MW" actions={<MockTag mock={v.mock} />} hint="erro médio absoluto, 30 dias" />
         <KpiCard label="RMSE" value={formatMw(v.rmseMw)} unit="MW" actions={<MockTag mock={v.mock} />} hint="penaliza erros grandes" />
         <KpiCard label="MAPE" value={formatNum(v.mapePct)} unit="%" actions={<MockTag mock={v.mock} />} hint="erro percentual médio" />
         <KpiCard
@@ -63,8 +64,8 @@ function StatusFontes({ fontes, mock }: { fontes: MetricasValidacao['statusFonte
     <Card title="Status das fontes de dados" actions={<MockTag mock={mock} />}>
       <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {fontes.map((f) => (
-          <li key={f.fonte} className="rounded-md border border-line bg-base p-3">
-            <p className="min-h-10 text-sm text-ink">{f.fonte}</p>
+          <li key={f.fonte} className="border border-line bg-fundo p-3">
+            <p className="min-h-10 text-body text-ink">{f.fonte}</p>
             {/* pill com texto "online"/"offline": estado nunca comunicado só pela cor */}
             <StatusPill level={f.online ? 'low' : 'critical'} label={f.online ? 'online' : 'offline'} pulse={f.online} className="mt-2" />
             <p className="kpi mt-2 text-[11px] text-ink-muted">
@@ -93,7 +94,7 @@ function MetadadosModelo({ modelo, mock }: { modelo: ModeloInfo; mock: boolean }
       {mock && (
         <p className="mb-3 text-xs text-ink-muted">Placeholder: nenhum modelo foi treinado ainda.</p>
       )}
-      <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-body">
         {itens.map(([k, val]) => (
           <div key={k} className="contents">
             <dt className="text-ink-muted">{k}</dt>
@@ -108,17 +109,7 @@ function MetadadosModelo({ modelo, mock }: { modelo: ModeloInfo; mock: boolean }
 function Limitacoes() {
   return (
     <Card title="Limitações declaradas">
-      <ol className="space-y-3">
-        {LIMITACOES.map((l, i) => (
-          <li key={l.titulo} className="flex gap-3">
-            <span className="kpi mt-0.5 text-xs text-ink-faint">{String(i + 1).padStart(2, '0')}</span>
-            <div>
-              <p className="text-sm font-medium text-ink">{l.titulo}</p>
-              <p className="mt-0.5 text-xs text-ink-muted">{l.detalhe}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+      <ListaLimitacoes itens={LIMITACOES} />
     </Card>
   )
 }
