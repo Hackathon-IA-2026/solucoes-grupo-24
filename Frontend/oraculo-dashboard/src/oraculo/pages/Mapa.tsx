@@ -2,13 +2,16 @@
  * Mapa Inteligente de perfis de carga e GD (protótipo, painel "mapa"). Porte de
  * 02-PROTOTIPO/web/js/views/mapa.js (V.mapa). Para cada subestação de fronteira: classe de
  * consumo predominante e nível de penetração de MMGD, com a amostra de ortoimagem e detecções.
+ * Abre no mapa do Brasil; escolher a UF aproxima o mapa e carrega as subestações dela.
  */
-import { useState } from 'react'
-import { Circle, CircleMarker, Polygon, Rectangle, Tooltip } from 'react-leaflet'
+import L from 'leaflet'
+import { useMemo, useState } from 'react'
+import { Circle, CircleMarker, GeoJSON, Pane, Polygon, Rectangle, Tooltip } from 'react-leaflet'
+import ufsGeo from '../../data/geo/ufs.geo.json'
 import { Api, type Envelope } from '../api'
 import { color } from '../charts'
-import { usePersistido } from '../estado'
-import { ImagemGeo, MapaOsm, limitesDaCena, limitesDe, pixelParaLatLon } from '../MapaOsm'
+import { useOraculo, usePersistido } from '../estado'
+import { ImagemGeo, MapaOsm, limitesDaCena, pixelParaLatLon, type Limites } from '../MapaOsm'
 import { num, pct, signed } from '../format'
 import { BarRow, Chip, Conteudo, Kpi, OCard, Pagina, Proveniencia, StatLines, Vazio, useApi } from '../ui'
 
@@ -47,44 +50,74 @@ function spread(obj: Dado): string {
   )
 }
 
+/** UFs com a análise por subestação liberada. As demais aparecem no mapa como "em breve". */
+const UFS_ATIVAS = ['RJ']
+
+const NOME_UF: Record<string, string> = {
+  AC: 'Acre', AL: 'Alagoas', AM: 'Amazonas', AP: 'Amapá', BA: 'Bahia', CE: 'Ceará', DF: 'Distrito Federal',
+  ES: 'Espírito Santo', GO: 'Goiás', MA: 'Maranhão', MG: 'Minas Gerais', MS: 'Mato Grosso do Sul', MT: 'Mato Grosso',
+  PA: 'Pará', PB: 'Paraíba', PE: 'Pernambuco', PI: 'Piauí', PR: 'Paraná', RJ: 'Rio de Janeiro', RN: 'Rio Grande do Norte',
+  RO: 'Rondônia', RR: 'Roraima', RS: 'Rio Grande do Sul', SC: 'Santa Catarina', SE: 'Sergipe', SP: 'São Paulo', TO: 'Tocantins',
+}
+
+const COLECAO_UFS = ufsGeo as GeoJSON.FeatureCollection
+const BRASIL: Limites = [
+  [-33.8, -74.0],
+  [5.3, -34.8],
+]
+
+/** Enquadramento de uma UF a partir do contorno do IBGE. */
+function limitesDaUf(uf: string): Limites | null {
+  const f = COLECAO_UFS.features.find((x) => x.properties?.uf === uf)
+  if (!f) return null
+  const b = L.geoJSON(f).getBounds()
+  return [
+    [b.getSouth(), b.getWest()],
+    [b.getNorth(), b.getEast()],
+  ]
+}
+
 export default function Mapa() {
-  const [uf, setUf] = usePersistido('oraculo.mapaUf', '')
-  const [limit] = usePersistido('oraculo.mapaLimit', 12)
+  // a tela sempre abre no Brasil; escolher a UF aproxima o mapa e abre os dados dela
+  const [uf, setUf] = useState('')
   const [sel, setSel] = usePersistido<string | null>('oraculo.mapaSel', null)
-  const estado = useApi(() => Api.get('mapa/substations', { uf: uf || '', limit, frontier_only: 1 }), [uf, limit])
+  // a análise da UF leva alguns segundos: com uma UF só liberada, já pede os dados dela na
+  // abertura, e o tempo em que a pessoa olha o mapa (e o voo) cobre parte da espera
+  const ufDados = uf || UFS_ATIVAS[0]
+  const estado = useApi(() => Api.get('mapa/substations', { uf: ufDados, limit: 50, frontier_only: 1 }), [ufDados])
+  const rows: Dado[] = uf && estado.status === 'ok' ? ((estado.dado as Envelope).data as Dado).rows || [] : []
+  const selId: string | null = sel && rows.some((r) => r.sub_id === sel) ? sel : (rows[0]?.sub_id ?? null)
 
   return (
     <Pagina>
-      <Conteudo estado={estado} texto="Carregando subestações do ONS e analisando as amostras…">
-        {(body) => (
-          <Corpo
-            body={body}
-            uf={uf}
-            sel={sel}
-            setSel={setSel}
-            setUf={(u) => {
-              setUf(u)
-              setSel(null)
-            }}
-          />
-        )}
-      </Conteudo>
+      <div style={{ marginBottom: 14 }}>
+        <MapaBrasil uf={uf} setUf={setUf} rows={rows} selId={selId} setSel={setSel} carregando={!!uf && estado.status === 'carregando'} />
+      </div>
+      {uf ? (
+        <Conteudo estado={estado} texto={'Carregando subestações do ONS em ' + (NOME_UF[uf] || uf) + ' e analisando as amostras…'}>
+          {(body) => <Corpo body={body} selId={selId} setSel={setSel} />}
+        </Conteudo>
+      ) : (
+        <div className="note-strip">
+          Selecione um estado no mapa para ver as subestações de fronteira com a distribuição: composição por classe de consumo e nível de penetração de MMGD.
+          Nesta versão, só o <strong>Rio de Janeiro</strong> está disponível; os demais estados entram em seguida.
+        </div>
+      )}
     </Pagina>
   )
 }
 
-function Corpo({ body, uf, sel, setSel, setUf }: { body: Envelope; uf: string; sel: string | null; setSel: (s: string) => void; setUf: (u: string) => void }) {
+function Corpo({ body, selId, setSel }: { body: Envelope; selId: string | null; setSel: (s: string) => void }) {
   const d = body.data as Dado
   const rows: Dado[] = d.rows || []
-  if (!rows.length) {
+  if (!rows.length || !selId) {
     return (
       <>
-        <Vazio>Nenhuma subestação de fronteira no filtro atual.</Vazio>
+        <Vazio>Nenhuma subestação de fronteira neste estado.</Vazio>
         <Proveniencia body={body} />
       </>
     )
   }
-  const selId: string = sel && rows.some((r) => r.sub_id === sel) ? sel : rows[0].sub_id
   const sm = d.summary || {}
   const rr = d.registry_report || {}
 
@@ -96,8 +129,8 @@ function Corpo({ body, uf, sel, setSel, setUf }: { body: Envelope; uf: string; s
       </div>
 
       <div className="grid g4" style={{ marginBottom: 14 }}>
-        <Kpi label="Subestações de fronteira" value={num(d.total)} foot={'filtro atual · ' + num(d.returned) + ' analisadas nesta página'} accent="teal" />
-        <Kpi label="Classe dominante no lote" value={topLabel(sm.by_class)} foot={spread(sm.by_class)} accent="navy" />
+        <Kpi label="Subestações de fronteira" value={num(d.total)} foot={'no estado · ' + num(d.returned) + ' analisadas'} accent="teal" />
+        <Kpi label="Classe dominante no estado" value={topLabel(sm.by_class)} foot={spread(sm.by_class)} accent="navy" />
         <Kpi label="Penetração de MMGD" value={topLabel(sm.by_mmgd_level)} foot={spread(sm.by_mmgd_level)} accent="amber" />
         <Kpi
           label="Qualidade da detecção"
@@ -108,59 +141,43 @@ function Corpo({ body, uf, sel, setSel, setUf }: { body: Envelope; uf: string; s
         />
       </div>
 
-      <div className="chips" style={{ marginBottom: 12 }}>
-        <Chip on={!uf} onClick={() => setUf('')}>
-          todas as UF
-        </Chip>
-        {(d.ufs || []).map((u: string) => (
-          <Chip key={u} on={uf === u} onClick={() => setUf(u)}>
-            {u}
-          </Chip>
-        ))}
-      </div>
-
       <div className="grid g-1-2" style={{ marginBottom: 14 }}>
-        <div>
-          <OCard title="Subestações analisadas" hint="clique para abrir o detalhe">
-            <div className="table-wrap scroll-y">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Subestação</th>
-                    <th>Classe predominante</th>
-                    <th>MMGD</th>
+        <OCard title="Subestações analisadas" hint="clique para abrir o detalhe">
+          <div className="table-wrap scroll-y">
+            <table>
+              <thead>
+                <tr>
+                  <th>Subestação</th>
+                  <th>Classe predominante</th>
+                  <th>MMGD</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.sub_id} className={r.sub_id === selId ? 'sel' : ''} style={{ cursor: 'pointer' }} onClick={() => setSel(r.sub_id)}>
+                    <td>
+                      <strong>{r.name}</strong>
+                      <br />
+                      <span className="small faint">
+                        {r.uf} · {r.sub_id} · {num(r.voltage_kv)}/{num(r.secondary_kv)} kV
+                      </span>
+                    </td>
+                    <td className="small">
+                      {r.class_label || '—'}
+                      <br />
+                      <span className="faint">conf. {pct(r.class_confidence, 0)}</span>
+                    </td>
+                    <td>
+                      <LevelChip lv={r.mmgd_level} />
+                      <br />
+                      <span className="small faint mono">{num(r.mmgd_kwp_per_km2)} kWp/km²</span>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r) => (
-                    <tr key={r.sub_id} className={r.sub_id === selId ? 'sel' : ''} style={{ cursor: 'pointer' }} onClick={() => setSel(r.sub_id)}>
-                      <td>
-                        <strong>{r.name}</strong>
-                        <br />
-                        <span className="small faint">
-                          {r.uf} · {r.sub_id} · {num(r.voltage_kv)}/{num(r.secondary_kv)} kV
-                        </span>
-                      </td>
-                      <td className="small">
-                        {r.class_label || '—'}
-                        <br />
-                        <span className="faint">conf. {pct(r.class_confidence, 0)}</span>
-                      </td>
-                      <td>
-                        <LevelChip lv={r.mmgd_level} />
-                        <br />
-                        <span className="small faint mono">{num(r.mmgd_kwp_per_km2)} kWp/km²</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </OCard>
-          <div style={{ marginTop: 14 }}>
-            <MapaSubestacoes rows={rows} selId={selId} setSel={setSel} />
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
+        </OCard>
         <Detalhe key={selId} subId={selId} />
       </div>
 
@@ -224,67 +241,134 @@ function Corpo({ body, uf, sel, setSel, setUf }: { body: Envelope; uf: string; s
   )
 }
 
-/** Subestações da lista sobre o OSM: cor pelo nível de MMGD, círculo claro do raio de análise. */
-function MapaSubestacoes({ rows, selId, setSel }: { rows: Dado[]; selId: string; setSel: (s: string) => void }) {
+/**
+ * Mapa do Brasil com as UFs do IBGE. Abre no país inteiro; clicar numa UF liberada voa até ela e
+ * passa a mostrar as subestações de fronteira (cor pelo nível de MMGD, círculo do raio de análise).
+ */
+function MapaBrasil({
+  uf,
+  setUf,
+  rows,
+  selId,
+  setSel,
+  carregando,
+}: {
+  uf: string
+  setUf: (u: string) => void
+  rows: Dado[]
+  selId: string | null
+  setSel: (s: string) => void
+  carregando: boolean
+}) {
   const [raios, setRaios] = usePersistido('oraculo.mapaOsmRaios', true)
+  const limites = useMemo(() => (uf ? limitesDaUf(uf) : null) || BRASIL, [uf])
   const pts = rows.filter((r) => Number.isFinite(r.lat) && Number.isFinite(r.lon))
-  const limites = limitesDe(pts, 0.25)
   // a selecionada por último, para ficar por cima das demais
   const ordem = [...pts].sort((a, b) => (a.sub_id === selId ? 1 : 0) - (b.sub_id === selId ? 1 : 0))
+  const nome = NOME_UF[uf] || uf
+
   return (
     <OCard
-      title="Subestações no mapa"
-      hint="clique para abrir o detalhe"
-      note={'Cor pelo nível de penetração de MMGD' + (raios ? '; círculo claro = raio de análise da subestação' : '') + '. © OpenStreetMap contributors.'}
+      title={uf ? nome + ' · subestações de fronteira' : 'Brasil · selecione um estado'}
+      hint={uf ? (carregando ? 'analisando as subestações…' : num(pts.length) + ' subestações · clique para abrir o detalhe') : 'estados em destaque já têm a análise'}
+      note={
+        uf
+          ? 'Cor pelo nível de penetração de MMGD' + (raios ? '; círculo claro = raio de análise da subestação' : '') + '. Divisas: IBGE. © OpenStreetMap contributors.'
+          : 'Divisas: IBGE. © OpenStreetMap contributors.'
+      }
     >
-      {limites ? (
-        <MapaOsm limites={limites} altura={400} maxZoom={12}>
-          {raios &&
-            ordem.map((r) =>
-              Number.isFinite(r.radius_km) && r.radius_km > 0 ? (
-                <Circle
-                  key={'raio-' + r.sub_id}
-                  center={[r.lat, r.lon]}
-                  radius={r.radius_km * 1000}
-                  interactive={false}
-                  pathOptions={{ color: nivelCor(r.mmgd_level), weight: 1, opacity: 0.5, fillOpacity: r.sub_id === selId ? 0.14 : 0.06 }}
-                />
-              ) : null,
-            )}
-          {ordem.map((r) => {
-            const cor = nivelCor(r.mmgd_level)
-            const on = r.sub_id === selId
-            return (
-              <CircleMarker
-                key={r.sub_id}
+      <MapaOsm limites={limites} altura={540} maxZoom={uf ? 9 : 5} zoomMin={3} animar>
+        <Pane name="ufs" style={{ zIndex: 350 }}>
+          <CamadaUfs uf={uf} onUf={setUf} />
+        </Pane>
+        {raios &&
+          ordem.map((r) =>
+            Number.isFinite(r.radius_km) && r.radius_km > 0 ? (
+              <Circle
+                key={'raio-' + r.sub_id}
                 center={[r.lat, r.lon]}
-                radius={on ? 10 : 7}
-                pathOptions={{ color: on ? color('ink') : cor, weight: on ? 3 : 1.5, fillColor: cor, fillOpacity: 0.85 }}
-                eventHandlers={{ click: () => setSel(r.sub_id) }}
-              >
-                <Tooltip direction="top">
-                  <strong>{r.name}</strong> ({r.uf}) · {r.sub_id}
-                  <br />
-                  classe: {r.class_label || r.class_dominant || '—'}
-                  <br />
-                  MMGD: {r.mmgd_level || '—'} · {num(r.mmgd_kwp_per_km2)} kWp/km²
-                </Tooltip>
-              </CircleMarker>
-            )
-          })}
-        </MapaOsm>
-      ) : (
-        <Vazio>Sem coordenadas nas subestações listadas.</Vazio>
-      )}
+                radius={r.radius_km * 1000}
+                interactive={false}
+                pathOptions={{ color: nivelCor(r.mmgd_level), weight: 1, opacity: 0.5, fillOpacity: r.sub_id === selId ? 0.14 : 0.06 }}
+              />
+            ) : null,
+          )}
+        {ordem.map((r) => {
+          const cor = nivelCor(r.mmgd_level)
+          const on = r.sub_id === selId
+          return (
+            <CircleMarker
+              key={r.sub_id}
+              center={[r.lat, r.lon]}
+              radius={on ? 10 : 7}
+              pathOptions={{ color: on ? color('ink') : cor, weight: on ? 3 : 1.5, fillColor: cor, fillOpacity: 0.85 }}
+              eventHandlers={{ click: () => setSel(r.sub_id) }}
+            >
+              <Tooltip direction="top">
+                <strong>{r.name}</strong> ({r.uf}) · {r.sub_id}
+                <br />
+                classe: {r.class_label || r.class_dominant || '—'}
+                <br />
+                MMGD: {r.mmgd_level || '—'} · {num(r.mmgd_kwp_per_km2)} kWp/km²
+              </Tooltip>
+            </CircleMarker>
+          )
+        })}
+      </MapaOsm>
       <div className="chips" style={{ marginTop: 8 }}>
-        {Object.keys(LEVEL_COLORS).map((lv) => (
-          <LevelChip key={lv} lv={lv} />
-        ))}
-        <Chip on={raios} onClick={() => setRaios(!raios)}>
-          raio de análise
-        </Chip>
+        {uf ? (
+          <>
+            <Chip onClick={() => setUf('')}>← voltar ao Brasil</Chip>
+            {Object.keys(LEVEL_COLORS).map((lv) => (
+              <LevelChip key={lv} lv={lv} />
+            ))}
+            <Chip on={raios} onClick={() => setRaios(!raios)}>
+              raio de análise
+            </Chip>
+          </>
+        ) : (
+          UFS_ATIVAS.map((u) => (
+            <Chip key={u} cor="teal" onClick={() => setUf(u)}>
+              {NOME_UF[u] || u}
+            </Chip>
+          ))
+        )}
       </div>
     </OCard>
+  )
+}
+
+/** Divisas das UFs: as liberadas em destaque e clicáveis; as demais esmaecidas ("em breve"). */
+function CamadaUfs({ uf, onUf }: { uf: string; onUf: (u: string) => void }) {
+  const { tema } = useOraculo()
+  const estilo = (u: string): L.PathOptions => {
+    const teal = color('teal')
+    if (u === uf) return { color: teal, weight: 2.5, fillColor: teal, fillOpacity: 0.05 }
+    if (UFS_ATIVAS.includes(u)) return { color: teal, weight: 1.5, fillColor: teal, fillOpacity: uf ? 0.12 : 0.5 }
+    return { color: color('line'), weight: 0.8, fillColor: color('muted'), fillOpacity: uf ? 0.05 : 0.18 }
+  }
+  return (
+    <GeoJSON
+      // remonta ao trocar UF ou tema: o GeoJSON do react-leaflet não reestiliza pelas props
+      key={uf + '|' + tema}
+      data={COLECAO_UFS}
+      style={(f) => estilo(f?.properties?.uf)}
+      onEachFeature={(f, layer) => {
+        const u: string = f.properties?.uf
+        const caminho = layer as L.Path
+        const ativa = UFS_ATIVAS.includes(u)
+        if (u === uf) return
+        layer.bindTooltip('<strong>' + (NOME_UF[u] || u) + '</strong> · ' + (ativa ? 'clique para ver as subestações' : 'em breve'), {
+          sticky: true,
+          direction: 'top',
+        })
+        layer.on({
+          mouseover: () => caminho.setStyle(ativa ? { weight: 2.5, fillOpacity: 0.7 } : { weight: 1.2, fillOpacity: uf ? 0.1 : 0.28 }),
+          mouseout: () => caminho.setStyle(estilo(u)),
+          click: () => ativa && onUf(u),
+        })
+      }}
+    />
   )
 }
 

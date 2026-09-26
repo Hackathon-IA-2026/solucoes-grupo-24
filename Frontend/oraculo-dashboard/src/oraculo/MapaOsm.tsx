@@ -13,7 +13,7 @@
  */
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { ImageOverlay, MapContainer, TileLayer, useMap } from 'react-leaflet'
 import { useOraculo } from './estado'
 
@@ -66,16 +66,29 @@ export function pixelParaLatLon(
   return [la1 - (y / geo.height_px) * (la1 - la0), lo0 + (x / geo.width_px) * (lo1 - lo0)]
 }
 
-function Enquadrar({ limites, maxZoom }: { limites: Limites | null; maxZoom?: number }) {
+function Enquadrar({ limites, maxZoom, animar }: { limites: Limites | null; maxZoom?: number; animar?: boolean }) {
   const map = useMap()
   const chave = limites ? limites.flat().map((v) => v.toFixed(5)).join(',') : ''
+  const primeira = useRef(true)
+  const atual = useRef({ limites, maxZoom })
+  atual.current = { limites, maxZoom }
   useEffect(() => {
-    if (limites) map.fitBounds(limites, { padding: [12, 12], maxZoom: maxZoom ?? 17 })
+    if (!limites) return
+    const opcoes = { padding: [12, 12] as [number, number], maxZoom: maxZoom ?? 17 }
+    // o enquadramento inicial é seco; os seguintes voam até o destino quando `animar`
+    if (animar && !primeira.current) map.flyToBounds(limites, { ...opcoes, duration: 1.2 })
+    else map.fitBounds(limites, opcoes)
+    primeira.current = false
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chave, map, maxZoom])
-  // o mapa pode nascer num card com largura ainda indefinida: recalcula o tamanho
+  // o mapa pode nascer num card com largura ainda indefinida: recalcula o tamanho e refaz o
+  // enquadramento inicial, que foi calculado com a largura errada
   useEffect(() => {
-    const t = setTimeout(() => map.invalidateSize(), 120)
+    const t = setTimeout(() => {
+      map.invalidateSize()
+      const { limites: l, maxZoom: z } = atual.current
+      if (l) map.fitBounds(l, { padding: [12, 12], maxZoom: z ?? 17 })
+    }, 120)
     return () => clearTimeout(t)
   }, [map])
   return null
@@ -88,6 +101,8 @@ export function MapaOsm({
   children,
   estilo,
   rolagem = false,
+  animar = false,
+  zoomMin,
 }: {
   limites: Limites | null
   altura?: number
@@ -96,6 +111,9 @@ export function MapaOsm({
   estilo?: CSSProperties
   /** zoom pela roda do mouse (desligado por padrão: a página rola por cima do mapa) */
   rolagem?: boolean
+  /** trocar `limites` voa (flyToBounds) até o novo enquadramento em vez de saltar */
+  animar?: boolean
+  zoomMin?: number
 }) {
   const { tema } = useOraculo()
   const [semTiles, setSemTiles] = useState(false)
@@ -103,9 +121,9 @@ export function MapaOsm({
   const centro = limites ? L.latLngBounds(limites).getCenter() : L.latLng(-15.8, -47.9)
   return (
     <div className={'osm-mapa' + (tema === 'dark' ? ' osm-escuro' : '')} style={{ height: altura, ...estilo }}>
-      <MapContainer center={centro} zoom={limites ? 12 : 4} scrollWheelZoom={rolagem} style={{ height: '100%', width: '100%' }} attributionControl>
+      <MapContainer center={centro} zoom={limites ? 12 : 4} scrollWheelZoom={rolagem} minZoom={zoomMin} style={{ height: '100%', width: '100%' }} attributionControl>
         <TileLayer url={OSM_URL} attribution={OSM_ATRIBUICAO} maxZoom={19} eventHandlers={eventos} />
-        <Enquadrar limites={limites} maxZoom={maxZoom} />
+        <Enquadrar limites={limites} maxZoom={maxZoom} animar={animar} />
         {children}
       </MapContainer>
       {semTiles && <div className="osm-aviso">OpenStreetMap indisponível nesta rede: exibindo só as camadas georreferenciadas.</div>}

@@ -503,9 +503,11 @@ body.help-locked { overflow: hidden; }
 
 
 /* ---------------------------------------------------------------- mapas OpenStreetMap */
-/* Moldura no mesmo desenho dos gráficos do protótipo; tiles escurecidos no tema escuro. */
+/* Moldura no mesmo desenho dos gráficos do protótipo; tiles escurecidos no tema escuro.
+ * isolation: o Leaflet usa z-index de 200 a 1000 nas camadas e controles; sem um contexto de
+ * empilhamento próprio eles competem com a página e passam por cima do header sticky (#top, z 20). */
 .osm-mapa {
-  position: relative; border: 1px solid var(--o-line); border-radius: var(--o-radius-sm);
+  position: relative; isolation: isolate; border: 1px solid var(--o-line); border-radius: var(--o-radius-sm);
   overflow: hidden; background: var(--o-panel-2);
 }
 .osm-mapa .leaflet-container { background: var(--o-panel-2); font-family: var(--o-sans); }
