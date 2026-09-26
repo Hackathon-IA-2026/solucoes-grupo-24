@@ -1,4 +1,6 @@
 import { Outlet } from 'react-router-dom'
+import { AjudaF1 } from '../../oraculo/Ajuda'
+import { OraculoProvider } from '../../oraculo/estado'
 import { SeverityFilterProvider } from '../../state/severityFilter'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
@@ -15,7 +17,9 @@ import { Topbar } from './Topbar'
  */
 export function AppLayout() {
   return (
+    <OraculoProvider>
     <SeverityFilterProvider>
+      <AjudaF1 />
       <div className="grid h-full grid-cols-[3.5rem_minmax(0,1fr)] grid-rows-[3rem_minmax(0,1fr)] lg:grid-cols-[13rem_minmax(0,1fr)]">
         <Topbar />
         <Sidebar />
@@ -24,5 +28,6 @@ export function AppLayout() {
         </main>
       </div>
     </SeverityFilterProvider>
+    </OraculoProvider>
   )
 }

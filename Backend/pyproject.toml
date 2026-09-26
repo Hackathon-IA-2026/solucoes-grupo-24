@@ -44,7 +44,7 @@ explicabilidade = ["shap", "numpy"]
 visao = ["ultralytics>=8.1", "earthengine-api"]
 
 [tool.setuptools.packages.find]
-include = ["src*", "pipeline*", "migrations*"]
+include = ["src*", "pipeline*", "migrations*", "oraculo*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

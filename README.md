@@ -34,7 +34,7 @@ pip install -e ".[dev]"
 python run_heavywork.py
 
 # 2. Serviço web: API só de leitura sobre o banco publicado no passo 1
-#    http://127.0.0.1:8000/api/carga/snapshot ... | documentação das rotas em /docs
+#    http://127.0.0.1:8000/api/carga/snapshot ... | documentação das rotas em /api-docs
 python main.py
 
 # 3. Explicabilidade: regenera os alertas mockados do dashboard
@@ -66,6 +66,25 @@ npm test          # testes do contrato de dados
 # http://127.0.0.1:8000/ (caminho do build em Backend/config/api.yaml)
 npm run build
 ```
+
+## Protótipo O.R.A.C.U.L.O. consolidado (Equipe 24 — LINKFY)
+
+O protótipo (antes em `02-PROTOTIPO`, HTML/JS puro + Starlette) foi trazido para este repositório,
+com as telas reescritas em React dentro do mesmo dashboard. Um servidor só (`python main.py`)
+serve a API do contrato, a API do protótipo, a documentação Sphinx (tecla F1) e o dashboard.
+
+| Onde | O quê |
+|---|---|
+| `Backend/oraculo/` | pacote do protótipo: API (`/api/health`, `/api/mapa/...`, `/api/clm/...`, `/api/fronteira/...`, `/api/bess/...`, `/api/ene/...`, `/api/tempo/...`), modelos, ingestão ONS/ANEEL/IBGE/Open-Meteo, visão computacional clássica + adaptador YOLO |
+| `Backend/oraculo/web_legado/` | interface original em HTML/JS, servida em `/legado` (referência) |
+| `Backend/tests_oraculo/` | suíte do protótipo: `python -m pytest tests_oraculo` (em `Backend/`) |
+| `Backend/data/oraculo_cache/` | cache de trabalho das fontes (fora do git; reconstruído sob demanda) |
+| `Backend/src/api/auditoria.py` | `/api/auditoria/mmgd`: leitura da auditoria em 3 camadas (visão computacional do time) |
+| `Frontend/oraculo-dashboard/src/oraculo/` | telas React do protótipo (grupos Operação, Análise, Mapa Inteligente, Visão computacional, Fronteira T–D, Investimento, Confiança), gráficos SVG, ajuda F1 |
+| `docs/oraculo/` | documentação Sphinx (`documentacao_sphinx/`, `python build_docs.py`), especificações e apresentações |
+
+Visão computacional com as duas soluções: **Detector por subestação** (protótipo, `/visao`) e
+**Auditoria MMGD · 3 camadas** (pipeline do time, `/auditoria-mmgd`). Swagger da API em `/api-docs`.
 
 ## Pré-requisitos
 

@@ -1,0 +1,205 @@
+/**
+ * Telas do protótipo O.R.A.C.U.L.O. no registro de módulos (src/modules.ts), na ordem e nos
+ * grupos do menu original (02-PROTOTIPO/web/js/app.js, NAV). `ajuda` é o id do painel na
+ * documentação Sphinx (tecla F1); o mapeamento id -> página vem do Backend (/api/docs/status).
+ *
+ * Visão computacional tem as DUAS soluções do time lado a lado:
+ * - "Detector por subestação" (protótipo: detector clássico + adaptador YOLO, /api/mapa/vision);
+ * - "Auditoria MMGD · 3 camadas" (pipeline do time: YOLOv8-seg + BDGD + cadastro ANEEL,
+ *   Backend/pipeline/auditoria_*.py, /api/auditoria/mmgd).
+ */
+import { lazy } from 'react'
+import {
+  Activity,
+  BatteryCharging,
+  ChartPie,
+  CheckCheck,
+  Database,
+  Eye,
+  Layers,
+  Link2,
+  MapPin,
+  Satellite,
+  Scissors,
+  SlidersHorizontal,
+  Sun,
+  Target,
+  TrendingUp,
+  TriangleAlert,
+  ShieldCheck,
+} from 'lucide-react'
+import type { ModuleDef } from '../modules'
+
+export const GRUPO_CONTRATO = 'Dashboard do contrato'
+
+export const MODULOS_ORACULO: readonly ModuleDef[] = [
+  // ---------------------------------------------------------------- Operação
+  {
+    path: '/operacao',
+    grupo: 'Operação',
+    ajuda: 'operacao',
+    label: 'Despacho preditivo',
+    description: 'Carga medida − MMGD estimada = carga supervisionada, com banda probabilística e múltiplos horizontes.',
+    icon: Activity,
+    Page: lazy(() => import('./pages/Operacao')),
+  },
+  {
+    path: '/risco',
+    grupo: 'Operação',
+    ajuda: 'risco',
+    label: 'Risco e excedentes',
+    description: 'Localizar · priorizar · explicar e recomendar, com rastreabilidade até o dado de origem.',
+    icon: TriangleAlert,
+    Page: lazy(() => import('./pages/Risco')),
+  },
+  {
+    path: '/pato',
+    grupo: 'Operação',
+    ajuda: 'pato',
+    label: 'Curva do pato · tempo',
+    description: 'Radiação solar prevista por modelos de IA e físicos × onde está a MMGD → carga supervisionada dos próximos dias.',
+    icon: Sun,
+    Page: lazy(() => import('./pages/Pato')),
+  },
+  // ---------------------------------------------------------------- Análise
+  {
+    path: '/curtailment',
+    grupo: 'Análise',
+    ajuda: 'curtailment',
+    label: 'Curtailment',
+    description: 'Montante, razão e origem da restrição, a partir dos registros de constrained-off do ONS.',
+    icon: Scissors,
+    Page: lazy(() => import('./pages/Curtailment')),
+  },
+  {
+    path: '/perfis',
+    grupo: 'Análise',
+    ajuda: 'perfis',
+    label: 'Perfis e CLM',
+    description: 'Eixo 1: caracterizar perfis de consumo e a presença da geração distribuída para parametrizar modelos equivalentes.',
+    icon: Layers,
+    Page: lazy(() => import('./pages/Perfis')),
+  },
+  {
+    path: '/triangulacao',
+    grupo: 'Análise',
+    ajuda: 'triangulacao',
+    label: 'Triangulação',
+    description: 'Três camadas independentes e a lógica de desempate que separa defasagem administrativa de instalação não homologada.',
+    icon: Target,
+    Page: lazy(() => import('./pages/Triangulacao')),
+  },
+  // ---------------------------------------------------------------- Mapa Inteligente
+  {
+    path: '/mapa',
+    grupo: 'Mapa Inteligente',
+    ajuda: 'mapa',
+    label: 'Perfis por subestação',
+    description: 'Para cada subestação georreferenciada: perfil predominante de consumo e indicador de presença de geração distribuída.',
+    icon: MapPin,
+    Page: lazy(() => import('./pages/Mapa')),
+  },
+  {
+    path: '/classes',
+    grupo: 'Mapa Inteligente',
+    ajuda: 'classes',
+    label: 'Classes de consumo',
+    description: 'Perfis canônicos e decomposição da curva de carga verificada por mínimos quadrados não negativos.',
+    icon: ChartPie,
+    Page: lazy(() => import('./pages/Classes')),
+  },
+  {
+    path: '/clm',
+    grupo: 'Mapa Inteligente',
+    ajuda: 'clm',
+    label: 'Parametrização CLM',
+    description: 'CMPLDW segundo a especificação do WECC: estrutura, equações e cartão de parâmetros com procedência campo a campo.',
+    icon: SlidersHorizontal,
+    Page: lazy(() => import('./pages/Clm')),
+  },
+  // ---------------------------------------------------------------- Visão computacional
+  {
+    path: '/visao',
+    grupo: 'Visão computacional',
+    ajuda: 'visao',
+    label: 'Detector por subestação',
+    description: 'Detecção de painéis fotovoltaicos sobre imagem de satélite: pipeline, backends e desempenho medido contra verdade fundamental.',
+    icon: Eye,
+    Page: lazy(() => import('./pages/Visao')),
+  },
+  {
+    path: '/auditoria-mmgd',
+    grupo: 'Visão computacional',
+    ajuda: 'visao',
+    label: 'Auditoria MMGD · 3 camadas',
+    description: 'Painéis detectados em satélite (YOLOv8-seg) × BDGD × cadastro ANEEL: desempate e fator de correção por mancha.',
+    icon: Satellite,
+    Page: lazy(() => import('./pages/AuditoriaMmgd')),
+  },
+  // ---------------------------------------------------------------- Fronteira T–D
+  {
+    path: '/fronteira',
+    grupo: 'Fronteira T–D',
+    ajuda: 'fronteira',
+    label: 'SE × distribuição',
+    description: 'Cada subestação de distribuição da BDGD associada à SE de fronteira do ONS que a alimenta, com a carga e a MMGD que ela leva.',
+    icon: Link2,
+    Page: lazy(() => import('./pages/Fronteira')),
+  },
+  {
+    path: '/correlacao',
+    grupo: 'Fronteira T–D',
+    ajuda: 'correlacao',
+    label: 'Qualidade da correlação',
+    description: 'Sem verdade de campo para a topologia: validação externa contra a carga do ONS, coerência física e sensibilidade às premissas.',
+    icon: CheckCheck,
+    Page: lazy(() => import('./pages/Correlacao')),
+  },
+  // ---------------------------------------------------------------- Investimento
+  {
+    path: '/bess',
+    grupo: 'Investimento',
+    ajuda: 'bess',
+    label: 'Alocação de BESS',
+    description: 'Onde um armazenamento recupera mais energia cortada das usinas centralizadas — e quanto desse corte é excedente criado pela MMGD.',
+    icon: BatteryCharging,
+    Page: lazy(() => import('./pages/Bess')),
+  },
+  {
+    path: '/bess-metodo',
+    grupo: 'Investimento',
+    ajuda: 'bessmetodo',
+    label: 'Método e sensibilidade',
+    description: 'De onde vem cada número, o que ficou de fora e o quanto o ranking depende dos pesos.',
+    icon: SlidersHorizontal,
+    Page: lazy(() => import('./pages/BessMetodo')),
+  },
+  {
+    path: '/projecao-ene',
+    grupo: 'Investimento',
+    ajuda: 'projecao',
+    label: 'Projeção do corte ENE',
+    description: 'Quanto corte ENE vem pela frente, quanto dele a MMGD explica, e quanto BESS ele justifica no SIN.',
+    icon: TrendingUp,
+    Page: lazy(() => import('./pages/Projecao')),
+  },
+  // ---------------------------------------------------------------- Confiança
+  {
+    path: '/validacao-metodo',
+    grupo: 'Confiança',
+    ajuda: 'validacao',
+    label: 'Validação do método',
+    description: 'Backtest cronológico, baselines obrigatórios, métricas por patamar e calibração probabilística.',
+    icon: ShieldCheck,
+    Page: lazy(() => import('./pages/ValidacaoMetodo')),
+  },
+  {
+    path: '/dados-abertos',
+    grupo: 'Confiança',
+    ajuda: 'dados',
+    label: 'Dados abertos',
+    description: 'Navegação pelo catálogo do Portal de Dados Abertos do ONS, estado do cache e rastro de cada número exibido.',
+    icon: Database,
+    Page: lazy(() => import('./pages/DadosAbertos')),
+  },
+]

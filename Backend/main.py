@@ -5,7 +5,8 @@ Como rodar (de dentro de Backend/, com o .venv ativo):
     python main.py                 # http://127.0.0.1:8000/api/...  (host/porta em config/api.yaml)
     uvicorn main:app --reload      # alternativa, com recarga automática no desenvolvimento
 
-Documentação interativa das rotas: http://127.0.0.1:8000/docs
+Documentação interativa das rotas: http://127.0.0.1:8000/api-docs
+(/docs é a documentação Sphinx do protótipo, a ajuda F1 do dashboard)
 
 Este arquivo não importa nada da parte pesada (ingestão, processamento, modelos): o serviço
 web só lê o banco. Se o banco ainda não foi publicado, as rotas respondem 503 dizendo para

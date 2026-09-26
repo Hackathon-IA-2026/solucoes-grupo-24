@@ -1,3 +1,4 @@
+import { OraculoBarra } from '../../oraculo/Barra'
 import { StatusPill } from '../ui/StatusPill'
 import { Clock } from './Clock'
 import { FonteDados } from './FonteDados'
@@ -41,6 +42,8 @@ export function Topbar() {
         <FonteDados />
 
         <div className="ml-auto flex shrink-0 items-center gap-4">
+          {/* telas do protótipo: modo dos dados, área, ajuda F1 e recarregar */}
+          <OraculoBarra />
           <SeverityFilters />
           <div className="h-7 w-px bg-line max-sm:hidden" aria-hidden />
           <div className="max-sm:hidden">

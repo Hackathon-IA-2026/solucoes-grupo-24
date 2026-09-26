@@ -1,0 +1,35 @@
+/* Ajustes de leitura sobre o tema RTD. A paleta acompanha a do painel. */
+:root {
+  --oraculo-navy: #17296b;
+  --oraculo-teal: #0e7c74;
+  --oraculo-amber: #c06410;
+  --oraculo-crimson: #b3262a;
+  --oraculo-green: #2e9b57;
+}
+
+.wy-nav-side, .wy-side-nav-search { background: var(--oraculo-navy); }
+.wy-side-nav-search input[type="text"] { border-color: var(--oraculo-teal); }
+.wy-menu-vertical a:hover { background: #22357f; }
+
+/* Tabelas largas: rolagem em vez de estouro. */
+.wy-table-responsive table td, .wy-table-responsive table th {
+  white-space: normal;
+}
+.rst-content table.docutils td { vertical-align: top; }
+
+/* Blocos de destaque, um por natureza de aviso. */
+.rst-content .admonition-title { font-weight: 600; }
+.rst-content .admonition.limite { border-left: 4px solid var(--oraculo-crimson); }
+.rst-content .admonition.premissa { border-left: 4px solid var(--oraculo-amber); }
+.rst-content .admonition.medido { border-left: 4px solid var(--oraculo-green); }
+
+/* Rotulos de procedencia usados nas tabelas de parametros. */
+.proc { font-family: monospace; font-size: 88%; padding: 1px 5px;
+        border-radius: 3px; }
+.proc-derivado { background: #e3f4ea; color: #1d6b3c; }
+.proc-premissa { background: #fdf0dd; color: #8d4a0c; }
+.proc-calibrar { background: #fbe4e5; color: #8c1d20; }
+.proc-fonte    { background: #e4ecf7; color: #17296b; }
+
+.rst-content code.literal { color: #b3262a; background: #f7f7f9; }
+.rst-content .guilabel { border-color: var(--oraculo-teal); }

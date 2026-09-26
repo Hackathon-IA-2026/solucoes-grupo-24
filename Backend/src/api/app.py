@@ -38,6 +38,7 @@ from src.db.sessao import nova_sessao
 from src.db.tabelas import Execucao
 from src.utils.config import carregar
 from src.utils.paths import RAIZ
+from src.api.auditoria import rotas_auditoria
 
 INSTRUCAO = "rode `python run_heavywork.py` em Backend/ para publicar os dados no banco"
 
@@ -120,15 +121,41 @@ def _rotas() -> APIRouter:
 def criar_app(dashboard_dist: Path | None = None) -> FastAPI:
     """`dashboard_dist` só para testes; o padrão vem de config/api.yaml."""
     cfg = carregar("api")
+    # Swagger em /api-docs: "/docs" é a documentação Sphinx do protótipo (ajuda F1 das telas).
     app = FastAPI(title="O.R.A.C.U.L.O. API",
                   description="Leitura dos recursos publicados pelo run_heavywork.py "
-                              "(contrato: Frontend/oraculo-dashboard/src/data/types.ts).")
-    app.add_middleware(CORSMiddleware, allow_origins=cfg["cors_origens"], allow_methods=["GET"],
-                       allow_headers=["*"])
+                              "(contrato: Frontend/oraculo-dashboard/src/data/types.ts), "
+                              "auditoria da MMGD por visão computacional e os serviços do "
+                              "protótipo O.R.A.C.U.L.O. (oraculo/: mapa, CLM, fronteira T–D, "
+                              "BESS, projeção ENE, curva do pato).",
+                  docs_url="/api-docs", redoc_url=None)
+    # POST: as reconstruções do protótipo (fronteira, BESS, tempo) e a ingestão sob demanda.
+    app.add_middleware(CORSMiddleware, allow_origins=cfg["cors_origens"],
+                       allow_methods=["GET", "POST"], allow_headers=["*"])
     app.include_router(_rotas(), prefix=cfg["prefixo"])
+    app.include_router(rotas_auditoria(), prefix=cfg["prefixo"])
+    _incluir_prototipo(app)
     dist = dashboard_dist if dashboard_dist is not None else RAIZ / cfg["dashboard_dist"]
     _servir_dashboard(app, dist.resolve(), cfg["prefixo"])
     return app
+
+
+def _incluir_prototipo(app: FastAPI) -> None:
+    """Rotas do protótipo O.R.A.C.U.L.O. (pacote `oraculo/`, Starlette) no mesmo servidor.
+
+    Decisões:
+    - As rotas do protótipo (/api/health, /api/mapa/..., /api/fronteira/..., /api/bess/...,
+      /api/ene/..., /api/tempo/..., /api/clm/..., /docs, /legado) não colidem com as do
+      contrato (/api/carga/snapshot, /api/previsao, /api/riscos, ... /api/saude).
+    - Entram ANTES do dashboard: o catch-all do SPA nunca engole /docs nem /legado.
+    - Import tardio e opcional: sem o pacote (checkout parcial), a API do contrato sobe igual.
+    - O protótipo usa só numpy/scipy/httpx; nada da parte pesada (pandas, DuckDB) é carregado.
+    """
+    try:
+        from oraculo.api.app import routes as rotas_oraculo
+    except ImportError:  # pragma: no cover
+        return
+    app.router.routes.extend(rotas_oraculo)
 
 
 def _servir_dashboard(app: FastAPI, dist: Path, prefixo: str) -> None:

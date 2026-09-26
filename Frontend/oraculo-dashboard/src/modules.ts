@@ -6,6 +6,7 @@
  * ordem do menu). Para criar um módulo novo: uma página em src/pages/ + uma entrada aqui.
  */
 import { lazy, type ComponentType } from 'react'
+import { GRUPO_CONTRATO, MODULOS_ORACULO } from './oraculo/modulos'
 import {
   Activity,
   BookOpen,
@@ -37,9 +38,14 @@ export interface ModuleDef {
   description: string
   icon: LucideIcon
   Page: ComponentType
+  /** título do grupo no menu lateral (ver ./oraculo/modulos.ts) */
+  grupo?: string
+  /** id do painel na documentação Sphinx do protótipo (ajuda F1, /api/docs/status) */
+  ajuda?: string
 }
 
-export const MODULES: readonly ModuleDef[] = [
+/** Módulos do dashboard do contrato (types.ts ↔ Backend/src/api), no grupo próprio do menu. */
+const MODULOS_CONTRATO: readonly ModuleDef[] = ([
   {
     path: '/visao-geral',
     label: 'Visão Geral',
@@ -98,7 +104,14 @@ export const MODULES: readonly ModuleDef[] = [
     icon: BookOpen,
     Page: lazy(() => import('./pages/Metodologia')),
   },
-]
+] satisfies ModuleDef[]).map((m) => ({ ...m, grupo: GRUPO_CONTRATO }))
+
+/**
+ * Ordem do menu: primeiro as telas do protótipo O.R.A.C.U.L.O. (prioridade da consolidação,
+ * grupos Operação → Confiança, com as duas soluções de visão computacional), depois o
+ * dashboard do contrato. "/" abre o primeiro módulo (Despacho preditivo do protótipo).
+ */
+export const MODULES: readonly ModuleDef[] = [...MODULOS_ORACULO, ...MODULOS_CONTRATO]
 
 /** URL do Detalhe do Alerta de um risco (Lista de Riscos e demais links usam só isto). */
 export function rotaDetalheAlerta(riscoUsinaId: string): string {

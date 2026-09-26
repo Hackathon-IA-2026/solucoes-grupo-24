@@ -8,9 +8,11 @@
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-const SRC = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')
+// fileURLToPath (e não .pathname): caminho com espaço viraria %20 e o readdirSync falharia
+const SRC = fileURLToPath(new URL('..', import.meta.url))
 
 function arquivos(dir: string): string[] {
   return readdirSync(dir).flatMap((n: string) => {

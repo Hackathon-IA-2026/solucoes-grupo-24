@@ -63,3 +63,8 @@ dist/
 .idea/
 .DS_Store
 Thumbs.db
+
+# protótipo O.R.A.C.U.L.O. (Backend/oraculo): cache de trabalho das fontes (ONS, ANEEL, IBGE,
+# Open-Meteo), regravado sob demanda, e o cache isolado da suíte de testes
+Backend/data/oraculo_cache/
+Backend/.cache-tests/

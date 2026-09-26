@@ -25,7 +25,7 @@ Sem argumentos. Configuração em `config/heavywork.yaml` (liga/desliga etapas, 
 
 ## 2. Serviço web: `python main.py`
 
-API só de leitura em `http://127.0.0.1:8000` (host, porta, prefixo e CORS em `config/api.yaml`). Documentação interativa em `/docs`. Rotas e formato: `docs/schema_contrato.md`.
+API só de leitura em `http://127.0.0.1:8000` (host, porta, prefixo e CORS em `config/api.yaml`). Documentação interativa em `/api-docs` (`/docs` é a ajuda Sphinx do protótipo). Rotas e formato: `docs/schema_contrato.md`.
 
 - Serve sempre a **execução mais recente** publicada.
 - Banco inexistente, em versão antiga ou sem publicação: **503**, com a instrução de rodar `python run_heavywork.py`.

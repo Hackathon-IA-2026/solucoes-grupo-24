@@ -111,7 +111,10 @@ def test_publicacao_recusa_id_repetido(banco):
 
 def test_servico_web_nao_carrega_a_parte_pesada():
     """main.py num processo limpo: nenhum módulo de ingestão/processamento/modelos/pandas."""
-    pesados = ["pandas", "duckdb", "numpy", "pyarrow", "lightgbm", "torch", "src.ingestion",
+    # numpy saiu da lista na consolidação do protótipo (Backend/oraculo): as telas do protótipo
+    # (mapa, CLM, fronteira, BESS, projeção ENE, curva do pato) calculam no serviço com numpy/scipy.
+    # O que continua proibido é a parte pesada do pipeline (pandas, DuckDB, modelos, ingestão).
+    pesados = ["pandas", "duckdb", "pyarrow", "lightgbm", "torch", "src.ingestion",
                "src.processing", "src.heavywork", "src.publicacao"]
     codigo = f"import sys, main; print([m for m in {pesados!r} if m in sys.modules])"
     saida = subprocess.run([sys.executable, "-c", codigo], cwd=RAIZ, capture_output=True,

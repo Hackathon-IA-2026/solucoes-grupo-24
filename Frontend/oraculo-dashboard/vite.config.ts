@@ -37,7 +37,11 @@ const calendario = {
 // Proxy do prefixo da API: o navegador chama /api/... na MESMA origem do dashboard e o Vite
 // repassa para o FastAPI. Sem CORS no desenvolvimento e com a mesma URL relativa que o
 // Backend usa quando ele mesmo serve o build (dist/) em produção.
-const proxy = { [api.prefixo]: { target: alvoApi, changeOrigin: true } }
+// /docs (ajuda F1: documentação Sphinx do protótipo) e /legado (interface HTML/JS original do
+// protótipo, com /css e /js) também vêm do Backend.
+const proxy = Object.fromEntries(
+  [api.prefixo, '/docs', '/legado', '/css', '/js'].map((p) => [p, { target: alvoApi, changeOrigin: true }]),
+)
 
 // https://vite.dev/config/
 // Tailwind v4 entra como plugin do Vite; as tokens ficam em src/index.css (@theme).

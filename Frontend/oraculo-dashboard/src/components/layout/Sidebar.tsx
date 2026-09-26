@@ -12,12 +12,15 @@ import { MODULES } from '../../modules'
 export function Sidebar() {
   return (
     <aside className="flex flex-col border-r border-line bg-surface">
-      <p className="rotulo hidden px-4 pt-4 pb-2 lg:block">Módulos</p>
-
+      
       <nav aria-label="Módulos" className="flex-1 overflow-y-auto py-2 lg:py-0">
         <ul>
-          {MODULES.map(({ path, label, icon: Icon }, i) => (
+          {MODULES.map(({ path, label, icon: Icon, grupo }, i) => (
             <li key={path}>
+              {/* título do grupo (Operação, Análise, ... Dashboard do contrato) quando muda */}
+              {grupo && grupo !== MODULES[i - 1]?.grupo && (
+                <p className="rotulo hidden px-4 pt-3 pb-1 text-[10px] text-ink-faint lg:block">{grupo}</p>
+              )}
               <NavLink
                 to={path}
                 title={label}

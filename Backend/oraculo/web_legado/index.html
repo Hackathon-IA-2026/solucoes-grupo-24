@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O.R.A.C.U.L.O. — Observabilidade da fronteira transmissão–distribuição</title>
+<meta name="description" content="Camada de observabilidade e inteligência preditiva
+da fronteira transmissão–distribuição. Equipe 24 — LINKFY.">
+<link rel="stylesheet" href="/css/oraculo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2317296b'/%3E%3Cpath d='M5 21c3 0 4-11 7-11s4 14 7 14 4-8 8-8' stroke='%234fd1c5' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+</head>
+<body>
+<div id="shell">
+
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">O.R.A.C.U.L.<span>O.</span></div>
+      <div class="brand-sub">Observabilidade de Redes e Análise de Curtailment
+        em Usinas e Limites Operacionais</div>
+      <div class="brand-team">Equipe 24 — Linkfy</div>
+    </div>
+    <nav id="nav"></nav>
+    <div class="side-foot">
+      Fontes técnicas
+      <a href="https://dados.ons.org.br/" target="_blank" rel="noreferrer">
+        Portal de Dados Abertos do ONS</a>
+      <a href="https://www.ons.org.br/Paginas/energia-no-futuro/suprimento-eletrico/parpel2025/sumario-executivo/index.aspx"
+         target="_blank" rel="noreferrer">PAR/PEL 2025 — Sumário Executivo</a>
+      <a href="https://www.ons.org.br/Paginas/faq_curtailment.aspx"
+         target="_blank" rel="noreferrer">FAQ Curtailment</a>
+    </div>
+  </aside>
+
+  <div id="main">
+    <header id="top"></header>
+    <main id="content"><div class="loading"><div class="spinner"></div>
+      Iniciando o serviço…</div></main>
+  </div>
+
+</div>
+
+<noscript>
+  <div class="error" style="margin:20px">
+    <h4>JavaScript necessário</h4>
+    <div>A interface é renderizada no navegador, sem dependência de CDN.
+      Habilite o JavaScript para navegar pelos painéis.</div>
+  </div>
+</noscript>
+
+<script src="/js/charts.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/views/operacao.js"></script>
+<script src="/js/views/analise.js"></script>
+<script src="/js/views/confianca.js"></script>
+<script src="/js/views/mapa.js"></script>
+<script src="/js/views/clm.js"></script>
+<script src="/js/views/fronteira.js"></script>
+<script src="/js/views/bess.js"></script>
+<script src="/js/views/projecao.js"></script>
+<script src="/js/views/pato.js"></script>
+<script>App.boot();</script>
+</body>
+</html>
