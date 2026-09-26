@@ -72,13 +72,13 @@ def _processar() -> str:
 
 
 # --------------------------------------------------------------------------- 2b. espacialização
-# Fase 6: BDGD -> manchas -> MMGD por mancha -> pesos de carga (src/spatial/construir.py).
+# Fase 6: BDGD -> áreas de influência -> MMGD por área de influência -> pesos de carga (src/spatial/construir.py).
 # Entradas: só os downloads de que ela depende (BDGD, cadastro da ANEEL, malha do IBGE), o
 # código (construir e tudo que ele importa), a config espacial, a do projeto (caminho do fator de
 # correção do satélite) e o próprio arquivo do fator, se houver.
 def _conjuntos_espaciais() -> set[str]:
     return ({d.apelido_bdgd for d in espacial_bdgd.distribuidoras()}
-            | {espacial.APELIDO_MALHA_UF, tabelas.APELIDO_ANEEL_MMGD})
+            | {espacial.APELIDO_MALHA_UF, processamento_saidas.APELIDO_ANEEL_MMGD})
 
 
 def _entradas_espacializacao() -> str:
@@ -141,8 +141,8 @@ def _prever_curtailment() -> str:
 def _entradas_publicacao() -> str:
     arquivos = [processamento_saidas.SAIDA_CARGA, processamento_saidas.SAIDA_CAPACIDADE_MMGD,
                 processamento_saidas.SAIDA_CALENDARIO, processamento_saidas.SAIDA_CARGA_AREA,
-                espacial_saidas.SAIDA_MMGD_MANCHA, espacial_saidas.SAIDA_MMGD_DIARIA,
-                espacial_saidas.SAIDA_CARGA_MANCHA, CONFIG / "espacial.yaml",
+                espacial_saidas.SAIDA_MMGD_AREA_INFLUENCIA, espacial_saidas.SAIDA_MMGD_DIARIA,
+                espacial_saidas.SAIDA_CARGA_AREA_INFLUENCIA, CONFIG / "espacial.yaml",
                 modelos_carga.ARQ_PREVISOES, modelos_curtailment.ARQ_PREVISOES,
                 modelos_curtailment.ARQ_MODELOS, modelos_curtailment.ARQ_USINAS,
                 *sorted(DASHBOARD_MOCK.glob("*.json")), CONFIG / "publicacao.yaml",
@@ -173,7 +173,7 @@ def montar() -> list[Etapa]:
               saidas=(ARQUIVO_MAPEAMENTO, *processamento_saidas.SAIDAS),
               estimativa=lambda: est["processamento"]),
         Etapa("espacializacao",
-              "BDGD (LIGHT + Enel RJ) -> manchas por subestação, MMGD por mancha (desempate com a ANEEL) e pesos de carga",
+              "BDGD (LIGHT + Enel RJ) -> áreas de influência por subestação, MMGD por área de influência (desempate com a ANEEL) e pesos de carga",
               executar=espacial.construir, entradas=_entradas_espacializacao, saidas=espacial_saidas.SAIDAS,
               estimativa=lambda: est["espacializacao"]),
         # 3. Treino (um por modelo) e 4. previsão (modo replay). O TFT (Fatia 3) entra como

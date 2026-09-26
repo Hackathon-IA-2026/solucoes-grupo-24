@@ -19,3 +19,8 @@ SAIDA_CARGA_AREA = DATA_PROCESSED / "carga_area.csv"
 # Arquivos que a etapa de processamento precisa deixar prontos (o run_heavywork.py refaz a
 # etapa se algum sumir, mesmo que as entradas não tenham mudado).
 SAIDAS = (SAIDA_CALENDARIO, SAIDA_CARGA, SAIDA_ROTULOS, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA_AREA)
+
+# Apelido (config/fontes_ons.yaml) do cadastro de MMGD da ANEEL, lido pelo processamento
+# (capacidade_mmgd) e pela espacialização (src/spatial/mmgd.py). Fica aqui, e não em tabelas.py,
+# pelo mesmo motivo dos caminhos: a espacialização não deve depender do código do processamento.
+APELIDO_ANEEL_MMGD = "aneel_mmgd_empreendimentos"

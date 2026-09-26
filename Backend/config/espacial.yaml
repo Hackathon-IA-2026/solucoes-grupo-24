@@ -1,4 +1,4 @@
-# Espacialização (Fase 6, Fatias 4 e 5): BDGD -> manchas -> MMGD por mancha -> excedentes.
+# Espacialização (Fase 6, Fatias 4 e 5): BDGD -> áreas de influência -> MMGD por área de influência -> excedentes.
 # Lido por src/spatial/*. Pipeline herdado do Backend/RDX/extrator.py (hackathon anterior),
 # migrado para o backend. Método completo em docs/metodo_espacial.md.
 
@@ -6,7 +6,7 @@
 uf: RJ
 codigo_uf_ibge: 33
 
-# Distribuidoras da área piloto. `sigla` compõe o id da mancha ("<sigla>:<COD_ID da SUB>"):
+# Distribuidoras da área piloto. `sigla` compõe o id da área de influência ("<sigla>:<COD_ID da SUB>"):
 # chave composta, porque COD_ID de subestação só é único DENTRO de uma distribuidora.
 # `apelido_bdgd` = arquivo direto em config/fontes_ons.yaml; `agente_aneel` = SigAgente no
 # cadastro de MMGD da ANEEL (é por ele que a BDGD e o cadastro são cruzados).
@@ -24,7 +24,7 @@ distribuidoras:
 # nomes; o RDX tinha nomes diferentes por distribuidora porque a LIGHT de 2021 usava UNTRS/UNTRD.
 camadas:
   subestacao: SUB            # polígono da subestação
-  trafo_distribuicao: UNTRMT # transformadores MT/BT (pontos): desenham a mancha
+  trafo_distribuicao: UNTRMT # transformadores MT/BT (pontos): desenham a área de influência
   trafo_subestacao: UNTRAT   # transformadores AT/MT: potência nominal da subestação
   circuito_mt: CTMT          # alimentadores: energia mensal injetada (ENE_01..12)
   segmento_at: SSDAT         # linhas de alta tensão: hierarquia entre subestações
@@ -41,7 +41,7 @@ geometria:
   min_trafos_fecho: 3              # fecho convexo precisa de 3 pontos; abaixo disso vira semente
   raio_semente_m: 10               # subestação sem trafos: círculo mínimo que "reclama" território
   area_min_buraco_m2: 100          # vazios menores que isso são ruído de geometria
-  toque_buraco_m: 2                # tolerância para achar as manchas vizinhas de um vazio
+  toque_buraco_m: 2                # tolerância para achar as áreas de influência vizinhas de um vazio
   folga_voronoi_m: 5000            # envelope do Voronoi em volta de cada vazio
   simplificacao_m: 1.0             # simplificação final (preserva topologia)
 
@@ -49,7 +49,7 @@ hierarquia:
   toque_linha_at_m: 50             # linha AT a menos disso de uma subestação "toca" nela
   max_saltos: 50                   # limite da busca em largura na malha AT
 
-# Carga por mancha: a energia mensal de cada mancha (BDGD) reparte a carga global da área de carga
+# Carga por área de influência: a energia mensal de cada área de influência (BDGD) reparte a carga global da área de carga
 # do ONS da área piloto (data/processed/carga_area.csv; a área fica em config/processamento.yaml,
 # carga.area_piloto_ons, porque a tabela é feita na etapa de processamento).
 
@@ -66,12 +66,12 @@ excedentes:
     high: "Preparar redução escalonada da MMGD com a distribuidora"
     medium: "Monitorar fluxo reverso na fronteira TSO-DSO"
     low: "Sem ação: acompanhamento"
-  # Publicadas: as manchas com excedente > 0 (no máximo top_manchas). Menos que min_manchas:
+  # Publicadas: as áreas de influência com excedente > 0 (no máximo top_areas). Menos que min_areas:
   # completa com as de maior penetração (geração ÷ carga), com excedente 0 e prioridade low.
-  top_manchas: 15
-  min_manchas: 5
+  top_areas: 15
+  min_areas: 5
 
 densidade:
-  # Heatmap do Mapa Híbrido: um ponto por mancha (ponto interno do polígono), intensidade =
-  # capacidade de MMGD da mancha ÷ a maior capacidade entre as manchas (0–1).
-  descricao: "Capacidade instalada de MMGD por mancha de rede (BDGD LIGHT + Enel RJ, cruzada com o cadastro da ANEEL)"
+  # Heatmap do Mapa Híbrido: um ponto por área de influência (ponto interno do polígono), intensidade =
+  # capacidade de MMGD da área de influência ÷ a maior capacidade entre as áreas de influência (0–1).
+  descricao: "Capacidade instalada de MMGD por área de influência da subestação (BDGD LIGHT + Enel RJ, cruzada com o cadastro da ANEEL)"

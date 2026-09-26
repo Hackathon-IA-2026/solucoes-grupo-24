@@ -13,11 +13,11 @@ Origem de cada recurso hoje:
 |            | `distribuidora` ainda sem definição (decisão do Luiz);      |       |
 |            | `lat`/`lon` = sede da UF (sem coordenada por usina)         |       |
 | alertas    | mesmo classificador + SHAP exato do LightGBM                | false |
-| excedentes | MMGD por mancha (BDGD × ANEEL) × fator de geração e carga   | false |
+| excedentes | MMGD por área de influência (BDGD × ANEEL) × fator de geração e carga   | false |
 |            | da área RJ (ONS), persistência sazonal (src/spatial)        |       |
 | validacao  | backtest (src/models/metricas.py) + manifesto de download   | false |
 |            | + metadados do treino (src/models/carga.py)                 |       |
-| mmgd_densidade | capacidade de MMGD por mancha (src/spatial/construir.py) | false |
+| mmgd_densidade | capacidade de MMGD por área de influência (src/spatial/construir.py) | false |
 * Registro com qualquer parte mock é mock inteiro: a curva é real, mas os fatores climáticos
   não, então `mock: true` até existir fonte meteorológica (ou o contrato mudar); o risco é
   real, mas o campo `distribuidora` não, então `mock: true` até o Luiz definir o que ele
@@ -49,7 +49,7 @@ from src.models import curtailment as mcur
 from src.models import metricas as mt
 from src.processing.saidas import SAIDA_CALENDARIO, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA, SAIDA_CARGA_AREA
 from src.spatial import excedentes as ex
-from src.spatial.saidas import SAIDA_CARGA_MANCHA, SAIDA_MMGD_DIARIA, SAIDA_MMGD_MANCHA
+from src.spatial.saidas import SAIDA_CARGA_AREA_INFLUENCIA, SAIDA_MMGD_DIARIA, SAIDA_MMGD_AREA_INFLUENCIA
 from src.utils.config import carregar
 from src.utils.paths import DASHBOARD_MOCK, RAIZ, ensure
 from src.utils.tempo import FUSO, PASSO, para_utc
@@ -287,7 +287,7 @@ def riscos_e_alertas(agora: pd.Timestamp) -> tuple[list[RiscoUsina], list[Alerta
 
 
 def excedentes_tso_dso(agora: pd.Timestamp) -> list[ExcedenteTsoDso]:
-    """Tela Excedentes: manchas da área piloto com maior excedente de MMGD previsto (24 h).
+    """Tela Excedentes: áreas de influência da área piloto com maior excedente de MMGD previsto (24 h).
 
     Método em src/spatial/excedentes.py e docs/metodo_espacial.md. Dado real (mock=False):
     capacidade da BDGD × ANEEL, carga e MMGD do ONS; a previsão é persistência sazonal, sem
@@ -295,12 +295,12 @@ def excedentes_tso_dso(agora: pd.Timestamp) -> list[ExcedenteTsoDso]:
     """
     c = carregar("espacial")
     ce = c["excedentes"]
-    manchas = pd.read_csv(SAIDA_MMGD_MANCHA, dtype={"cod_sub": str})
+    areas = pd.read_csv(SAIDA_MMGD_AREA_INFLUENCIA, dtype={"cod_sub": str})
     cap = ex.capacidade_no_agora(pd.read_csv(SAIDA_MMGD_DIARIA), agora)
     fator = ex.fator_geracao(pd.read_csv(SAIDA_CARGA_AREA), pd.read_csv(SAIDA_CAPACIDADE_MMGD), c["uf"])
-    prev = ex.prever(fator, cap, pd.read_csv(SAIDA_CARGA_MANCHA), agora,
+    prev = ex.prever(fator, cap, pd.read_csv(SAIDA_CARGA_AREA_INFLUENCIA), agora,
                      max(ce["horizontes"].values()), ce["defasagem_sazonal_passos"])
-    sel = ex.selecionar(ex.pico_por_mancha(prev, ce["horizontes"]), manchas, ce)
+    sel = ex.selecionar(ex.pico_por_area(prev, ce["horizontes"]), areas, ce)
     return [ExcedenteTsoDso(mock=False, area_concessao=r.area, distribuidora=r.distribuidora,
                             lat=r.lat_sub, lon=r.lon_sub, fonte=r.fonte,
                             excedente_mw=round(float(r.excedente_mw), 1), prioridade=r.prioridade,
@@ -309,10 +309,10 @@ def excedentes_tso_dso(agora: pd.Timestamp) -> list[ExcedenteTsoDso]:
 
 
 def densidade_mmgd() -> DensidadeMmgd:
-    """Camada de calor do Mapa Híbrido: capacidade de MMGD por mancha (dado real)."""
-    manchas = pd.read_csv(SAIDA_MMGD_MANCHA)
+    """Camada de calor do Mapa Híbrido: capacidade de MMGD por área de influência (dado real)."""
+    areas = pd.read_csv(SAIDA_MMGD_AREA_INFLUENCIA)
     return DensidadeMmgd(mock=False, descricao=carregar("espacial")["densidade"]["descricao"],
-                         pontos=ex.pontos_densidade(manchas))
+                         pontos=ex.pontos_densidade(areas))
 
 
 def ler_mock(recurso: str) -> list | dict:

@@ -27,7 +27,7 @@ python -m venv .venv
 pip install -e ".[dev]"
 
 # 1. Trabalho pesado: baixa das fontes só o que falta ou foi republicado, processa as tabelas,
-#    monta as manchas de MMGD da BDGD (área piloto RJ), treina os modelos (carga e curtailment),
+#    monta as áreas de influência das subestações e a MMGD de cada uma (BDGD, área piloto RJ), treina os modelos (carga e curtailment),
 #    gera as previsões fora da amostra e o backtest (docs/reports/) e publica no banco.
 #    Sem argumentos: a config fica em config/heavywork.yaml. Pode rodar a qualquer momento:
 #    pula o que está em dia. Primeira vez: ~3,7 GB e ~35 min de download + ~25 min de treino.

@@ -1,4 +1,4 @@
-"""Manchas de rede: um polígono por subestação, cobrindo o estado sem sobreposição.
+"""Áreas de influência das subestações: um polígono por subestação, cobrindo o estado sem sobreposição.
 
 Herdado de Backend/RDX/extrator.py (run_pipeline, preencher_buracos_rj,
 processar_classificacao_e_hierarquia). O método é o mesmo; mudanças:
@@ -6,17 +6,17 @@ processar_classificacao_e_hierarquia). O método é o mesmo; mudanças:
   polígonos em graus (EPSG:4326) e só projetava em alguns passos.
 - O Voronoi usa `ordered=True` (shapely 2.1): cada célula sai na ordem do seu ponto, sem a
   busca "qual ponto está nesta célula" do RDX (que falhava com pontos na borda da célula).
-- Mancha que o recorte deixa vazia NÃO some em silêncio (o RDX descartava): fica com
+- Área de influência que o recorte deixa vazia NÃO some em silêncio (o RDX descartava): fica com
   `geometria_vazia=True` e continua nas tabelas (a MMGD dela é contada; o ponto da
   subestação continua existindo para o mapa).
 - Limite do estado: malha do IBGE baixada pela ingestão (o RDX usava o pacote geobr).
 
-Passos (`construir_manchas`):
+Passos (`construir_areas`):
 1. Área inicial: fecho convexo dos transformadores MT/BT de cada subestação; sem transformadores
    suficientes, um círculo mínimo em volta da subestação (a "semente" que depois reclama
    território no Voronoi; ex.: subestações de transporte).
-2. Sobreposições: as manchas mais internas (a subestação cai dentro de mais áreas alheias)
-   recortam primeiro, depois as de maior potência; cada mancha fica só com o que sobrou.
+2. Sobreposições: as áreas de influência mais internas (a subestação cai dentro de mais áreas alheias)
+   recortam primeiro, depois as de maior potência; cada área de influência fica só com o que sobrou.
 3. Vazios no estado: vazio com uma vizinha é absorvido por ela; com várias, é dividido por
    Voronoi entre as subestações vizinhas.
 4. Recorte pelo limite do estado e simplificação (1 m).
@@ -43,34 +43,34 @@ def _geo(cfg: dict) -> dict:
 def areas_iniciais(subs: gpd.GeoDataFrame, trafos: gpd.GeoDataFrame, cfg: dict) -> gpd.GeoDataFrame:
     """Fecho convexo dos trafos de cada subestação, ou semente em volta dela (CRS métrico).
 
-    `subs`: mancha_id, potencia_nominal_mva, geometry; `trafos`: mancha_id, geometry.
-    Devolve mancha_id, potencia_nominal_mva, ponto_sub (centroide da subestação), origem
+    `subs`: area_id, potencia_nominal_mva, geometry; `trafos`: area_id, geometry.
+    Devolve area_id, potencia_nominal_mva, ponto_sub (centroide da subestação), origem
     ("fecho_trafos" | "semente"), n_trafos, geometry.
     """
     g, crs = _geo(cfg), _geo(cfg)["crs_metrico"]
     subs, trafos = subs.to_crs(crs), trafos.to_crs(crs)
-    n = trafos.groupby("mancha_id").size()
-    fechos = (trafos[trafos["mancha_id"].isin(n[n >= g["min_trafos_fecho"]].index)]
-              .dissolve("mancha_id").convex_hull)
-    out = gpd.GeoDataFrame(subs[["mancha_id", "potencia_nominal_mva"]].copy(),
+    n = trafos.groupby("area_id").size()
+    fechos = (trafos[trafos["area_id"].isin(n[n >= g["min_trafos_fecho"]].index)]
+              .dissolve("area_id").convex_hull)
+    out = gpd.GeoDataFrame(subs[["area_id", "potencia_nominal_mva"]].copy(),
                            geometry=subs.geometry.centroid, crs=crs)
     out["ponto_sub"] = out.geometry
-    out["n_trafos"] = out["mancha_id"].map(n).fillna(0).astype(int)
-    tem_fecho = out["mancha_id"].isin(fechos.index)
+    out["n_trafos"] = out["area_id"].map(n).fillna(0).astype(int)
+    tem_fecho = out["area_id"].isin(fechos.index)
     out["origem"] = np.where(tem_fecho, "fecho_trafos", "semente")
     out["geometry"] = [fechos[m] if f else p.buffer(g["raio_semente_m"])
-                       for m, f, p in zip(out["mancha_id"], tem_fecho, out["ponto_sub"])]
+                       for m, f, p in zip(out["area_id"], tem_fecho, out["ponto_sub"])]
     return out.set_geometry("geometry")
 
 
 # --------------------------------------------------------------------------- 2. sobreposições
 def resolver_sobreposicoes(areas: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-    """Cada ponto do mapa fica com uma mancha só.
+    """Cada ponto do mapa fica com uma área de influência só.
 
     Ordem de prioridade: sementes primeiro (mudança em relação ao RDX, ver abaixo); depois a do
     RDX: profundidade de contenção (quantas áreas ALHEIAS contêm a subestação; as mais internas
     primeiro, para não serem engolidas pela maior) e, no empate, maior potência nominal. Cada
-    mancha fica com a sua área menos o que já foi tomado.
+    área de influência fica com a sua área menos o que já foi tomado.
     """
     areas = areas.reset_index(drop=True)
     # Pares (subestação i, área j) com o ponto da subestação i dentro da área j (posições).
@@ -78,8 +78,8 @@ def resolver_sobreposicoes(areas: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     alheias = i_ponto[i_area != i_ponto]
     areas["profundidade"] = np.bincount(alheias, minlength=len(areas))
     # Sementes antes de tudo: são círculos de 10 m em volta da própria subestação e, sem esta
-    # regra, um fecho de mesma profundidade e maior potência as engolia (a mancha sumia e a
-    # subestação ficava fora da própria mancha). Com ela, toda semente sobrevive.
+    # regra, um fecho de mesma profundidade e maior potência as engolia (a área de influência sumia e a
+    # subestação ficava fora da própria área de influência). Com ela, toda semente sobrevive.
     areas["_semente"] = areas["origem"] == "semente"
     areas = areas.sort_values(["_semente", "profundidade", "potencia_nominal_mva"],
                               ascending=[False, False, False]).drop(columns="_semente")
@@ -94,9 +94,9 @@ def resolver_sobreposicoes(areas: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
 # --------------------------------------------------------------------------- 3. vazios
 def preencher_vazios(areas: gpd.GeoDataFrame, limite: shapely.Geometry, cfg: dict) -> gpd.GeoDataFrame:
-    """Divide o que sobrou do estado (fora de toda mancha) entre as manchas vizinhas.
+    """Divide o que sobrou do estado (fora de toda área de influência) entre as áreas de influência vizinhas.
 
-    - vazio que toca uma mancha só: é absorvido por ela;
+    - vazio que toca uma área de influência só: é absorvido por ela;
     - vazio que toca várias: Voronoi das subestações vizinhas, recortado pelo vazio;
     - vazio que não toca nenhuma (ilha sem rede, por exemplo): fica sem dono.
     `limite` no mesmo CRS métrico de `areas`.
@@ -144,16 +144,16 @@ def classificar(subs: pd.DataFrame, trafos: pd.DataFrame, circuitos: pd.DataFram
     - "Transporte/manobra": nenhum dos dois.
     Transformadoras e de transporte sem mãe: busca em largura na malha AT (linhas ligadas pelos
     pontos de conexão PAC) até a primeira linha que toca uma subestação plena.
-    `subs`: mancha_id, potencia_nominal_mva; `trafos`: mancha_id, CTMT; `circuitos`: COD_ID,
-    mancha_id (de origem); `polig_subs`: mancha_id + polígono da subestação.
+    `subs`: area_id, potencia_nominal_mva; `trafos`: area_id, CTMT; `circuitos`: COD_ID,
+    area_id (de origem); `polig_subs`: area_id + polígono da subestação.
     """
     h = cfg["hierarquia"]
-    orig = circuitos.set_index("COD_ID")["mancha_id"]
+    orig = circuitos.set_index("COD_ID")["area_id"]
     maes = (trafos.assign(mae=trafos["CTMT"].map(orig)).dropna(subset=["mae"])
-            .groupby("mancha_id")["mae"].agg(lambda s: sorted(set(s))))
-    com_trafo = set(trafos["mancha_id"])
+            .groupby("area_id")["mae"].agg(lambda s: sorted(set(s))))
+    com_trafo = set(trafos["area_id"])
     classe, mae_de = {}, {}
-    for m, pot in zip(subs["mancha_id"], subs["potencia_nominal_mva"]):
+    for m, pot in zip(subs["area_id"], subs["potencia_nominal_mva"]):
         ms = maes.get(m, [])
         if ms == [m]:
             classe[m] = "Distribuição plena"
@@ -171,11 +171,11 @@ def classificar(subs: pd.DataFrame, trafos: pd.DataFrame, circuitos: pd.DataFram
     # Grafo da malha AT: segmento <-> PAC, e quais subestações cada segmento toca.
     crs = _geo(cfg)["crs_metrico"]
     linhas = linhas_at.to_crs(crs).reset_index(drop=True)
-    toque = gpd.sjoin(linhas, gpd.GeoDataFrame(polig_subs[["mancha_id"]],
+    toque = gpd.sjoin(linhas, gpd.GeoDataFrame(polig_subs[["area_id"]],
                                                geometry=polig_subs.to_crs(crs).buffer(h["toque_linha_at_m"])),
                       predicate="intersects")
-    subs_do_seg = toque.groupby(level=0)["mancha_id"].agg(set).to_dict()
-    segs_da_sub = toque.reset_index().groupby("mancha_id")["index"].agg(set).to_dict()
+    subs_do_seg = toque.groupby(level=0)["area_id"].agg(set).to_dict()
+    segs_da_sub = toque.reset_index().groupby("area_id")["index"].agg(set).to_dict()
     pac_segs: dict[str, set] = {}
     for i, (a, b) in enumerate(zip(linhas["PAC_1"], linhas["PAC_2"])):
         for p in (a, b):
@@ -199,16 +199,16 @@ def classificar(subs: pd.DataFrame, trafos: pd.DataFrame, circuitos: pd.DataFram
                         if viz not in vistos:
                             vistos.add(viz)
                             fila.append((viz, saltos + 1))
-    return pd.DataFrame({"mancha_id": list(classe), "classificacao": list(classe.values()),
-                         "mancha_mae": [mae_de.get(m) for m in classe]})
+    return pd.DataFrame({"area_id": list(classe), "classificacao": list(classe.values()),
+                         "area_mae": [mae_de.get(m) for m in classe]})
 
 
 # --------------------------------------------------------------------------- orquestração
-def construir_manchas(limite_uf: gpd.GeoDataFrame, cfg: dict | None = None) -> gpd.GeoDataFrame:
-    """Manchas de todas as distribuidoras da área piloto (EPSG:4326).
+def construir_areas(limite_uf: gpd.GeoDataFrame, cfg: dict | None = None) -> gpd.GeoDataFrame:
+    """Áreas de influência de todas as distribuidoras da área piloto (EPSG:4326).
 
-    Colunas: mancha_id, distribuidora, cod_sub, nome, potencia_nominal_mva, n_trafos, origem,
-    profundidade, classificacao, mancha_mae, lat_sub, lon_sub, area_km2, geometria_vazia,
+    Colunas: area_id, distribuidora, cod_sub, nome, potencia_nominal_mva, n_trafos, origem,
+    profundidade, classificacao, area_mae, lat_sub, lon_sub, area_km2, geometria_vazia,
     recorte_ignorado, geometry. `limite_uf`: polígono do estado (malha do IBGE).
     """
     cfg = cfg or bdgd.cfg()
@@ -225,8 +225,8 @@ def construir_manchas(limite_uf: gpd.GeoDataFrame, cfg: dict | None = None) -> g
     limite = unary_union(list(limite_uf.to_crs(crs).geometry))
     areas = preencher_vazios(areas, limite, cfg)
     # Recorte pelo estado (fechos de trafos do litoral entram no mar). Se o recorte apagar uma
-    # mancha inteira, o errado é o limite (ilha ou faixa de praia fora da malha), não a rede:
-    # a mancha fica com a geometria sem recorte. Simplificação final.
+    # área de influência inteira, o errado é o limite (ilha ou faixa de praia fora da malha), não a rede:
+    # a área de influência fica com a geometria sem recorte. Simplificação final.
     recortada = areas.geometry.intersection(limite)
     apagou = recortada.is_empty & ~areas.geometry.is_empty
     areas["geometry"] = recortada.where(~apagou, areas.geometry)
@@ -236,6 +236,6 @@ def construir_manchas(limite_uf: gpd.GeoDataFrame, cfg: dict | None = None) -> g
     areas["area_km2"] = (areas.geometry.area / 1e6).round(3)
     pontos = gpd.GeoSeries(areas["ponto_sub"], crs=crs).to_crs("EPSG:4326")
     areas["lat_sub"], areas["lon_sub"] = pontos.y.round(6), pontos.x.round(6)
-    areas = areas.drop(columns="ponto_sub").merge(pd.concat(classes, ignore_index=True), on="mancha_id")
-    areas = areas.merge(subs[["mancha_id", "distribuidora", "cod_sub", "nome"]], on="mancha_id")
+    areas = areas.drop(columns="ponto_sub").merge(pd.concat(classes, ignore_index=True), on="area_id")
+    areas = areas.merge(subs[["area_id", "distribuidora", "cod_sub", "nome"]], on="area_id")
     return areas.to_crs("EPSG:4326")

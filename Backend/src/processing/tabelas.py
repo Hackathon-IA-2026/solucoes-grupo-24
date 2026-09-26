@@ -11,7 +11,7 @@ Saídas (data/processed/):
     rotulos_curtailment.parquet  fonte+id_ons × 30 min: corte por razão e flags (>1M linhas -> Parquet)
     capacidade_mmgd.csv          UF × data: potência de MMGD cadastrada na ANEEL (diária e acumulada)
     carga_area.csv               área de carga da área piloto (config/espacial.yaml) × 30 min:
-                                 carga_global e mmgd_estimada (base dos excedentes por mancha)
+                                 carga_global e mmgd_estimada (base dos excedentes por área de influência)
 
 Um resumo de cobertura de cada tabela vai para docs/reports/cobertura_tabelas.csv.
 """
@@ -23,7 +23,7 @@ from src.features.calendario import montar_calendario
 from src.utils.banco_analitico import conectar
 from src.utils.config import arquivo_direto, carregar, razoes_curtailment
 from src.utils.joins import cruzar_subsistema_area
-from src.processing.saidas import (SAIDA_CALENDARIO, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA, SAIDA_CARGA_AREA,
+from src.processing.saidas import (APELIDO_ANEEL_MMGD, SAIDA_CALENDARIO, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA, SAIDA_CARGA_AREA,
                                    SAIDA_ROTULOS)
 from src.utils.paths import DATA_PROCESSED, DOCS_REPORTS, RAW_ONS, ensure
 from src.utils.tempo import de_local_ons, de_utc, fim_para_inicio
@@ -74,8 +74,8 @@ def _ler_carga_verificada(areas: list[str]) -> pd.DataFrame:
 def construir_carga_area() -> pd.DataFrame:
     """Carga global e MMGD estimada (ONS) da área de carga da área piloto, 30 min.
 
-    É a base dos excedentes por mancha (src/spatial/excedentes.py): a carga global da área é
-    repartida entre as manchas e a MMGD estimada, dividida pela capacidade cadastrada, dá o
+    É a base dos excedentes por área de influência (src/spatial/excedentes.py): a carga global da área é
+    repartida entre as áreas de influência e a MMGD estimada, dividida pela capacidade cadastrada, dá o
     fator de geração da MMGD em cada semi-hora. Área em config/processamento.yaml
     (carga.area_piloto_ons).
     """
@@ -244,7 +244,6 @@ def construir_rotulos() -> pd.DataFrame:
 
 
 # --------------------------------------------------------------------------- capacidade MMGD
-APELIDO_ANEEL_MMGD = "aneel_mmgd_empreendimentos"
 
 
 def construir_capacidade_mmgd() -> pd.DataFrame:

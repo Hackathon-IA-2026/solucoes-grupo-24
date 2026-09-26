@@ -9,7 +9,7 @@ com estas mudanças:
 - Camadas vêm de config/espacial.yaml (mesmos nomes nas duas distribuidoras desde a BDGD 2022).
 - MMGD = unidade geradora cujo CEG_GD casa `padrao_ceg_mmgd` ("GD."): o RDX contava qualquer
   CEG preenchido e somava usinas grandes da UGAT como se fossem MMGD.
-- Toda subestação ganha `mancha_id` = "<sigla>:<COD_ID>" (chave composta: COD_ID só é único
+- Toda subestação ganha `area_id` = "<sigla>:<COD_ID>" (chave composta: COD_ID só é único
   dentro da distribuidora). Nenhuma tabela deste módulo sai sem ela.
 """
 from __future__ import annotations
@@ -81,10 +81,10 @@ def _ler(gdb: str, camada: str, colunas: list[str], geometria: bool = False) -> 
     return df
 
 
-def _mancha_id(sigla: str, cod: pd.Series) -> pd.Series:
+def _area_id(sigla: str, cod: pd.Series) -> pd.Series:
     """"<sigla>:<COD_ID>"; código vazio ou nulo vira NA (nunca um id falso como "LIGHT:").
 
-    A BDGD tem trafos e alimentadores com SUB em branco. Antes eles formavam a mancha "LIGHT:",
+    A BDGD tem trafos e alimentadores com SUB em branco. Antes eles formavam a área de influência "LIGHT:",
     que não existe na camada SUB e estourava na publicação.
     """
     cod = cod.astype("string").str.strip()
@@ -100,9 +100,9 @@ def subestacoes(dist: Distribuidora) -> gpd.GeoDataFrame:
     pot = trafos.groupby("SUB")["POT_NOM"].sum().rename("potencia_nominal_mva")
     sub = sub.merge(pot, left_on="COD_ID", right_index=True, how="left")
     sub["potencia_nominal_mva"] = sub["potencia_nominal_mva"].fillna(0.0)
-    sub["mancha_id"] = _mancha_id(dist.sigla, sub["COD_ID"])
+    sub["area_id"] = _area_id(dist.sigla, sub["COD_ID"])
     sub["distribuidora"] = dist.nome
-    if sub["mancha_id"].duplicated().any():
+    if sub["area_id"].duplicated().any():
         raise ValueError(f"{dist.nome}: COD_ID de subestação repetido na BDGD")
     return sub.rename(columns={"COD_ID": "cod_sub", "NOME": "nome"})
 
@@ -112,7 +112,7 @@ def trafos_distribuicao(dist: Distribuidora) -> gpd.GeoDataFrame:
     t = _ler(caminho_gdb(dist), cfg()["camadas"]["trafo_distribuicao"], ["SUB", "CTMT", "MUN", "POT_NOM"],
              geometria=True)
     t["POT_NOM"] = t["POT_NOM"].astype(float).fillna(0.0)
-    t["mancha_id"] = _mancha_id(dist.sigla, t["SUB"])
+    t["area_id"] = _area_id(dist.sigla, t["SUB"])
     return t
 
 
@@ -120,7 +120,7 @@ def circuitos(dist: Distribuidora) -> pd.DataFrame:
     """Alimentadores MT: subestação de origem e energia injetada por mês (ENE_01..12, kWh)."""
     cols = ["COD_ID", "SUB", *[f"ENE_{m}" for m in MESES]]
     ct = _ler(caminho_gdb(dist), cfg()["camadas"]["circuito_mt"], cols)
-    ct["mancha_id"] = _mancha_id(dist.sigla, ct["SUB"])
+    ct["area_id"] = _area_id(dist.sigla, ct["SUB"])
     return ct
 
 
@@ -132,7 +132,7 @@ def consumidores_at(dist: Distribuidora) -> pd.DataFrame:
     """
     cols = ["SUB", *[f"ENE_P_{m}" for m in MESES], *[f"ENE_F_{m}" for m in MESES]]
     uc = _ler(caminho_gdb(dist), cfg()["camadas"]["consumidor_at"], cols)
-    out = pd.DataFrame({"mancha_id": _mancha_id(dist.sigla, uc["SUB"])})
+    out = pd.DataFrame({"area_id": _area_id(dist.sigla, uc["SUB"])})
     for m in MESES:
         out[f"ENE_{m}"] = uc[f"ENE_P_{m}"].fillna(0) + uc[f"ENE_F_{m}"].fillna(0)
     return out
@@ -155,7 +155,7 @@ def eh_mmgd(ceg: pd.Series, padrao: str) -> pd.Series:
 def unidades_mmgd(dist: Distribuidora) -> pd.DataFrame:
     """Unidades geradoras de MMGD da BDGD (UGBT, UGMT, UGAT), uma linha por unidade.
 
-    Colunas: ceg, mancha_id, ctmt (alimentador; vazio na UGAT), mun (código IBGE), pot_bdgd_kw,
+    Colunas: ceg, area_id, ctmt (alimentador; vazio na UGAT), mun (código IBGE), pot_bdgd_kw,
     ene_01..12 (kWh gerados no mês), camada. Filtro de MMGD pelo padrão do CEG (ver docstring do módulo). A UGAT publica energia
     em ponta/fora ponta (ENE_P/ENE_F): somadas, como no RDX.
     """
@@ -174,7 +174,7 @@ def unidades_mmgd(dist: Distribuidora) -> pd.DataFrame:
         ug = _ler(gdb, camada, ["CEG_GD", "SUB", "MUN", "POT_INST", *(["CTMT"] if tem_ctmt else []), *energia])
         ug = ug[eh_mmgd(ug["CEG_GD"], padrao)]
         out = pd.DataFrame({"ceg": ug["CEG_GD"].astype("string").str.strip(),
-                            "mancha_id": _mancha_id(dist.sigla, ug["SUB"]),
+                            "area_id": _area_id(dist.sigla, ug["SUB"]),
                             "ctmt": ug["CTMT"] if tem_ctmt else pd.Series(pd.NA, index=ug.index, dtype="string"),
                             "mun": ug["MUN"], "pot_bdgd_kw": ug["POT_INST"].astype(float),
                             "camada": camada})
