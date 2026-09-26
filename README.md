@@ -74,7 +74,7 @@ npm run build
 - ~5 GB livres em disco para `Backend/data/raw` e ~8 GB de RAM (limites do DuckDB em `Backend/config/fontes_ons.yaml`)
 - Opcional: credencial do Copernicus CDS (`~/.cdsapirc`) para o ERA5 (`era5_disponivel` em `Backend/config/projeto.yaml`)
 - Opcional (visão computacional): extra `pip install -e ".[visao]"` (~300 MB com o torch CPU), pesos do YOLO (`modelo.caminho` em `Backend/config/visao.yaml`, fora do git) e, para baixar imagem, `earthengine authenticate` + `satelite.gee_projeto`
-- Documentação detalhada (catálogo de séries, inventário do portal ONS, MCP, schema do contrato, real vs. mock, status): [`docs/`](./docs)
+- Documentação detalhada — comece pela visão geral do sistema (de onde vêm os dados, como são usados, modelos, API e telas) e siga para catálogo de séries, inventário do portal ONS, MCP, schema do contrato, real vs. mock e status: [`docs/visao_geral_sistema.md`](./docs/visao_geral_sistema.md)
 
 ## Licença
 

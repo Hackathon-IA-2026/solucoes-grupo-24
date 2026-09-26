@@ -529,3 +529,8 @@ estão intactos.
 - O dashboard agora lê `calendario.patamares` e `calendario.faixas_curtailment` de `Backend/config/processamento.yaml` no build: mudar os horários lá muda a tela.
 - `src/utils/log.py::console_utf8()` (acentos legíveis no console do Windows) e extra `[visao]` no `pyproject.toml`.
 - `tests/test_estrutura.py`: allowlist do dado bruto ampliada para os 4 módulos de visão.
+
+## 2026-09-26 — Visão geral do sistema ✅ (Luiz)
+
+- `docs/visao_geral_sistema.md`: o sistema como um todo — problema e produtos, fluxo ponta a ponta (diagrama), fontes de dados e como chegam, tratamento (tempo, recortes, tabelas processadas), modelos de carga e curtailment com resultados do backtest, garantias contra vazamento, publicação/banco/API (situação real × mock de cada rota), as 8 telas e de onde leem, auditoria da MMGD, teste e2e, regras garantidas por teste, pendências e mapa de pastas. README aponta para ele (link único para `docs/`).
+- Pendência encontrada ao escrever: limiares de severidade divergentes entre o Backend (40/60/80%, `config/modelos_curtailment.yaml`) e o KPI agregado do dashboard (25/50/75%, `src/data/derivados.ts`); o mesmo 57,8% sai "Alto" no KPI e seria "Médio" na lista. Não corrigido aqui (decidir qual escala vale e ler de um lugar só).
