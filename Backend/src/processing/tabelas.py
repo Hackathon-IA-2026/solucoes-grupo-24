@@ -10,6 +10,8 @@ Saídas (data/processed/):
     carga_supervisionada.csv     subsistema × 30 min: carga_global, mmgd_estimada, carga_supervisionada
     rotulos_curtailment.parquet  fonte+id_ons × 30 min: corte por razão e flags (>1M linhas -> Parquet)
     capacidade_mmgd.csv          UF × data: potência de MMGD cadastrada na ANEEL (diária e acumulada)
+    carga_area.csv               área de carga da área piloto (config/espacial.yaml) × 30 min:
+                                 carga_global e mmgd_estimada (base dos excedentes por mancha)
 
 Um resumo de cobertura de cada tabela vai para docs/reports/cobertura_tabelas.csv.
 """
@@ -19,9 +21,9 @@ import pandas as pd
 
 from src.features.calendario import montar_calendario
 from src.utils.banco_analitico import conectar
-from src.utils.config import carregar, razoes_curtailment
+from src.utils.config import arquivo_direto, carregar, razoes_curtailment
 from src.utils.joins import cruzar_subsistema_area
-from src.utils.paths import DATA_PROCESSED, DOCS_REPORTS, RAIZ, RAW_ONS, ensure
+from src.utils.paths import DATA_PROCESSED, DOCS_REPORTS, RAW_ONS, ensure
 from src.utils.tempo import de_local_ons, de_utc, fim_para_inicio
 
 CFG = carregar("processamento")
@@ -29,6 +31,7 @@ SAIDA_CALENDARIO = DATA_PROCESSED / "calendario.csv"
 SAIDA_CARGA = DATA_PROCESSED / "carga_supervisionada.csv"
 SAIDA_ROTULOS = DATA_PROCESSED / "rotulos_curtailment.parquet"
 SAIDA_CAPACIDADE_MMGD = DATA_PROCESSED / "capacidade_mmgd.csv"
+SAIDA_CARGA_AREA = DATA_PROCESSED / "carga_area.csv"
 
 
 # Leitura das bases brutas: sempre hive_partitioning=false. As pastas ano=/area= são só
@@ -43,6 +46,52 @@ def construir_calendario() -> pd.DataFrame:
 
 
 # --------------------------------------------------------------------------- carga
+def _ler_carga_verificada(areas: list[str]) -> pd.DataFrame:
+    """Carga verificada bruta das áreas pedidas, sem duplicatas e com `timestamp` no padrão.
+
+    Único leitor da API de carga verificada (DRY): a tabela por subsistema e a da área piloto
+    saem daqui, então as duas têm o mesmo fuso, a mesma convenção de intervalo e a mesma regra
+    de duplicata. Carga global <= 0 vira NaN com flag `carga_global_invalida` (falha de medição,
+    ex.: N em 2024-02-08 10:00 = -187,6 MW; o ONS publica 8.019 MW na versão consistida).
+    """
+    lista = ", ".join(f"'{s}'" for s in areas)
+    fonte = (RAW_ONS / "carga_verificada").as_posix()
+    df = conectar().sql(f"""
+        SELECT cod_areacarga, din_referenciautc, din_atualizacao, val_cargaglobal,
+               val_cargaglobalcons, val_cargammgd, val_cargaglobalsmmgd
+        FROM read_parquet('{fonte}/**/*.parquet', hive_partitioning=false, union_by_name=true)
+        WHERE cod_areacarga IN ({lista})
+    """).df()
+    # Janelas rebaixadas podem repetir um instante: fica a publicação mais recente.
+    df = (df.sort_values("din_atualizacao")
+            .drop_duplicates(["cod_areacarga", "din_referenciautc"], keep="last")
+            .reset_index(drop=True))
+    df["timestamp"] = fim_para_inicio(de_utc(df["din_referenciautc"]))
+    df["carga_global_invalida"] = df["val_cargaglobal"] <= 0
+    df.loc[df["carga_global_invalida"], "val_cargaglobal"] = float("nan")
+    return df
+
+
+def construir_carga_area() -> pd.DataFrame:
+    """Carga global e MMGD estimada (ONS) da área de carga da área piloto, 30 min.
+
+    É a base dos excedentes por mancha (src/spatial/excedentes.py): a carga global da área é
+    repartida entre as manchas e a MMGD estimada, dividida pela capacidade cadastrada, dá o
+    fator de geração da MMGD em cada semi-hora. Área em config/processamento.yaml
+    (carga.area_piloto_ons).
+    """
+    area = CFG["carga"]["area_piloto_ons"]
+    df = _ler_carga_verificada([area])
+    if df.empty:
+        raise LookupError(f"carga verificada sem a área '{area}': rode a ingestão")
+    out = pd.DataFrame({"area": df["cod_areacarga"], "timestamp": df["timestamp"],
+                        "carga_global": df["val_cargaglobal"], "mmgd_estimada": df["val_cargammgd"],
+                        "carga_global_invalida": df["carga_global_invalida"]})
+    out = out.sort_values(["area", "timestamp"]).reset_index(drop=True)
+    out.to_csv(SAIDA_CARGA_AREA, index=False)
+    return out
+
+
 def construir_carga() -> pd.DataFrame:
     """Carga supervisionada = carga global − MMGD estimada, por subsistema, 30 min.
 
@@ -59,19 +108,7 @@ def construir_carga() -> pd.DataFrame:
       não assumimos zero. A coluna mmgd_disponivel marca isso.
     - Checagem: carga_global − mmgd deve bater com val_cargaglobalsmmgd publicado pelo ONS.
     """
-    subs = CFG["carga"]["subsistemas_api"]
-    lista = ", ".join(f"'{s}'" for s in subs)
-    fonte = (RAW_ONS / "carga_verificada").as_posix()
-    df = conectar().sql(f"""
-        SELECT cod_areacarga, din_referenciautc, din_atualizacao, val_cargaglobal,
-               val_cargaglobalcons, val_cargammgd, val_cargaglobalsmmgd
-        FROM read_parquet('{fonte}/**/*.parquet', hive_partitioning=false, union_by_name=true)
-        WHERE cod_areacarga IN ({lista})
-    """).df()
-    # Janelas rebaixadas podem repetir um instante: fica a publicação mais recente.
-    df = (df.sort_values("din_atualizacao")
-            .drop_duplicates(["cod_areacarga", "din_referenciautc"], keep="last"))
-    df["timestamp"] = fim_para_inicio(de_utc(df["din_referenciautc"]))
+    df = _ler_carga_verificada(CFG["carga"]["subsistemas_api"])
     df = cruzar_subsistema_area(df, "cod_areacarga", de="cod_areacarga", para="id_subsistema")
 
     out = pd.DataFrame({
@@ -80,11 +117,9 @@ def construir_carga() -> pd.DataFrame:
         "carga_global": df["val_cargaglobal"],
         "mmgd_estimada": df["val_cargammgd"],
     })
-    # Carga global <= 0 é fisicamente impossível (ex.: N em 2024-02-08 10:00 = -187,6 MW,
-    # falha de medição; o ONS publica 8.019 MW na versão consistida). Vira NaN aqui, com flag,
-    # em vez de entrar como verdade no treino. A versão consistida continua em outra coluna.
-    out["carga_global_invalida"] = out["carga_global"] <= 0
-    out.loc[out["carga_global_invalida"], "carga_global"] = float("nan")
+    # Carga global <= 0 já veio NaN de _ler_carga_verificada, com flag, em vez de entrar como
+    # verdade no treino. A versão consistida continua em outra coluna.
+    out["carga_global_invalida"] = df["carga_global_invalida"].to_numpy()
     out["carga_supervisionada"] = out["carga_global"] - out["mmgd_estimada"]
     out["mmgd_disponivel"] = out["mmgd_estimada"].notna()
     out["carga_global_consistida"] = df["val_cargaglobalcons"].to_numpy()
@@ -210,12 +245,7 @@ def construir_rotulos() -> pd.DataFrame:
 
 
 # --------------------------------------------------------------------------- capacidade MMGD
-def _arquivo_aneel_mmgd():
-    """Caminho do cadastro de MMGD da ANEEL, lido da config do download (um lugar só)."""
-    for a in carregar("fontes_ons").get("arquivos_diretos", []):
-        if a["apelido"] == "aneel_mmgd_empreendimentos":
-            return RAIZ / a["destino"]
-    raise KeyError("config/fontes_ons.yaml sem o arquivo direto 'aneel_mmgd_empreendimentos'")
+APELIDO_ANEEL_MMGD = "aneel_mmgd_empreendimentos"
 
 
 def construir_capacidade_mmgd() -> pd.DataFrame:
@@ -235,7 +265,7 @@ def construir_capacidade_mmgd() -> pd.DataFrame:
     - PRIVACIDADE: o arquivo tem CPF/CNPJ e nome do titular. Este SELECT lê SÓ três colunas
       (UF, data, potência); nenhuma coluna pessoal sai de data/raw.
     """
-    fonte = _arquivo_aneel_mmgd().as_posix()
+    fonte = arquivo_direto(APELIDO_ANEEL_MMGD).as_posix()
     con = conectar()
     fora = con.execute(f"""SELECT count(*) FROM read_parquet('{fonte}')
         WHERE SigUF IS NULL OR DthAtualizaCadastralEmpreend IS NULL OR MdaPotenciaInstaladaKW IS NULL""").fetchone()[0]
@@ -266,10 +296,10 @@ def cobertura(nome: str, df: pd.DataFrame, grupo: str | None) -> pd.DataFrame:
     return pd.DataFrame(linhas)
 
 
-TABELAS = ("calendario", "carga", "rotulos", "capacidade_mmgd")
+TABELAS = ("calendario", "carga", "rotulos", "capacidade_mmgd", "carga_area")
 # Arquivos que a etapa de processamento precisa deixar prontos (o run_heavywork.py refaz a
 # etapa se algum sumir, mesmo que as entradas não tenham mudado).
-SAIDAS = (SAIDA_CALENDARIO, SAIDA_CARGA, SAIDA_ROTULOS, SAIDA_CAPACIDADE_MMGD)
+SAIDAS = (SAIDA_CALENDARIO, SAIDA_CARGA, SAIDA_ROTULOS, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA_AREA)
 
 
 def construir(tabelas=TABELAS) -> pd.DataFrame:
@@ -289,6 +319,8 @@ def construir(tabelas=TABELAS) -> pd.DataFrame:
     if "capacidade_mmgd" in tabelas:
         cap = construir_capacidade_mmgd()
         cob.append(cobertura("capacidade_mmgd", cap.rename(columns={"data": "timestamp"}), None))
+    if "carga_area" in tabelas:
+        cob.append(cobertura("carga_area", construir_carga_area(), "area"))
     cob = pd.concat(cob)
     arq = DOCS_REPORTS / "cobertura_tabelas.csv"
     if arq.exists():  # atualiza só as tabelas reconstruídas

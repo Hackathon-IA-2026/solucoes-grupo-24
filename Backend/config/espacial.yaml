@@ -1,0 +1,77 @@
+# Espacialização (Fase 6, Fatias 4 e 5): BDGD -> manchas -> MMGD por mancha -> excedentes.
+# Lido por src/spatial/*. Pipeline herdado do Backend/RDX/extrator.py (hackathon anterior),
+# migrado para o backend. Método completo em docs/metodo_espacial.md.
+
+# Área piloto (decisão do Tiago em 2026-09-26): RJ, reaproveitando a pipeline do RDX.
+uf: RJ
+codigo_uf_ibge: 33
+
+# Distribuidoras da área piloto. `sigla` compõe o id da mancha ("<sigla>:<COD_ID da SUB>"):
+# chave composta, porque COD_ID de subestação só é único DENTRO de uma distribuidora.
+# `apelido_bdgd` = arquivo direto em config/fontes_ons.yaml; `agente_aneel` = SigAgente no
+# cadastro de MMGD da ANEEL (é por ele que a BDGD e o cadastro são cruzados).
+distribuidoras:
+  - sigla: LIGHT
+    nome: LIGHT
+    apelido_bdgd: bdgd_light
+    agente_aneel: LIGHT SESA
+  - sigla: ENEL_RJ
+    nome: ENEL RJ
+    apelido_bdgd: bdgd_enel_rj
+    agente_aneel: ENEL RJ
+
+# Camadas da BDGD (PRODIST Módulo 10). Desde a BDGD 2022 as duas distribuidoras usam os mesmos
+# nomes; o RDX tinha nomes diferentes por distribuidora porque a LIGHT de 2021 usava UNTRS/UNTRD.
+camadas:
+  subestacao: SUB            # polígono da subestação
+  trafo_distribuicao: UNTRMT # transformadores MT/BT (pontos): desenham a mancha
+  trafo_subestacao: UNTRAT   # transformadores AT/MT: potência nominal da subestação
+  circuito_mt: CTMT          # alimentadores: energia mensal injetada (ENE_01..12)
+  segmento_at: SSDAT         # linhas de alta tensão: hierarquia entre subestações
+  geracao: [UGBT_tab, UGMT_tab, UGAT_tab]   # unidades geradoras (BT, MT, AT)
+  consumidor_at: UCAT_tab    # consumidores AT ligados direto na subestação (fora do CTMT)
+
+# Só é MMGD a unidade geradora com código de empreendimento de GD da ANEEL ("GD.RJ.xxx.xxx.xxx").
+# O RDX aceitava qualquer CEG preenchido e, com isso, contava como MMGD 2,2 GW de usinas grandes
+# da UGAT da LIGHT (UHEs/UTEs, CEG sem "GD."). Com o padrão, essa classe de erro não passa.
+padrao_ceg_mmgd: "^GD\\."
+
+geometria:
+  crs_metrico: EPSG:31983          # SIRGAS 2000 / UTM 23S: áreas e distâncias em metros no RJ
+  min_trafos_fecho: 3              # fecho convexo precisa de 3 pontos; abaixo disso vira semente
+  raio_semente_m: 10               # subestação sem trafos: círculo mínimo que "reclama" território
+  area_min_buraco_m2: 100          # vazios menores que isso são ruído de geometria
+  toque_buraco_m: 2                # tolerância para achar as manchas vizinhas de um vazio
+  folga_voronoi_m: 5000            # envelope do Voronoi em volta de cada vazio
+  simplificacao_m: 1.0             # simplificação final (preserva topologia)
+
+hierarquia:
+  toque_linha_at_m: 50             # linha AT a menos disso de uma subestação "toca" nela
+  max_saltos: 50                   # limite da busca em largura na malha AT
+
+# Carga por mancha: a energia mensal de cada mancha (BDGD) reparte a carga global da área de carga
+# do ONS da área piloto (data/processed/carga_area.csv; a área fica em config/processamento.yaml,
+# carga.area_piloto_ons, porque a tabela é feita na etapa de processamento).
+
+excedentes:
+  # Horizontes do contrato (ExcedenteTsoDso.horizonte) em semi-horas à frente do "agora".
+  horizontes: {"1h": 2, "3h": 6, "D+1": 48}
+  # Previsão: persistência sazonal de 1 dia (o valor observado 24 h antes do alvo). Para
+  # alvos até 24 h à frente, só usa dado <= agora (sem vazamento; testado).
+  defasagem_sazonal_passos: 48
+  # Prioridade pelo excedente previsto (MW): primeiro nível cujo limiar é atingido.
+  prioridade: {critical: 50, high: 20, medium: 5, low: 0}
+  acao:
+    critical: "Fluxo reverso relevante na fronteira: coordenar redução com a distribuidora"
+    high: "Preparar redução escalonada da MMGD com a distribuidora"
+    medium: "Monitorar fluxo reverso na fronteira TSO-DSO"
+    low: "Sem ação: acompanhamento"
+  # Publicadas: as manchas com excedente > 0 (no máximo top_manchas). Menos que min_manchas:
+  # completa com as de maior penetração (geração ÷ carga), com excedente 0 e prioridade low.
+  top_manchas: 15
+  min_manchas: 5
+
+densidade:
+  # Heatmap do Mapa Híbrido: um ponto por mancha (ponto interno do polígono), intensidade =
+  # capacidade de MMGD da mancha ÷ a maior capacidade entre as manchas (0–1).
+  descricao: "Capacidade instalada de MMGD por mancha de rede (BDGD LIGHT + Enel RJ, cruzada com o cadastro da ANEEL)"

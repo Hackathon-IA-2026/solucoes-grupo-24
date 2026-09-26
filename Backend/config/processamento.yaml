@@ -28,6 +28,9 @@ carga:
   subsistemas_api: [SECO, S, NE, N]       # códigos da API de carga
   # Tolerância (MW) para conferir carga_global - mmgd contra val_cargaglobalsmmgd do ONS
   tolerancia_checagem_mw: 1.0
+  # Área de carga do ONS da área piloto da Fase 6 (config/espacial.yaml): vira
+  # data/processed/carga_area.csv, base dos excedentes por mancha.
+  area_piloto_ons: RJ
 
 curtailment:
   inicio_rotulos: "2021-10-01"            # início da base tm eólica

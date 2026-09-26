@@ -23,6 +23,8 @@ status_fontes:
   "ANEEL — Cadastro de MMGD": [aneel_mmgd_empreendimentos]
   "ANEEL — SIGA (empreendimentos de geração)": [aneel_siga_empreendimentos]
   "IBGE — Malha municipal": [ibge_malha_municipios]
+  "ANEEL — BDGD (Light e Enel RJ)": [bdgd_light, bdgd_enel_rj]
+  "IBGE — Malhas do RJ": [ibge_malha_rj, ibge_malha_municipios_rj]
 
 # Posição exibida no Mapa Híbrido para cada usina da Lista de Riscos: a SEDE (capital) da UF da
 # usina, [lat, lon] em WGS84. Aproximação, porque o projeto ainda não ingere coordenada por usina

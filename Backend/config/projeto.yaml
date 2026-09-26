@@ -1,7 +1,7 @@
 # Configuração central do projeto (lida por todos os scripts via src/utils/config.py).
 # Valores preenchidos pelo Tiago no Prompt 1.
-area_piloto: "CEMIG-D — Norte de Minas (polo Janaúba–Jaíba)"  # PROVISÓRIA: recomendação do Passo 1 (docs/area_piloto_opcoes.md); Tiago confirma
-area_piloto_provisoria: true # true enquanto o Tiago não confirmar a área piloto
+area_piloto: "RJ — LIGHT + Enel RJ"  # decisão do Tiago em 2026-09-26: reaproveita a pipeline do Backend/RDX (config/espacial.yaml)
+area_piloto_provisoria: false
 incluir_rel: false           # REL fora por padrão: nenhum modelo prevê essa razão
 bloco_espacial: tiago        # "tiago" ou "luiz"
 era5_disponivel: false       # true se ~/.cdsapirc já estiver configurado

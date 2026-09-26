@@ -25,9 +25,9 @@ Todas as rotas são GET, com prefixo `/api` (`Backend/config/api.yaml`), e serve
 | previsao | `/api/previsao` | `PrevisaoCurva[]` (os 3 horizontes) | pontos reais; fatores climáticos mock → `mock: true` |
 | riscos | `/api/riscos` | `RiscoUsina[]` | real, exceto `distribuidora` e `lat`/`lon` (sede da UF) → `mock: true` |
 | alertas | `/api/alertas/{riscoUsinaId}` | `AlertaDetalhado` (404 se não houver) | **real** (`mock: false`) |
-| excedentes | `/api/excedentes` | `ExcedenteTsoDso[]` | mock |
+| excedentes | `/api/excedentes` | `ExcedenteTsoDso[]` | **real** (`mock: false`): subestações de fronteira do RJ, `docs/metodo_espacial.md` |
 | validacao | `/api/validacao` | `MetricasValidacao` | **real** (`mock: false`) |
-| mmgd_densidade | `/api/mmgd/densidade` | `DensidadeMmgd` (heatmap: `pontos` = `[lat, lon, intensidade 0–1]`) | mock (sintético) até a MMGD por mancha existir |
+| mmgd_densidade | `/api/mmgd/densidade` | `DensidadeMmgd` (heatmap: `pontos` = `[lat, lon, intensidade 0–1]`) | **real** (`mock: false`): capacidade de MMGD por mancha do RJ |
 
 Fora do contrato: `/api/saude` informa a execução servida (`execucaoId`, `geradoEm`, `instanteReferencia`).
 

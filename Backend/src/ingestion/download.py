@@ -8,6 +8,7 @@ Uso:
     python -m src.ingestion.download --so-ckan       # só conjuntos do portal
     python -m src.ingestion.download --so-api        # só API de carga
     python -m src.ingestion.download --conjuntos coff_eolica_tm coff_solar_tm
+    python -m src.ingestion.download --diretos bdgd_light bdgd_enel_rj   # só arquivos diretos
     python -m src.ingestion.download --so-ckan --conjuntos coff_solar_detail --recompactar coff_solar_detail
 
 Decisões:
@@ -98,6 +99,13 @@ class Manifesto:
             tmp.write_text(json.dumps(self.dados, ensure_ascii=False, indent=1), encoding="utf-8")
             tmp.replace(self.caminho)
 
+    def remover(self, chave: str) -> None:
+        with self._lock:
+            if self.dados.pop(chave, None) is not None:
+                tmp = self.caminho.with_suffix(".tmp")
+                tmp.write_text(json.dumps(self.dados, ensure_ascii=False, indent=1), encoding="utf-8")
+                tmp.replace(self.caminho)
+
     def itens(self) -> list[tuple[str, dict]]:
         with self._lock:
             return list(self.dados.items())
@@ -179,10 +187,16 @@ def migrar_csvs(man: Manifesto) -> None:
             log.info("convertido para Parquet: %s", novo.name)
 
 
-def contar_linhas(arquivo: Path) -> int:
-    """Linhas de dados. Parquet: lê só o rodapé. CSV: conta quebras de linha - cabeçalho."""
+def contar_linhas(arquivo: Path) -> int | None:
+    """Linhas de dados. Parquet: lê só o rodapé. CSV: conta quebras de linha - cabeçalho.
+
+    Outros formatos (a BDGD zipada, GeoJSON do IBGE) não têm "linhas": devolve None em vez de
+    contar quebras de linha de um binário e registrar um número sem sentido no manifesto.
+    """
     if arquivo.suffix.lower() == ".parquet":
         return pq.ParquetFile(arquivo).metadata.num_rows
+    if arquivo.suffix.lower() != ".csv":
+        return None
     with arquivo.open("rb") as f:
         n = sum(bloco.count(b"\n") for bloco in iter(lambda: f.read(1 << 20), b""))
     return max(n - 1, 0)
@@ -483,16 +497,52 @@ def vencido(baixado_em: str | None, dias: int | None, agora: datetime | None = N
     return agora - datetime.fromisoformat(baixado_em) > timedelta(days=dias)
 
 
-def processar_arquivos_diretos(man: Manifesto) -> None:
-    """Fontes de arquivo único fora do portal ONS (ex.: MMGD da ANEEL)."""
+def chave_direta(a: dict) -> str:
+    """Chave do manifesto de um arquivo direto: apelido + nome do arquivo de DESTINO.
+
+    Antes era o fim da URL, e várias URLs terminam igual (".../items/<id>/data" da BDGD):
+    trocar de ano deixaria a chave igual e o arquivo velho seria dado como em dia. O destino
+    é único por arquivo e é o que está no disco.
+    """
+    return f"{a['apelido']}/{Path(a['destino']).name}"
+
+
+def precisa_baixar_direto(a: dict, info: dict | None, agora: datetime | None = None) -> str | None:
+    """Motivo para (re)baixar um arquivo direto, ou None se o que está no disco vale.
+
+    Rebaixa se: nunca baixou/falhou, o arquivo sumiu, a URL da config mudou (nova edição da
+    BDGD, por exemplo) ou o download venceu (`atualizar_apos_dias`).
+    """
+    if not info or info.get("status") != "ok":
+        return "ausente"
+    if not (RAIZ / info.get("caminho", "")).exists():
+        return "arquivo sumiu do disco"
+    if info.get("url") != a["url"]:
+        return "URL mudou na config"
+    if vencido(info.get("baixado_em"), a.get("atualizar_apos_dias"), agora):
+        return f"download com mais de {a['atualizar_apos_dias']} dias"
+    return None
+
+
+def processar_arquivos_diretos(man: Manifesto, apelidos: list[str] | None = None) -> None:
+    """Fontes de arquivo único fora do portal ONS (MMGD e BDGD da ANEEL, malhas do IBGE)."""
     for a in CFG.get("arquivos_diretos", []):
-        chave = f"{a['apelido']}/{a['url'].rsplit('/', 1)[-1]}"
-        info = man.get(chave)
-        if (info and info.get("status") == "ok" and (RAIZ / info["caminho"]).exists()
-                and not vencido(info.get("baixado_em"), a.get("atualizar_apos_dias"))):
+        if apelidos and a["apelido"] not in apelidos:
             continue
-        if info and info.get("status") == "ok":
-            log.info("%s: download com mais de %s dias, rebaixando", a["apelido"], a["atualizar_apos_dias"])
+        chave = chave_direta(a)
+        # Entradas antigas do mesmo apelido com outra chave (formato anterior ou edição anterior
+        # da BDGD) saem do manifesto: senão continuariam na impressão digital e na tela Validação.
+        # Se a entrada antiga aponta para o MESMO arquivo de destino, só muda de chave (não rebaixa).
+        for velha, v in man.itens():
+            if velha.startswith(f"{a['apelido']}/") and velha != chave:
+                if Path(v.get("caminho", "")).as_posix() == a["destino"] and man.get(chave) is None:
+                    man.registrar(chave, v)
+                man.remover(velha)
+        info = man.get(chave)
+        motivo = precisa_baixar_direto(a, info)
+        if motivo is None:
+            continue
+        log.info("%s: baixando (%s)", a["apelido"], motivo)
         dest = RAIZ / a["destino"]
         try:
             nbytes, conteudo = baixar_arquivo(a["url"], dest)
@@ -534,7 +584,7 @@ def gravar_relatorios(man: Manifesto) -> pd.DataFrame:
 
 
 def executar(conjuntos: list[str] | None = None, so_ckan: bool = False, so_api: bool = False,
-             recompactar: list[str] | tuple = ()) -> pd.DataFrame:
+             recompactar: list[str] | tuple = (), diretos: list[str] | None = None) -> pd.DataFrame:
     """Baixa o que falta ou está desatualizado. Devolve a sanidade por conjunto.
 
     Sem argumentos = tudo (é o que o run_heavywork.py chama). Os filtros existem para a
@@ -547,7 +597,7 @@ def executar(conjuntos: list[str] | None = None, so_ckan: bool = False, so_api: 
         t0 = time.time()
         limpar_parquets_vazios(man)
         migrar_csvs(man)
-        if not so_api:
+        if not so_api and diretos is None:
             for c in CFG["conjuntos"]:
                 if conjuntos and c["apelido"] not in conjuntos:
                     continue
@@ -555,9 +605,11 @@ def executar(conjuntos: list[str] | None = None, so_ckan: bool = False, so_api: 
                     processar_conjunto(c, man)
                 except Exception as e:  # um conjunto com problema não derruba os outros
                     log.exception("conjunto %s falhou: %s", c["apelido"], e)
-        if not so_ckan and not conjuntos:
+        if not so_ckan and not conjuntos and diretos is None:
             processar_api_carga(man)
-        if not so_api and not so_ckan and not conjuntos:
+        if diretos is not None:  # --diretos: só os arquivos diretos (lista vazia = todos)
+            processar_arquivos_diretos(man, diretos or None)
+        elif not so_api and not so_ckan and not conjuntos:
             processar_arquivos_diretos(man)
         for apelido in recompactar:
             consolidar_id_ons(apelido, man, recompactar=True)
@@ -566,14 +618,17 @@ def executar(conjuntos: list[str] | None = None, so_ckan: bool = False, so_api: 
     return san
 
 
-def impressao_digital() -> str:
+def impressao_digital(conjuntos: set[str] | None = None) -> str:
     """Resumo do que está baixado: muda sempre que um arquivo entra, sai ou é rebaixado.
 
     É a "entrada" da etapa de processamento no run_heavywork.py: se nada mudou aqui (nem no
-    código/config do processamento), as tabelas processadas continuam válidas.
+    código/config do processamento), as tabelas processadas continuam válidas. `conjuntos`
+    restringe aos apelidos pedidos (a espacialização só depende da BDGD, do cadastro da ANEEL
+    e das malhas do IBGE: um download novo de carga não a refaz).
     """
     man = Manifesto(MANIFESTO_PATH)
-    return de_objeto(sorted((k, _versao(v)) for k, v in man.itens() if v.get("status") == "ok"))
+    return de_objeto(sorted((k, _versao(v)) for k, v in man.itens()
+                            if v.get("status") == "ok" and (conjuntos is None or v.get("conjunto") in conjuntos)))
 
 
 def _versao(info: dict):
@@ -659,8 +714,10 @@ def main() -> None:
     ap.add_argument("--conjuntos", nargs="*", help="apelidos de config/fontes_ons.yaml")
     ap.add_argument("--recompactar", nargs="*", default=[],
                     help="apelidos id_ons para reconsolidar mesmo sem arquivos novos")
+    ap.add_argument("--diretos", nargs="*", default=None,
+                    help="só os arquivos diretos (ANEEL, IBGE); apelidos opcionais")
     args = ap.parse_args()
-    san = executar(args.conjuntos, args.so_ckan, args.so_api, args.recompactar)
+    san = executar(args.conjuntos, args.so_ckan, args.so_api, args.recompactar, args.diretos)
     log.info("\n%s", san.to_string(index=False))
 
 

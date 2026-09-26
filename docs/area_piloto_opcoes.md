@@ -35,3 +35,5 @@ Gravada como provisória em `Backend/config/projeto.yaml` (`area_piloto`, `area_
 ## Pendência humana
 
 **Tiago: confirmar a área piloto e avisar o Luiz** (as imagens de satélite dependem disso). Se confirmar, mude `area_piloto_provisoria` para `false`.
+
+> **Decisão (Tiago, 2026-09-26): RJ (LIGHT + Enel RJ)**, reaproveitando a pipeline do `Backend/RDX/`. `area_piloto_provisoria: false`. Implementação e método em `docs/metodo_espacial.md`.

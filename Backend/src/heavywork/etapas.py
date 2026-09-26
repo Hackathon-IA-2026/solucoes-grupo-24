@@ -16,6 +16,9 @@ from src.models import curtailment as modelos_curtailment
 from src.models import relatorio_carga, relatorio_curtailment
 from src.processing import mapeamento, tabelas
 from src.publicacao import montar as publicacao
+from src.spatial import bdgd as espacial_bdgd
+from src.spatial import construir as espacial
+from src.spatial import saidas as espacial_saidas
 from src.utils.config import carregar
 from src.utils.impressao import codigo_de, de_arquivos, de_objeto
 from src.utils.joins import ARQUIVO_MAPEAMENTO
@@ -67,6 +70,24 @@ def _processar() -> str:
     return "; ".join(f"{tab}: {n:,} linhas" for tab, n in total.items())
 
 
+# --------------------------------------------------------------------------- 2b. espacialização
+# Fase 6: BDGD -> manchas -> MMGD por mancha -> pesos de carga (src/spatial/construir.py).
+# Entradas: só os downloads de que ela depende (BDGD, cadastro da ANEEL, malha do IBGE), o
+# código (construir e tudo que ele importa), a config espacial, a do projeto (caminho do fator de
+# correção do satélite) e o próprio arquivo do fator, se houver.
+def _conjuntos_espaciais() -> set[str]:
+    return ({d.apelido_bdgd for d in espacial_bdgd.distribuidoras()}
+            | {espacial.APELIDO_MALHA_UF, tabelas.APELIDO_ANEEL_MMGD})
+
+
+def _entradas_espacializacao() -> str:
+    arquivos = [*codigo_de("src.spatial.construir", RAIZ), CONFIG / "espacial.yaml", CONFIG / "projeto.yaml"]
+    fator = carregar("projeto")["caminho_fator_correcao"]
+    if fator:
+        arquivos.append(RAIZ / fator)
+    return de_objeto([download.impressao_digital(_conjuntos_espaciais()), de_arquivos(arquivos, RAIZ)])
+
+
 # --------------------------------------------------------------------------- 3. treino
 # Uma etapa por modelo (carga, curtailment), cada uma com a própria impressão digital: mexer
 # no classificador de curtailment não retreina a carga, e vice-versa.
@@ -116,6 +137,8 @@ def _prever_curtailment() -> str:
 # endereço do banco (trocar DATABASE_URL publica de novo no banco novo).
 def _entradas_publicacao() -> str:
     arquivos = [tabelas.SAIDA_CARGA, tabelas.SAIDA_CAPACIDADE_MMGD, tabelas.SAIDA_CALENDARIO,
+                tabelas.SAIDA_CARGA_AREA, espacial_saidas.SAIDA_MMGD_MANCHA, espacial_saidas.SAIDA_MMGD_DIARIA,
+                espacial_saidas.SAIDA_CARGA_MANCHA, CONFIG / "espacial.yaml",
                 modelos_carga.ARQ_PREVISOES, modelos_curtailment.ARQ_PREVISOES,
                 modelos_curtailment.ARQ_MODELOS, modelos_curtailment.ARQ_USINAS,
                 *sorted(DASHBOARD_MOCK.glob("*.json")), CONFIG / "publicacao.yaml",
@@ -145,6 +168,10 @@ def montar() -> list[Etapa]:
               executar=_processar, entradas=_entradas_processamento,
               saidas=(ARQUIVO_MAPEAMENTO, *tabelas.SAIDAS),
               estimativa=lambda: est["processamento"]),
+        Etapa("espacializacao",
+              "BDGD (LIGHT + Enel RJ) -> manchas por subestação, MMGD por mancha (desempate com a ANEEL) e pesos de carga",
+              executar=espacial.construir, entradas=_entradas_espacializacao, saidas=espacial_saidas.SAIDAS,
+              estimativa=lambda: est["espacializacao"]),
         # 3. Treino (um por modelo) e 4. previsão (modo replay). O TFT (Fatia 3) entra como
         # mais um par treino/previsão.
         Etapa("treino_carga",

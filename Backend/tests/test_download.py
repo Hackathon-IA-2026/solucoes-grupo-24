@@ -168,3 +168,19 @@ def test_status_fontes_recusa_conjunto_sem_grupo(tmp_path, monkeypatch):
         "novo/1": {"conjunto": "novo", "status": "ok", "baixado_em": "2026-09-25T10:00:00+00:00"}}))
     with pytest.raises(ValueError, match="sem grupo"):
         download.status_fontes({"A": ["a"]})
+
+
+def test_arquivo_direto_rebaixa_quando_a_url_muda(tmp_path, monkeypatch):
+    """Nova edição da BDGD: mesma chave de destino não pode esconder a URL nova (o fim da URL
+    do ArcGIS é sempre ".../data", e a chave antiga derivada dela não mudava)."""
+    from src.ingestion import download
+    monkeypatch.setattr(download, "RAIZ", tmp_path)
+    (tmp_path / "x.zip").write_bytes(b"1")
+    a = {"apelido": "bdgd_x", "url": "https://h/items/NOVO/data", "destino": "x.zip"}
+    info = {"status": "ok", "caminho": "x.zip", "url": "https://h/items/VELHO/data", "baixado_em": None}
+    assert download.chave_direta(a) == "bdgd_x/x.zip"
+    assert download.precisa_baixar_direto(a, info) == "URL mudou na config"
+    assert download.precisa_baixar_direto(a, {**info, "url": a["url"]}) is None  # sem validade: não expira
+    assert download.precisa_baixar_direto(a, None) == "ausente"
+    (tmp_path / "x.zip").unlink()
+    assert download.precisa_baixar_direto(a, {**info, "url": a["url"]}) == "arquivo sumiu do disco"
