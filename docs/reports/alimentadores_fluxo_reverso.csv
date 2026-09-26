@@ -1,4 +1,4 @@
-COD_ID,mancha_id,meses_negativos,menor_energia_kwh
+COD_ID,area_id,meses_negativos,menor_energia_kwh
 RFR005,LIGHT:18520767,12,-4394728.0
 SCI006,LIGHT:18520299,12,-2424240.0
 BRI00005,LIGHT:18521208,12,-2399058.0
