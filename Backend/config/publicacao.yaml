@@ -19,6 +19,8 @@ status_fontes:
                                                 balanco_subsistema, curva_carga, capacidade_geracao,
                                                 usina_conjunto, modalidade_usina]
   "ANEEL — Cadastro de MMGD": [aneel_mmgd_empreendimentos]
+  "ANEEL — SIGA (empreendimentos de geração)": [aneel_siga_empreendimentos]
+  "IBGE — Malha municipal": [ibge_malha_municipios]
 
 # Posição exibida no Mapa Híbrido para cada usina da Lista de Riscos: a SEDE (capital) da UF da
 # usina, [lat, lon] em WGS84. Aproximação, porque o projeto ainda não ingere coordenada por usina

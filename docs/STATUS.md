@@ -534,3 +534,25 @@ estão intactos.
 
 - `docs/visao_geral_sistema.md`: o sistema como um todo — problema e produtos, fluxo ponta a ponta (diagrama), fontes de dados e como chegam, tratamento (tempo, recortes, tabelas processadas), modelos de carga e curtailment com resultados do backtest, garantias contra vazamento, publicação/banco/API (situação real × mock de cada rota), as 8 telas e de onde leem, auditoria da MMGD, teste e2e, regras garantidas por teste, pendências e mapa de pastas. README aponta para ele (link único para `docs/`).
 - Pendência encontrada ao escrever: limiares de severidade divergentes entre o Backend (40/60/80%, `config/modelos_curtailment.yaml`) e o KPI agregado do dashboard (25/50/75%, `src/data/derivados.ts`); o mesmo 57,8% sai "Alto" no KPI e seria "Médio" na lista. Não corrigido aqui (decidir qual escala vale e ler de um lugar só).
+
+## 2026-09-26 — Consolidação do protótipo O.R.A.C.U.L.O. (Equipe 24) no repositório ✅
+
+- **Backend:** pacote `Backend/oraculo/` (antes `02-PROTOTIPO/oraculo`, Starlette + numpy/scipy) com as
+  rotas incluídas no FastAPI de `main.py` (`_incluir_prototipo` em `src/api/app.py`): um servidor só
+  para contrato, protótipo, documentação Sphinx (`/docs`), interface original (`/legado`) e dashboard.
+  Swagger mudou para `/api-docs` (o `/docs` é a ajuda F1). Cache de trabalho em
+  `Backend/data/oraculo_cache/` (fora do git). Suíte do protótipo em `Backend/tests_oraculo/`
+  (521 passaram, 1 pulado). `run_oraculo_legado.py` e `run_oraculo_pipeline.py` mantidos.
+- **Frontend:** as 17 telas do protótipo reescritas em React (`src/oraculo/pages/`), com o cliente do
+  envelope de proveniência (`api.ts`), gráficos SVG portados (`charts.ts`), CSS escopado em
+  `.oraculo`, seletor de área, ajuda F1 e grupos no menu (`grupo` no `ModuleDef`). Primeiro vêm as
+  telas do protótipo, depois o grupo "Dashboard do contrato".
+- **Visão computacional com as duas soluções:** Detector por subestação (protótipo, `/visao`) e
+  Auditoria MMGD · 3 camadas (pipeline do time; nova rota só de leitura `/api/auditoria/mmgd`,
+  `src/api/auditoria.py`, tela `/auditoria-mmgd`).
+- **Docs:** `docs/oraculo/` (Sphinx com caminhos atualizados, especificações, apresentações).
+- **Correções de bugs anteriores encontrados no caminho:** `tsconfig.test.json` não incluía
+  `leaflet-heat.d.ts` (o `tsc -b` falhava); `semServicoExterno.test.ts` quebrava em caminho com espaço
+  (`%20`). `test_servico_web_nao_carrega_a_parte_pesada` passou a permitir numpy (o protótipo calcula
+  no serviço); pandas/DuckDB/modelos continuam proibidos.
+- Ambiente: `Backend/.venv` com Python 3.12 (o 3.14 da máquina está fora de `requires-python`).
