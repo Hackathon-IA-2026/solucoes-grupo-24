@@ -319,45 +319,58 @@ def processar_conjunto(c: dict, man: Manifesto) -> None:
 
 
 def consolidar_id_ons(apelido: str, man: Manifesto, recompactar: bool = False) -> None:
-    """Reescreve landing mensal + consolidado anterior em <apelido>/id_ons=<id>/.
+    """Junta o landing mensal ao consolidado em <apelido>/ano=<AAAA>/id_ons=<id>/.
 
-    Estratégia em GRUPOS ORDENADOS: os id_ons são divididos em N grupos (hash % N); cada
-    grupo é lido, ordenado por (id_ons, din_instante) e escrito de uma vez. Com a entrada
-    ordenada só uma partição fica aberta por vez, então:
-      - a memória é limitada pelo tamanho do grupo (não pelo total de 80M linhas);
-      - sai ~1 arquivo por usina. A 1ª versão (um COPY único com buffers pequenos para
-        caber na RAM) gerou 316 mil arquivos minúsculos para a eólica — trocar memória
-        por fragmentação não resolve; ordenar resolve as duas coisas.
-    Grava num diretório temporário e só troca no fim: se falhar, o consolidado anterior
-    continua intacto. `recompactar` refaz o consolidado mesmo sem arquivos novos.
+    Layout por ANO e depois por usina. O ONS republica os 2 últimos meses a cada poucos dias.
+    No layout antigo (só id_ons=), cada usina tinha um arquivo com todos os anos, e rebaixar
+    2 meses reescrevia os ~80 M linhas da eólica: 25 min de ingestão em toda execução
+    (medido em 2026-09-26). Agora só as pastas ano= dos meses novos são refeitas; os anos
+    fechados ficam intocados. Os leitores usam `**/*.parquet` com hive_partitioning=false,
+    então o nível ano= não muda nada para eles.
+
+    Escrita em GRUPOS ORDENADOS: os id_ons são divididos em N grupos (hash % N); cada grupo é
+    lido, ordenado por (id_ons, din_instante) e escrito de uma vez. Com a entrada ordenada só
+    uma partição fica aberta por vez, então:
+      - a memória é limitada pelo tamanho do grupo (não pelo total de linhas);
+      - sai ~1 arquivo por usina e ano. A 1ª versão (um COPY único com buffers pequenos para
+        caber na RAM) gerou 316 mil arquivos minúsculos para a eólica — trocar memória por
+        fragmentação não resolve; ordenar resolve as duas coisas.
+
+    Refaz TUDO (uma vez) quando o consolidado não existe, ainda está no layout antigo ou
+    `recompactar` foi pedido. Grava num diretório temporário e só troca no fim, e a troca é
+    recuperável (`_recuperar_troca`): se o processo morrer no meio, o consolidado anterior
+    volta, e os arquivos do landing só são apagados depois da troca.
     """
+    final = DESTINO / apelido
+    _recuperar_troca(final)
     pendentes = [(k, v) for k, v in man.itens()
                  if v.get("conjunto") == apelido and v.get("status") == "ok"
                  and not v.get("consolidado")]
-    final = DESTINO / apelido
     if not pendentes and not (recompactar and final.exists()):
         return
     arquivos = [str((RAIZ / v["caminho"]).as_posix()) for _, v in pendentes]
-    tmp = DESTINO / f"{apelido}.__tmp"
+    tmp = final.with_name(final.name + ".__tmp")
     if tmp.exists():
         shutil.rmtree(tmp)
 
-    fonte = sql_consolidacao(final if final.exists() else None, arquivos)
+    con = conectar()  # limites de memória/disco centralizados (src/utils/banco_analitico.py)
+    completo = recompactar or not layout_por_ano(final)
+    anos = None if completo else sorted(r[0] for r in con.execute(
+        f"SELECT DISTINCT year(din_instante) FROM read_parquet({arquivos!r}, union_by_name=true)").fetchall())
+    fonte = sql_consolidacao(final if final.exists() else None, arquivos, anos)
 
     n = CFG["duckdb"]["grupos_consolidacao"]
-    log.info("%s: consolidando (%d arquivos novos) por id_ons em %d grupos...", apelido, len(arquivos), n)
+    log.info("%s: consolidando (%d arquivos novos) %s, %d grupos por id_ons...", apelido, len(arquivos),
+             "TUDO" if completo else f"só os anos {anos}", n)
     t0 = time.time()
-    con = conectar()  # limites de memória/disco centralizados (src/utils/banco_analitico.py)
     for g in range(n):
-        con.execute(f"""COPY (SELECT * FROM ({fonte}) WHERE hash(id_ons) % {n} = {g}
-                              ORDER BY id_ons, din_instante)
+        con.execute(f"""COPY (SELECT *, year(din_instante) AS ano FROM ({fonte})
+                              WHERE hash(id_ons) % {n} = {g} ORDER BY id_ons, din_instante)
                         TO '{tmp.as_posix()}'
-                        (FORMAT parquet, PARTITION_BY (id_ons), COMPRESSION zstd,
+                        (FORMAT parquet, PARTITION_BY (ano, id_ons), COMPRESSION zstd,
                          OVERWRITE_OR_IGNORE, FILENAME_PATTERN 'g{g}_{{i}}')""")
     con.close()
-    if final.exists():
-        shutil.rmtree(final)
-    tmp.rename(final)
+    _trocar(final, tmp, completo)
     for chave, v in pendentes:
         (RAIZ / v["caminho"]).unlink(missing_ok=True)
         man.registrar(chave, {**v, "consolidado": True,
@@ -365,22 +378,82 @@ def consolidar_id_ons(apelido: str, man: Manifesto, recompactar: bool = False) -
     log.info("%s: consolidado em %.0fs", apelido, time.time() - t0)
 
 
-def sql_consolidacao(final: Path | None, arquivos: list[str]) -> str:
+def layout_por_ano(final: Path) -> bool:
+    """O consolidado já está no layout ano=/id_ons= (e não vazio)?"""
+    pastas = [p.name for p in final.iterdir()] if final.exists() else []
+    return bool(pastas) and all(p.startswith("ano=") for p in pastas)
+
+
+def _trocar(final: Path, tmp: Path, completo: bool) -> None:
+    """Põe o conteúdo de `tmp` no lugar, guardando o que sai em <final>.__velho até o fim.
+
+    completo: o diretório inteiro é trocado. Senão, só as pastas ano= que estão em `tmp`.
+    Cada passo é um rename de diretório (atômico); a qualquer momento, `_recuperar_troca`
+    consegue voltar a um estado consistente.
+    """
+    velho = final.with_name(final.name + ".__velho")
+    velho.mkdir()
+    if completo:
+        if final.exists():
+            final.rename(velho / "_completo")
+        tmp.rename(final)
+    else:
+        for ano in sorted(tmp.iterdir()):
+            alvo = final / ano.name
+            if alvo.exists():
+                alvo.rename(velho / ano.name)
+            ano.rename(alvo)
+        tmp.rmdir()
+    shutil.rmtree(velho)
+
+
+def _recuperar_troca(final: Path) -> None:
+    """Termina ou desfaz uma troca interrompida (ver `_trocar`).
+
+    O que está em <final>.__velho só volta se a versão nova não chegou ao lugar. Se chegou,
+    a troca já tinha acontecido e o velho é descartado.
+    """
+    velho = final.with_name(final.name + ".__velho")
+    if not velho.exists():
+        return
+    if (velho / "_completo").exists():
+        if not final.exists():
+            (velho / "_completo").rename(final)
+    else:
+        for ano in velho.iterdir():
+            if not (final / ano.name).exists():
+                ano.rename(final / ano.name)
+    shutil.rmtree(velho)
+    log.warning("%s: troca interrompida do consolidado recuperada", final.name)
+
+
+def sql_consolidacao(final: Path | None, arquivos: list[str], anos: list[int] | None = None) -> str:
     """SELECT que une o consolidado anterior com os arquivos novos do landing.
 
     Regra: os meses cobertos pelos arquivos novos SUBSTITUEM os mesmos meses do consolidado.
     Assim um mês republicado pelo ONS e rebaixado entra no lugar da versão antiga, em vez de
     se somar a ela: linha duplicada por rebaixar um mês não tem como acontecer.
+    `anos`: lê do consolidado só essas pastas ano= (atualização incremental); None = tudo.
+    O `ano` que vem do caminho (hive) é descartado: quem grava recalcula a partir de din_instante.
     union_by_name: o ONS muda colunas/tipos entre meses; unimos pelo nome.
     """
+    antigo = None
+    if final is not None:
+        por_ano = layout_por_ano(final)
+        if anos is None:
+            globs = [f"{final.as_posix()}/**/*.parquet"]
+        else:
+            globs = [f"{(final / f'ano={a}').as_posix()}/**/*.parquet" for a in anos
+                     if (final / f"ano={a}").exists()]
+        if globs:
+            antigo = (f"SELECT *{' EXCLUDE (ano)' if por_ano else ''} FROM read_parquet({globs!r}, "
+                      f"hive_partitioning=true, union_by_name=true)")
     if not arquivos:  # recompactar sem arquivo novo: só o consolidado
-        return (f"SELECT * FROM read_parquet('{final.as_posix()}/**/*.parquet', "
-                f"hive_partitioning=true, union_by_name=true)")
+        return antigo
     novos = f"read_parquet({arquivos!r}, union_by_name=true)"
-    if final is None:
+    if antigo is None:
         return f"SELECT * FROM {novos}"
-    return (f"SELECT * FROM read_parquet('{final.as_posix()}/**/*.parquet', "
-            f"hive_partitioning=true, union_by_name=true) "
+    return (f"SELECT * FROM ({antigo}) "
             f"WHERE date_trunc('month', din_instante) NOT IN "
             f"(SELECT DISTINCT date_trunc('month', din_instante) FROM {novos}) "
             f"UNION ALL BY NAME SELECT * FROM {novos}")

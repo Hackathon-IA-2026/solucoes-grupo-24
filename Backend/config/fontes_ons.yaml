@@ -24,7 +24,8 @@ sanidade_razao_max: 2.0
 
 # particao:
 #   data     -> ano=YYYY/mes=MM a partir do nome do arquivo (bases tm e séries mensais)
-#   id_ons   -> baixa mensal em _landing/ e consolida em id_ons=<id>/ com DuckDB (bases detail)
+#   id_ons   -> baixa mensal em _landing/ e consolida em ano=<AAAA>/id_ons=<id>/ com DuckDB (bases detail;
+#               atualizar um mês só reescreve o ano dele)
 #   arquivo  -> guarda o arquivo como veio (séries pequenas / cadastros)
 conjuntos:
   - pacote: restricao_coff_eolica_usi
