@@ -9,9 +9,11 @@ agora: ultimo_dado
 # Cópia do JSON publicado, para inspeção e exportação (a mesma função monta o banco e o arquivo).
 arquivo_export: output/contrato.json
 
-# Tela Validação: fontes exibidas (rótulo -> conjuntos do manifesto de download). Conjunto
-# baixado que não esteja em nenhum grupo faz a publicação falhar (fonte nunca some da tela).
-# Só entram fontes que o projeto de fato ingere (ERA5, BDGD e satélite ainda não).
+# Tela Validação: fontes exibidas (rótulo -> conjuntos do manifesto de download). Todo apelido
+# de config/fontes_ons.yaml precisa estar em exatamente um grupo, e só eles: o run_heavywork.py
+# confere isso ANTES da primeira etapa (download.validar_grupos_fontes) e o teste
+# test_status_fontes_cobre_todas_as_fontes_declaradas também. Fonte nunca some da tela.
+# Só entram fontes que o projeto de fato ingere (ERA5 e satélite ainda não).
 status_fontes:
   "ONS — API de Carga Verificada": [carga_verificada, carga_programada]
   "ONS — Dados Abertos (constrained-off)": [coff_eolica_tm, coff_solar_tm, coff_eolica_detail, coff_solar_detail]

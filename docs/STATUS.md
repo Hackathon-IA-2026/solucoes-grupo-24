@@ -556,3 +556,9 @@ estão intactos.
   (`%20`). `test_servico_web_nao_carrega_a_parte_pesada` passou a permitir numpy (o protótipo calcula
   no serviço); pandas/DuckDB/modelos continuam proibidos.
 - Ambiente: `Backend/.venv` com Python 3.12 (o 3.14 da máquina está fora de `requires-python`).
+
+## 2026-09-26 — Limpeza de branches + fontes da tela Validação conferidas antes do run_heavywork ✅
+
+- Branches `claude/eager-gauss-or90gs` e `claude/laughing-feynman-ntqc6y` apagadas (local e GitHub): o código delas já estava na main; o único resto era um commit com dados gerados (fora do git pelo `.gitignore`). `.claude/launch.json` entrou na main com caminhos relativos.
+- `run_heavywork.py` completo nesta máquina (ingestão ~24 min, treinos ~16 + ~15 min) falhou só na **publicação**: 4 fontes novas no manifesto (BDGD Light/Enel RJ, malhas do IBGE, da Fase 6) sem grupo em `status_fontes` (`config/publicacao.yaml`).
+- Classe de bug eliminada: `download.validar_grupos_fontes` confere `publicacao.yaml` × `fontes_ons.yaml` (fonte sem grupo **e** grupo citando fonte inexistente). Roda no **início** do `run_heavywork.py` (erro em segundos, não após ~70 min) e no teste `test_status_fontes_cobre_todas_as_fontes_declaradas`. Quem declarar fonte nova em `fontes_ons.yaml` precisa, no mesmo commit, dar grupo a ela.

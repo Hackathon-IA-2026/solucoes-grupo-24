@@ -596,6 +596,37 @@ def erros_de_download() -> list[str]:
                   if str(v.get("status", "")).startswith("erro"))
 
 
+def conjuntos_declarados() -> set[str]:
+    """Todos os apelidos que a ingestão baixa, lidos de config/fontes_ons.yaml.
+
+    Três blocos declaram fontes: `conjuntos` (CKAN do ONS), `arquivos_diretos` (ANEEL, IBGE)
+    e `api_carga.endpoints` (API de carga). Fonte nova em qualquer um deles aparece aqui.
+    """
+    return ({c["apelido"] for c in CFG["conjuntos"]}
+            | {a["apelido"] for a in CFG.get("arquivos_diretos", [])}
+            | {e["apelido"] for e in CFG["api_carga"]["endpoints"]})
+
+
+def validar_grupos_fontes(grupos: dict[str, list[str]]) -> None:
+    """Confere `status_fontes` (config/publicacao.yaml) contra as fontes de config/fontes_ons.yaml.
+
+    Decisão: a checagem é entre os DOIS ARQUIVOS DE CONFIG, sem olhar o manifesto. Assim ela
+    roda em milissegundos no início do run_heavywork.py e nos testes. Antes, fonte nova sem
+    grupo só estourava na publicação, a última etapa, depois de ~70 min de ingestão e treino
+    (aconteceu em 2026-09-26 com BDGD e malhas do IBGE). Também recusa grupo citando apelido
+    que não existe (erro de digitação sumiria da tela em silêncio).
+    """
+    declarados = conjuntos_declarados()
+    agrupados = {c for cs in grupos.values() for c in cs}
+    problemas = []
+    if sem_grupo := sorted(declarados - agrupados):
+        problemas.append(f"conjuntos sem grupo em publicacao.yaml (status_fontes): {sem_grupo}")
+    if desconhecidos := sorted(agrupados - declarados):
+        problemas.append(f"status_fontes cita conjuntos que não existem em fontes_ons.yaml: {desconhecidos}")
+    if problemas:
+        raise ValueError("; ".join(problemas))
+
+
 def status_fontes(grupos: dict[str, list[str]]) -> list[dict]:
     """Saúde de cada fonte, a partir do manifesto (tela Validação do dashboard).
 

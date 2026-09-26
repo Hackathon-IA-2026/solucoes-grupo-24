@@ -141,6 +141,27 @@ def test_status_fontes_agrupa_e_usa_o_download_mais_recente(tmp_path, monkeypatc
     assert not st["B"]["online"]
 
 
+def test_status_fontes_cobre_todas_as_fontes_declaradas():
+    """As configs REAIS batem: toda fonte de fontes_ons.yaml tem grupo em publicacao.yaml.
+
+    Sem este teste, fonte nova (ex.: BDGD, malhas do IBGE) só falhava na publicação, no fim
+    de ~70 min de run_heavywork.
+    """
+    from src.ingestion import download
+    from src.utils.config import carregar
+    download.validar_grupos_fontes(carregar("publicacao")["status_fontes"])
+
+
+def test_validar_grupos_fontes_recusa_sem_grupo_e_desconhecido(monkeypatch):
+    from src.ingestion import download
+    monkeypatch.setattr(download, "conjuntos_declarados", lambda: {"a", "b"})
+    download.validar_grupos_fontes({"A": ["a"], "B": ["b"]})
+    with pytest.raises(ValueError, match="sem grupo.*'b'"):
+        download.validar_grupos_fontes({"A": ["a"]})
+    with pytest.raises(ValueError, match="não existem.*'x'"):
+        download.validar_grupos_fontes({"A": ["a", "b", "x"]})
+
+
 def test_status_fontes_recusa_conjunto_sem_grupo(tmp_path, monkeypatch):
     from src.ingestion import download
     monkeypatch.setattr(download, "MANIFESTO_PATH", _manifesto(tmp_path, {

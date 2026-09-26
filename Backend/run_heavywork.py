@@ -25,6 +25,7 @@ import sys
 
 from src.heavywork import etapas as etapas_oraculo
 from src.heavywork.orquestrador import Estado, resumo, rodar, validar_config
+from src.ingestion import download
 from src.utils import log as log_util
 from src.utils.config import carregar
 from src.utils.paths import ESTADO_HEAVYWORK, TRAVA_HEAVYWORK
@@ -35,6 +36,8 @@ def main() -> int:
     log_util.configurar()
     etapas = etapas_oraculo.montar()
     ligadas, forcar = validar_config(carregar("heavywork"), etapas)
+    # Config da publicação (última etapa) conferida já aqui: erro em segundos, não após ~70 min.
+    download.validar_grupos_fontes(carregar("publicacao")["status_fontes"])
     with TravaDeProcesso(TRAVA_HEAVYWORK, "run_heavywork"):
         resultados = rodar(etapas, Estado.ler(ESTADO_HEAVYWORK), ligadas, forcar)
     logging.getLogger("heavywork").info("resumo:\n%s", resumo(resultados))
