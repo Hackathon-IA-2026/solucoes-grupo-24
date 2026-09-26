@@ -1,9 +1,0 @@
-# Configuração central do projeto (lida por todos os scripts via src/utils/config.py).
-# Valores preenchidos pelo Tiago no Prompt 1.
-area_piloto: ""              # vazio = recomendação provisória do Passo 1 (ver docs/area_piloto_opcoes.md)
-area_piloto_provisoria: true # true enquanto o Tiago não confirmar a área piloto
-incluir_rel: false           # REL fora por padrão: nenhum modelo prevê essa razão
-bloco_espacial: tiago        # "tiago" ou "luiz"
-era5_disponivel: false       # true se ~/.cdsapirc já estiver configurado
-gpu: false
-caminho_fator_correcao: ""   # arquivo do Luiz, quando existir

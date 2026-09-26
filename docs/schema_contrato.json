@@ -1,0 +1,768 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Contrato O.R.A.C.U.L.O. — API do Backend para o dashboard",
+  "description": "GERADO por `python -m src.contrato.esquema` a partir de Backend/src/contrato/modelos.py, espelho de Frontend/oraculo-dashboard/src/data/types.ts (fonte oficial). Não edite à mão. Explicação em docs/schema_contrato.md.",
+  "recursos": {
+    "carga": {
+      "rota": "GET /api/carga/snapshot",
+      "resposta": {
+        "additionalProperties": false,
+        "properties": {
+          "mock": {
+            "title": "Mock",
+            "type": "boolean"
+          },
+          "timestampUtc": {
+            "title": "Timestamputc",
+            "type": "string"
+          },
+          "cargaGlobalMw": {
+            "title": "Cargaglobalmw",
+            "type": "number"
+          },
+          "mmgdEstimadaMw": {
+            "title": "Mmgdestimadamw",
+            "type": "number"
+          },
+          "cargaSupervisionadaMw": {
+            "title": "Cargasupervisionadamw",
+            "type": "number"
+          },
+          "percentualMmgdNaGeracao": {
+            "maximum": 100,
+            "minimum": 0,
+            "title": "Percentualmmgdnageracao",
+            "type": "number"
+          },
+          "mmgdSobreCapacidadeInstalada": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Mmgdsobrecapacidadeinstalada",
+            "type": "number"
+          }
+        },
+        "required": [
+          "mock",
+          "timestampUtc",
+          "cargaGlobalMw",
+          "mmgdEstimadaMw",
+          "cargaSupervisionadaMw",
+          "percentualMmgdNaGeracao",
+          "mmgdSobreCapacidadeInstalada"
+        ],
+        "title": "CargaSnapshot",
+        "type": "object"
+      }
+    },
+    "previsao": {
+      "rota": "GET /api/previsao",
+      "resposta": {
+        "type": "array",
+        "items": {
+          "$defs": {
+            "FatoresClimaticos": {
+              "additionalProperties": false,
+              "properties": {
+                "radiacaoSolar": {
+                  "minimum": 0,
+                  "title": "Radiacaosolar",
+                  "type": "number"
+                },
+                "ventoMs": {
+                  "minimum": 0,
+                  "title": "Ventoms",
+                  "type": "number"
+                },
+                "temperaturaC": {
+                  "title": "Temperaturac",
+                  "type": "number"
+                },
+                "coberturaNuvensPct": {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "title": "Coberturanuvenspct",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "radiacaoSolar",
+                "ventoMs",
+                "temperaturaC",
+                "coberturaNuvensPct"
+              ],
+              "title": "FatoresClimaticos",
+              "type": "object"
+            },
+            "PontoPrevisao": {
+              "additionalProperties": false,
+              "properties": {
+                "timestamp": {
+                  "title": "Timestamp",
+                  "type": "string"
+                },
+                "p10": {
+                  "title": "P10",
+                  "type": "number"
+                },
+                "p50": {
+                  "title": "P50",
+                  "type": "number"
+                },
+                "p90": {
+                  "title": "P90",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "timestamp",
+                "p10",
+                "p50",
+                "p90"
+              ],
+              "title": "PontoPrevisao",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "properties": {
+            "mock": {
+              "title": "Mock",
+              "type": "boolean"
+            },
+            "horizonte": {
+              "enum": [
+                "30min",
+                "3h",
+                "D+1"
+              ],
+              "title": "Horizonte",
+              "type": "string"
+            },
+            "pontos": {
+              "items": {
+                "$ref": "#/$defs/PontoPrevisao"
+              },
+              "minItems": 1,
+              "title": "Pontos",
+              "type": "array"
+            },
+            "rampaProjetadaMw": {
+              "title": "Rampaprojetadamw",
+              "type": "number"
+            },
+            "janelaRampaHoras": {
+              "exclusiveMinimum": 0,
+              "title": "Janelarampahoras",
+              "type": "number"
+            },
+            "fatoresClimaticos": {
+              "$ref": "#/$defs/FatoresClimaticos"
+            }
+          },
+          "required": [
+            "mock",
+            "horizonte",
+            "pontos",
+            "rampaProjetadaMw",
+            "janelaRampaHoras",
+            "fatoresClimaticos"
+          ],
+          "title": "PrevisaoCurva",
+          "type": "object"
+        }
+      }
+    },
+    "riscos": {
+      "rota": "GET /api/riscos",
+      "resposta": {
+        "type": "array",
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "mock": {
+              "title": "Mock",
+              "type": "boolean"
+            },
+            "id": {
+              "minLength": 1,
+              "title": "Id",
+              "type": "string"
+            },
+            "nome": {
+              "minLength": 1,
+              "title": "Nome",
+              "type": "string"
+            },
+            "uf": {
+              "maxLength": 2,
+              "minLength": 2,
+              "title": "Uf",
+              "type": "string"
+            },
+            "lat": {
+              "maximum": 6,
+              "minimum": -34,
+              "title": "Lat",
+              "type": "number"
+            },
+            "lon": {
+              "maximum": -28,
+              "minimum": -74,
+              "title": "Lon",
+              "type": "number"
+            },
+            "distribuidora": {
+              "minLength": 1,
+              "title": "Distribuidora",
+              "type": "string"
+            },
+            "fonte": {
+              "enum": [
+                "Eólica",
+                "Solar FV"
+              ],
+              "title": "Fonte",
+              "type": "string"
+            },
+            "razao": {
+              "enum": [
+                "REL",
+                "CNF",
+                "ENE"
+              ],
+              "title": "Razao",
+              "type": "string"
+            },
+            "probabilidadePct": {
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Probabilidadepct",
+              "type": "number"
+            },
+            "montanteMw": {
+              "title": "Montantemw",
+              "type": "number"
+            },
+            "horizonte": {
+              "enum": [
+                "30min",
+                "3h",
+                "D+1"
+              ],
+              "title": "Horizonte",
+              "type": "string"
+            },
+            "severidade": {
+              "enum": [
+                "low",
+                "medium",
+                "high",
+                "critical"
+              ],
+              "title": "Severidade",
+              "type": "string"
+            },
+            "acaoRecomendada": {
+              "minLength": 1,
+              "title": "Acaorecomendada",
+              "type": "string"
+            }
+          },
+          "required": [
+            "mock",
+            "id",
+            "nome",
+            "uf",
+            "lat",
+            "lon",
+            "distribuidora",
+            "fonte",
+            "razao",
+            "probabilidadePct",
+            "montanteMw",
+            "horizonte",
+            "severidade",
+            "acaoRecomendada"
+          ],
+          "title": "RiscoUsina",
+          "type": "object"
+        }
+      }
+    },
+    "alertas": {
+      "rota": "GET /api/alertas/{id}",
+      "resposta": {
+        "$defs": {
+          "Motivo": {
+            "additionalProperties": false,
+            "properties": {
+              "razao": {
+                "enum": [
+                  "REL",
+                  "CNF",
+                  "ENE"
+                ],
+                "title": "Razao",
+                "type": "string"
+              },
+              "pesoPct": {
+                "maximum": 100,
+                "minimum": 0,
+                "title": "Pesopct",
+                "type": "number"
+              }
+            },
+            "required": [
+              "razao",
+              "pesoPct"
+            ],
+            "title": "Motivo",
+            "type": "object"
+          },
+          "ShapValue": {
+            "additionalProperties": false,
+            "properties": {
+              "variavel": {
+                "minLength": 1,
+                "title": "Variavel",
+                "type": "string"
+              },
+              "peso": {
+                "maximum": 1,
+                "minimum": 0,
+                "title": "Peso",
+                "type": "number"
+              },
+              "direcao": {
+                "enum": [
+                  "aumenta",
+                  "reduz"
+                ],
+                "title": "Direcao",
+                "type": "string"
+              }
+            },
+            "required": [
+              "variavel",
+              "peso",
+              "direcao"
+            ],
+            "title": "ShapValue",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "mock": {
+            "title": "Mock",
+            "type": "boolean"
+          },
+          "riscoUsinaId": {
+            "minLength": 1,
+            "title": "Riscousinaid",
+            "type": "string"
+          },
+          "probabilidadePct": {
+            "maximum": 100,
+            "minimum": 0,
+            "title": "Probabilidadepct",
+            "type": "number"
+          },
+          "montanteMw": {
+            "title": "Montantemw",
+            "type": "number"
+          },
+          "horarioPrevisto": {
+            "title": "Horarioprevisto",
+            "type": "string"
+          },
+          "motivos": {
+            "items": {
+              "$ref": "#/$defs/Motivo"
+            },
+            "minItems": 1,
+            "title": "Motivos",
+            "type": "array"
+          },
+          "fonteDataset": {
+            "minLength": 1,
+            "title": "Fontedataset",
+            "type": "string"
+          },
+          "janelaPrevisao": {
+            "enum": [
+              "30min",
+              "3h",
+              "D+1"
+            ],
+            "title": "Janelaprevisao",
+            "type": "string"
+          },
+          "atualizadoHaMin": {
+            "minimum": 0,
+            "title": "Atualizadohamin",
+            "type": "integer"
+          },
+          "atualizadoEm": {
+            "title": "Atualizadoem",
+            "type": "string"
+          },
+          "metodoExplicacao": {
+            "minLength": 1,
+            "title": "Metodoexplicacao",
+            "type": "string"
+          },
+          "shapValues": {
+            "items": {
+              "$ref": "#/$defs/ShapValue"
+            },
+            "title": "Shapvalues",
+            "type": "array"
+          },
+          "textoAlerta": {
+            "minLength": 1,
+            "title": "Textoalerta",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mock",
+          "riscoUsinaId",
+          "probabilidadePct",
+          "montanteMw",
+          "horarioPrevisto",
+          "motivos",
+          "fonteDataset",
+          "janelaPrevisao",
+          "atualizadoHaMin",
+          "atualizadoEm",
+          "metodoExplicacao",
+          "shapValues",
+          "textoAlerta"
+        ],
+        "title": "AlertaDetalhado",
+        "type": "object"
+      }
+    },
+    "excedentes": {
+      "rota": "GET /api/excedentes",
+      "resposta": {
+        "type": "array",
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "mock": {
+              "title": "Mock",
+              "type": "boolean"
+            },
+            "areaConcessao": {
+              "minLength": 1,
+              "title": "Areaconcessao",
+              "type": "string"
+            },
+            "distribuidora": {
+              "minLength": 1,
+              "title": "Distribuidora",
+              "type": "string"
+            },
+            "lat": {
+              "maximum": 6,
+              "minimum": -34,
+              "title": "Lat",
+              "type": "number"
+            },
+            "lon": {
+              "maximum": -28,
+              "minimum": -74,
+              "title": "Lon",
+              "type": "number"
+            },
+            "fonte": {
+              "minLength": 1,
+              "title": "Fonte",
+              "type": "string"
+            },
+            "excedenteMw": {
+              "title": "Excedentemw",
+              "type": "number"
+            },
+            "prioridade": {
+              "enum": [
+                "low",
+                "medium",
+                "high",
+                "critical"
+              ],
+              "title": "Prioridade",
+              "type": "string"
+            },
+            "horizonte": {
+              "enum": [
+                "1h",
+                "3h",
+                "D+1"
+              ],
+              "title": "Horizonte",
+              "type": "string"
+            },
+            "acaoRecomendada": {
+              "minLength": 1,
+              "title": "Acaorecomendada",
+              "type": "string"
+            }
+          },
+          "required": [
+            "mock",
+            "areaConcessao",
+            "distribuidora",
+            "lat",
+            "lon",
+            "fonte",
+            "excedenteMw",
+            "prioridade",
+            "horizonte",
+            "acaoRecomendada"
+          ],
+          "title": "ExcedenteTsoDso",
+          "type": "object"
+        }
+      }
+    },
+    "validacao": {
+      "rota": "GET /api/validacao",
+      "resposta": {
+        "$defs": {
+          "ErroDiario": {
+            "additionalProperties": false,
+            "properties": {
+              "data": {
+                "format": "date",
+                "title": "Data",
+                "type": "string"
+              },
+              "mae": {
+                "title": "Mae",
+                "type": "number"
+              },
+              "rmse": {
+                "title": "Rmse",
+                "type": "number"
+              },
+              "maeBaseline": {
+                "title": "Maebaseline",
+                "type": "number"
+              },
+              "rmseBaseline": {
+                "title": "Rmsebaseline",
+                "type": "number"
+              }
+            },
+            "required": [
+              "data",
+              "mae",
+              "rmse",
+              "maeBaseline",
+              "rmseBaseline"
+            ],
+            "title": "ErroDiario",
+            "type": "object"
+          },
+          "ModeloInfo": {
+            "additionalProperties": false,
+            "description": "Metadados do modelo avaliado na tela Validação.",
+            "properties": {
+              "nome": {
+                "minLength": 1,
+                "title": "Nome",
+                "type": "string"
+              },
+              "versao": {
+                "minLength": 1,
+                "title": "Versao",
+                "type": "string"
+              },
+              "dataTreino": {
+                "format": "date",
+                "title": "Datatreino",
+                "type": "string"
+              },
+              "periodoTreino": {
+                "$ref": "#/$defs/Periodo"
+              },
+              "periodoTeste": {
+                "$ref": "#/$defs/Periodo"
+              }
+            },
+            "required": [
+              "nome",
+              "versao",
+              "dataTreino",
+              "periodoTreino",
+              "periodoTeste"
+            ],
+            "title": "ModeloInfo",
+            "type": "object"
+          },
+          "Periodo": {
+            "additionalProperties": false,
+            "properties": {
+              "inicio": {
+                "format": "date",
+                "title": "Inicio",
+                "type": "string"
+              },
+              "fim": {
+                "format": "date",
+                "title": "Fim",
+                "type": "string"
+              }
+            },
+            "required": [
+              "inicio",
+              "fim"
+            ],
+            "title": "Periodo",
+            "type": "object"
+          },
+          "StatusFonte": {
+            "additionalProperties": false,
+            "properties": {
+              "fonte": {
+                "minLength": 1,
+                "title": "Fonte",
+                "type": "string"
+              },
+              "online": {
+                "title": "Online",
+                "type": "boolean"
+              },
+              "ultimaSincronizacao": {
+                "title": "Ultimasincronizacao",
+                "type": "string"
+              }
+            },
+            "required": [
+              "fonte",
+              "online",
+              "ultimaSincronizacao"
+            ],
+            "title": "StatusFonte",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "mock": {
+            "title": "Mock",
+            "type": "boolean"
+          },
+          "erroMedioAbsolutoMw": {
+            "title": "Erromedioabsolutomw",
+            "type": "number"
+          },
+          "rmseMw": {
+            "title": "Rmsemw",
+            "type": "number"
+          },
+          "mapePct": {
+            "minimum": 0,
+            "title": "Mapepct",
+            "type": "number"
+          },
+          "skillVsClimatologia": {
+            "maximum": 1,
+            "title": "Skillvsclimatologia",
+            "type": "number"
+          },
+          "baselineNome": {
+            "minLength": 1,
+            "title": "Baselinenome",
+            "type": "string"
+          },
+          "historicoErro30d": {
+            "items": {
+              "$ref": "#/$defs/ErroDiario"
+            },
+            "title": "Historicoerro30D",
+            "type": "array"
+          },
+          "modelo": {
+            "$ref": "#/$defs/ModeloInfo"
+          },
+          "statusFontes": {
+            "items": {
+              "$ref": "#/$defs/StatusFonte"
+            },
+            "title": "Statusfontes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "mock",
+          "erroMedioAbsolutoMw",
+          "rmseMw",
+          "mapePct",
+          "skillVsClimatologia",
+          "baselineNome",
+          "historicoErro30d",
+          "modelo",
+          "statusFontes"
+        ],
+        "title": "MetricasValidacao",
+        "type": "object"
+      }
+    },
+    "mmgd_densidade": {
+      "rota": "GET /api/mmgd/densidade",
+      "resposta": {
+        "additionalProperties": false,
+        "description": "Camada de calor do Mapa Híbrido.",
+        "properties": {
+          "mock": {
+            "title": "Mock",
+            "type": "boolean"
+          },
+          "descricao": {
+            "minLength": 1,
+            "title": "Descricao",
+            "type": "string"
+          },
+          "pontos": {
+            "items": {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 6,
+                  "minimum": -34,
+                  "type": "number"
+                },
+                {
+                  "maximum": -28,
+                  "minimum": -74,
+                  "type": "number"
+                },
+                {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "minItems": 1,
+            "title": "Pontos",
+            "type": "array"
+          }
+        },
+        "required": [
+          "mock",
+          "descricao",
+          "pontos"
+        ],
+        "title": "DensidadeMmgd",
+        "type": "object"
+      }
+    }
+  }
+}

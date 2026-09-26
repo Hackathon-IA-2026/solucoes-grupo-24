@@ -21,24 +21,16 @@ Divisão do time:
 
 ## Estrutura do repositório
 
+Na raiz do repositório só existem três pastas (garantido por `Backend/tests/test_estrutura.py`):
+
 ```
-data/raw/            # bruto, fora do git
-data/processed/      # derivados
-notebooks/
-src/ingestion/
-src/spatial/
-src/models/
-src/utils/
-docs/ ->toda a documentação e relatórios devem estar dentro desta pasta
-reports/
-output/
+Backend/    -> todo o Python: código, dados, config, notebooks, testes e o banco SQLite
+Frontend/   -> todo o frontend (dashboard do Luiz)
+docs/       -> toda a documentação e relatórios (relatórios em docs/reports/)
 ```
 
-e o mais importante:
-```
-Backend/ -> todo backend deve estar dentro desta pasta, inclusive o arquivo do banco de dados sqlite
-Frontend/ -> todo frontend deve estar dentro desta pasta
-```
+Dentro de `Backend/` (raiz de import do Python; comandos rodam daqui: `python -m src...`):
+
 
 Stack: Python, pandas, pyarrow, duckdb, geopandas, matplotlib, seaborn, lightgbm, pytorch-forecasting (ou neuralforecast) entre outros que forem necessários
 
@@ -47,15 +39,15 @@ Stack: Python, pandas, pyarrow, duckdb, geopandas, matplotlib, seaborn, lightgbm
 - Antes de começar a fazer qualquer alteração deve-se checar se existe atualizações da branch atual, se não tiver alterações conflitantes atualize com pull para ter a versão mais atual do time.
 - **Nunca inventar dados.** Se uma série, endpoint ou arquivo não existir ou não estiver acessível, pare e reporte. Dado sintético ou placeholder só com flag explícita (`mock=True` ou coluna `is_mock`) e registrado em `docs/real_vs_mock.md`.
 - **Split sempre cronológico.** Nunca aleatório. Toda etapa de modelagem precisa de um teste que prove ausência de vazamento temporal.
-- **Nunca cruzar** recortes por subsistema e por área operativa sem `data/processed/mapeamento_subsistema_area.csv`.
+- **Nunca cruzar** recortes por subsistema e por área operativa sem `Backend/data/processed/mapeamento_subsistema_area.csv`.
 - Bases tm de constrained-off: chave composta = fonte + id.
 - Carga supervisionada = carga global − MMGD estimada, resolução 30 min, por subsistema.
 - Feriados tratados como domingo.
 - Horizontes de previsão: 30 min, 3h e D+1. Quantis: P10, P50, P90.
 - Patamares: ponta noturna 19–22h; mínima diurna 09–16h.
 - Faixas horárias de curtailment: 00–07 | 07–09 e 16–18 | 09–16 | 18–24.
-- Dados grandes em Parquet particionado. `data/raw` no `.gitignore`.
-- Parâmetros (pesos da loss, datas de corte, caminhos) em `config/*.yaml`, nunca hardcoded.
+- Dados grandes em Parquet particionado. `Backend/data/raw` no `.gitignore`.
+- Parâmetros (pesos da loss, datas de corte, caminhos) em `Backend/config/*.yaml`, nunca hardcoded.
 - Antes de downloads longos ou treinos acima de ~10 min: avise e estime o tempo.
 - Commits pequenos e descritivos. Ao fim de cada tarefa, registre o andamento em `docs/STATUS.md`.
 - Após fazer commit faça imediatamente push para enviar logo as alterações para o time.

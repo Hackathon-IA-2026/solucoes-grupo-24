@@ -1,0 +1,18 @@
+# Serviço web (Backend/main.py): API FastAPI só de leitura. Ver docs/Oraculo_planejamento.md §13.1.
+
+host: 127.0.0.1
+porta: 8000
+
+# Prefixo das rotas. O dashboard usa VITE_API_BASE_URL (padrão "/api") + a rota do recurso,
+# ex.: /api/carga/snapshot (Frontend/oraculo-dashboard/src/data/dataSource.ts).
+prefixo: /api
+
+# Origens que podem chamar a API pelo navegador (CORS). 5173 = `npm run dev` do dashboard.
+cors_origens:
+  - http://localhost:5173
+  - http://127.0.0.1:5173
+
+# Build do dashboard (`npm run build` em Frontend/oraculo-dashboard), relativo a Backend/.
+# Se existir, `python main.py` também serve o dashboard em http://<host>:<porta>/ (um servidor
+# só para a demo). Sem build, só a API sobe; no desenvolvimento use `npm run dev` (proxy do Vite).
+dashboard_dist: ../Frontend/oraculo-dashboard/dist

@@ -1,0 +1,9 @@
+{
+  "mock": true,
+  "timestampUtc": "2026-09-25T17:30:00Z",
+  "cargaGlobalMw": 57973,
+  "mmgdEstimadaMw": 26169,
+  "cargaSupervisionadaMw": 31804,
+  "percentualMmgdNaGeracao": 44.8,
+  "mmgdSobreCapacidadeInstalada": 0.61
+}

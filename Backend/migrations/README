@@ -1,0 +1,6 @@
+Migrations do banco do O.R.A.C.U.L.O. (Alembic). Comandos de dentro de Backend/:
+
+    alembic upgrade head                              # aplica (o run_heavywork.py já faz isso)
+    alembic revision --autogenerate -m "descrição"    # depois de mudar src/db/tabelas.py
+
+URL do banco: DATABASE_URL ou Backend/oraculo.db (src/db/sessao.py).

@@ -5,7 +5,7 @@ Gerado em 2026-09-25 a partir da **API de catálogo** do portal (`https://dados.
 - **Período**: menor e maior ano presentes nos nomes dos arquivos publicados; entre parênteses, o início declarado no contrato do MCP.
 - **MCP**: se o conjunto é coberto pelo servidor MCP oficial (ver `docs/mcp_ons.md`).
 - **Relevância**: D1 = curtailment, D2 = demanda/carga supervisionada, Ambos, Nenhum. Atribuída pelo time; critérios na coluna "Uso".
-- A seleção final do que é baixado está em `data/catalogo_series_selecionadas.md`.
+- A seleção final do que é baixado está em `Backend/data/catalogo_series_selecionadas.md`.
 
 ## Lacunas encontradas
 

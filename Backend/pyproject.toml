@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oraculo"
+version = "0.1.0"
+description = "O.R.A.C.U.L.O. — previsão de carga e risco de curtailment no SIN (Hackathon IA COPPE/UFRJ 2026)"
+requires-python = ">=3.11,<3.13"
+license = { text = "MIT" }  # LICENSE fica na raiz do repositório (fora deste projeto)
+dependencies = [
+    "pandas",
+    "pyarrow",
+    "duckdb",
+    "geopandas",
+    "matplotlib",
+    "seaborn",
+    # 4.7.0 dá "access violation" dentro da DLL no Windows já no primeiro fit (2026-09-26);
+    # tests/test_modelos_carga.py::test_lightgbm_treina tem um fit mínimo que pega isso.
+    "lightgbm>=4.6,<4.7",
+    # LGBMRegressor/LGBMClassifier (API sklearn do LightGBM) exigem o scikit-learn instalado
+    "scikit-learn",
+    "joblib",
+    "pytorch-forecasting",
+    "pyyaml",
+    "jsonschema",
+    "requests",
+    "holidays",
+    # serviço web (main.py) e banco: SQLAlchemy 2.x + Alembic (Regras de Compatibilidade do CLAUDE.md)
+    "fastapi",
+    "uvicorn[standard]",
+    "sqlalchemy>=2",
+    "alembic",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx"]  # httpx: TestClient do FastAPI nos testes da API
+era5 = ["cdsapi", "xarray", "netcdf4"]
+# explicabilidade com modelo real (pipeline/explicabilidade.py::ExplicadorShap)
+explicabilidade = ["shap", "numpy"]
+
+[tool.setuptools.packages.find]
+include = ["src*", "pipeline*", "migrations*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Backend/ no sys.path: testes importam src.* e pipeline.* sem instalação
+pythonpath = ["."]

@@ -1,0 +1,82 @@
+# Previsão de carga supervisionada: baselines + LightGBM quantílico (Fase 3, Fatia 2).
+# Código: src/features/carga.py (features), src/models/carga.py (treino e previsão),
+# src/models/metricas.py (backtest). Nada disso fica hardcoded no código.
+
+alvo: carga_supervisionada          # coluna de data/processed/carga_supervisionada.csv
+# Séries modeladas. SIN = soma dos 4 subsistemas, só nas semi-horas em que os 4 existem
+# (soma parcial nunca vira "SIN"). Cada série tem os próprios modelos: somar quantis de
+# subsistemas NÃO dá o quantil do SIN, por isso o SIN é modelado direto.
+series: [SE, S, NE, N, SIN]
+serie_publicada: SIN                # a curva do dashboard não tem campo de subsistema
+
+# Horizonte do contrato -> passos de 30 min entre a emissão e o alvo (h = 1, 6, 48).
+# Modelo DIRETO por horizonte: cada previsão usa só dados até (alvo − h).
+horizontes:
+  "30min": 1
+  "3h": 6
+  "D+1": 48
+
+quantis: [0.1, 0.5, 0.9]
+
+# Split cronológico (nunca aleatório; teste em tests/test_modelos_carga.py).
+#   treino: alvos em [inicio_treino, fim_treino]
+#   teste:  emissões (alvo − h) a partir de inicio_teste  -> nenhuma previsão de teste
+#           usa informação que o treino não poderia ter.
+# A carga supervisionada existe a partir de 2019-02-14; 2019-03-01 evita o fim do horário
+# de verão de 2019 no começo da série. O teste cobre mais de um ano (todas as estações).
+split:
+  inicio_treino: "2019-03-01 00:00"
+  fim_treino: "2025-06-30 23:30"
+  inicio_teste: "2025-07-01 00:00"
+
+# Features (src/features/carga.py). Defasagens em passos de 30 min, contadas a partir da
+# EMISSÃO (alvo − h): 0 = último valor conhecido na emissão.
+features:
+  defasagens_recentes: [0, 1, 2, 4, 6, 12]
+  # Sazonais contadas a partir do ALVO; só entram se >= h (senão seriam futuro).
+  defasagens_sazonais: [48, 96, 336, 672]
+  janelas_media: [6, 48, 336]       # médias móveis terminando na emissão
+
+# Referência de cada horizonte: o LightGBM aprende o DESVIO em relação a ela (árvores não
+# extrapolam nível; a carga cresce ano a ano). É também o baseline que ele precisa bater.
+#   persistencia   -> último valor conhecido na emissão
+#   sazonal_dia    -> mesmo horário no dia mais recente disponível na emissão
+# 3h usa sazonal_dia: com persistência o modelo tinha de aprender sozinho 3 h de formato da
+# curva (no primeiro backtest o 3h errou mais que o D+1). O nível recente entra pelas features.
+referencia:
+  "30min": persistencia
+  "3h": sazonal_dia
+  "D+1": sazonal_dia
+
+# Calibração conformal (CQR) da banda P10–P90 do LightGBM: dias finais do TREINO separados
+# para medir a correção (o modelo é ajustado sem eles e depois reajustado com tudo). 182 dias
+# = um semestre. Ver src/models/carga.py.
+calibracao_dias: 182
+
+lightgbm:
+  n_estimators: 500
+  learning_rate: 0.05
+  num_leaves: 63
+  min_child_samples: 100
+  subsample: 0.8
+  subsample_freq: 1
+  colsample_bytree: 0.8
+  verbose: -1
+  n_jobs: -1
+  random_state: 42
+
+# Tela Validação: uma linha de métricas só no contrato -> série publicada neste horizonte.
+validacao:
+  horizonte: "D+1"
+  dias_historico: 30
+  modelo: lightgbm
+  climatologia: climatologia        # base do skill (1 − MAE_modelo / MAE_climatologia)
+  # Rótulos exibidos na tela (metadados do modelo e legenda do histórico de erro).
+  nome_modelo: "LightGBM quantílico (CQR) — carga supervisionada SIN"
+  nome_baseline: Climatologia
+
+# Curva do dashboard (PrevisaoCurva): 48 pontos e janela da rampa, como no mock do Luiz.
+curva:
+  pontos: 48
+  janela_rampa_horas: 3
+  modelo: lightgbm

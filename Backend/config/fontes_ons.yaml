@@ -1,0 +1,102 @@
+# Fontes do ONS baixadas por src/ingestion/download.py.
+# Os arquivos de cada conjunto NÃO são listados aqui: o script consulta a API CKAN do
+# portal (package_show) e pega todos os recursos PARQUET. Assim novos meses entram sozinhos.
+
+ckan_package_show: https://dados.ons.org.br/api/3/action/package_show
+destino: data/raw/ons              # relativo à raiz do repositório
+threads_download: 6
+timeout_s: 300
+
+# Limites do DuckDB na consolidação por id_ons (máquina com pouca RAM e disco quase cheio)
+duckdb:
+  memory_limit: 2GB
+  threads: 2
+  max_temp_directory_size: 6GB   # rótulos (ORDER BY + janela em 16M linhas) precisam de >1GB; 6GB ainda deixa o disco seguro
+  # Valores baixos aqui fragmentam a escrita (1 arquivo por flush). A memória da
+  # consolidação é controlada por grupos_consolidacao, não por estes buffers.
+  partitioned_write_max_open_files: 128
+  partitioned_write_flush_threshold: 524288
+  grupos_consolidacao: 16    # id_ons divididos em N grupos ordenados (~5M linhas cada)
+
+# Divergência "grande" na sanidade = razão linhas_obtidas/linhas_esperadas fora deste intervalo
+sanidade_razao_min: 0.5
+sanidade_razao_max: 2.0
+
+# particao:
+#   data     -> ano=YYYY/mes=MM a partir do nome do arquivo (bases tm e séries mensais)
+#   id_ons   -> baixa mensal em _landing/ e consolida em id_ons=<id>/ com DuckDB (bases detail)
+#   arquivo  -> guarda o arquivo como veio (séries pequenas / cadastros)
+conjuntos:
+  - pacote: restricao_coff_eolica_usi
+    apelido: coff_eolica_tm
+    particao: data
+    linhas_esperadas: 8000000
+  - pacote: restricao_coff_fotovoltaica
+    apelido: coff_solar_tm
+    particao: data
+    linhas_esperadas: 2900000
+  - pacote: restricao_coff_eolica_detail
+    apelido: coff_eolica_detail
+    particao: id_ons
+    linhas_esperadas: 63000000
+  - pacote: restricao_coff_fotovoltaica_detail
+    apelido: coff_solar_detail
+    particao: id_ons
+    linhas_esperadas: 19000000
+  - pacote: geracao-termica-despacho-2
+    apelido: termica_despacho
+    particao: data
+  - pacote: intercambio-nacional
+    apelido: intercambio_nacional
+    particao: data
+    aceitar_csv: true        # Parquet só existe de 2023 em diante; antes disso só CSV
+  - pacote: fator-capacidade-2
+    apelido: fator_capacidade
+    particao: data
+  - pacote: balanco-energia-subsistema
+    apelido: balanco_subsistema
+    particao: data
+  - pacote: curva-carga
+    apelido: curva_carga
+    particao: data
+  - pacote: capacidade-geracao
+    apelido: capacidade_geracao
+    particao: arquivo
+  - pacote: usina_conjunto
+    apelido: usina_conjunto
+    particao: arquivo
+  - pacote: modalidade-usina
+    apelido: modalidade_usina
+    particao: arquivo
+
+# Arquivos únicos fora do portal ONS (baixados com o mesmo manifesto e a mesma trava).
+arquivos_diretos:
+  # Relação de empreendimentos de MMGD (ANEEL): potência instalada por distribuidora,
+  # município e data de conexão. É a única fonte de CAPACIDADE de MMGD (o ONS só publica
+  # a geração estimada). Atualizada diariamente pela ANEEL.
+  - apelido: aneel_mmgd_empreendimentos
+    url: https://dadosabertos.aneel.gov.br/dataset/5e0fafd2-21b9-4d5b-b622-40438d40aba2/resource/cd29f6eb-e08d-4db7-b6fb-ed6e3b682d27/download/empreendimento-geracao-distribuida.parquet
+    destino: data/raw/aneel/empreendimento_geracao_distribuida.parquet
+    # A ANEEL atualiza todo dia; rebaixar semanalmente basta para a escala do hackathon
+    # (~100 MB por download). Sem esta chave, um arquivo direto nunca expira.
+    atualizar_apos_dias: 7
+
+# API REST de carga (fora do CKAN e fora do MCP). Limite: 3 meses por chamada.
+api_carga:
+  base_url: https://apicarga.ons.org.br/prd
+  threads: 4
+  janela_meses: 3
+  # dados de uma janela só são considerados "fechados" (não rebaixar) se ela terminou
+  # há mais que isto; janelas recentes são rebaixadas porque o ONS ainda consiste os dados.
+  dias_para_fechar: 45
+  endpoints:
+    - nome: cargaverificada
+      apelido: carga_verificada
+      inicio: "2016-01-01"
+      areas: [SECO, S, NE, N, RJ, SP, MG, ES, MT, MS, DF, GO, AC, RO, PR, SC, RS,
+              BASE, BAOE, ALPE, PBRN, CE, PI, TON, PA, MA, AP, AM, RR,
+              PESE, PES, PENE, PEN]   # perdas: fecham a soma áreas -> subsistema
+    - nome: cargaprogramada
+      apelido: carga_programada
+      inicio: "2021-03-05"
+      areas: [SECO, S, NE, N]

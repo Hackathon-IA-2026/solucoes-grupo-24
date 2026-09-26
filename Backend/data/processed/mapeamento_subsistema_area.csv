@@ -1,0 +1,34 @@
+cod_areacarga,nom_areacarga,tipo,cod_subsistema_api,id_subsistema,ufs
+SECO,Sudeste/Centro-Oeste,subsistema,SECO,SE,
+S,Sul,subsistema,S,S,
+NE,Nordeste,subsistema,NE,NE,
+N,Norte,subsistema,N,N,
+RJ,Rio de Janeiro,area,SECO,SE,RJ
+SP,São Paulo,area,SECO,SE,SP
+MG,Minas Gerais,area,SECO,SE,MG
+ES,Espírito Santo,area,SECO,SE,ES
+MT,Mato Grosso,area,SECO,SE,MT
+MS,Mato Grosso do Sul,area,SECO,SE,MS
+DF,Distrito Federal,area,SECO,SE,DF
+GO,Goiás,area,SECO,SE,GO
+AC,Acre,area,SECO,SE,AC
+RO,Rondônia,area,SECO,SE,RO
+PR,Paraná,area,S,S,PR
+SC,Santa Catarina,area,S,S,SC
+RS,Rio Grande do Sul,area,S,S,RS
+BASE,Bahia/Sergipe,area,NE,NE,BA;SE
+BAOE,Bahia Oeste,area,NE,NE,BA
+ALPE,Alagoas/Pernambuco,area,NE,NE,AL;PE
+PBRN,Paraíba/Rio Grande do Norte,area,NE,NE,PB;RN
+CE,Ceará,area,NE,NE,CE
+PI,Piauí,area,NE,NE,PI
+TON,Tocantins,area,N,N,TO
+PA,Pará,area,N,N,PA
+MA,Maranhão,area,N,N,MA
+AP,Amapá,area,N,N,AP
+AM,Amazonas,area,N,N,AM
+RR,Roraima,area,N,N,RR
+PESE,Perdas Sudeste/Centro-Oeste,perdas,SECO,SE,
+PES,Perdas Sul,perdas,S,S,
+PENE,Perdas Nordeste,perdas,NE,NE,
+PEN,Perdas Norte,perdas,N,N,

@@ -1,0 +1,7 @@
+[
+  {"mock": true, "areaConcessao": "Bahia Costa", "distribuidora": "NEOENERGIA BA", "lat": -12.9, "lon": -38.4, "fonte": "Eólica/Solar", "excedenteMw": 245, "prioridade": "high", "horizonte": "3h", "acaoRecomendada": "Redução escalonada"},
+  {"mock": true, "areaConcessao": "Piauí Central", "distribuidora": "EQUATORIAL PI", "lat": -7.1, "lon": -42.5, "fonte": "Solar FV", "excedenteMw": 189, "prioridade": "high", "horizonte": "1h", "acaoRecomendada": "Curtailment ENE"},
+  {"mock": true, "areaConcessao": "Rio Grande do Norte", "distribuidora": "COSERN", "lat": -5.8, "lon": -36.5, "fonte": "Eólica", "excedenteMw": 98, "prioridade": "medium", "horizonte": "D+1", "acaoRecomendada": "Monitoramento"},
+  {"mock": true, "areaConcessao": "Goiás Cerrado", "distribuidora": "ENEL GO", "lat": -16.0, "lon": -49.0, "fonte": "Solar FV", "excedenteMw": 134, "prioridade": "medium", "horizonte": "D+1", "acaoRecomendada": "Redução preventiva"},
+  {"mock": true, "areaConcessao": "Maranhão Litoral", "distribuidora": "EQUATORIAL MA", "lat": -2.6, "lon": -44.2, "fonte": "Eólica", "excedenteMw": 67, "prioridade": "low", "horizonte": "D+1", "acaoRecomendada": "Standby"}
+]

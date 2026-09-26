@@ -50,7 +50,7 @@ Todas as séries do Desafio 1 que selecionamos (tm, detail, térmicas, intercâm
 
 ## Decisão de uso no projeto
 
-- **Carga em volume: download direto** (`src/ingestion/download.py`). Com 1000 linhas por página e 30 s de timeout, o MCP não serve para puxar as bases detail (dezenas de milhões de linhas).
+- **Carga em volume: download direto** (`Backend/src/ingestion/download.py`). Com 1000 linhas por página e 30 s de timeout, o MCP não serve para puxar as bases detail (dezenas de milhões de linhas).
 - **MCP: exploração e checagem.** Serve para conferir schema, unidade e aditividade antes de escrever uma transformação, e para responder perguntas pontuais. Os contratos ODCS são a melhor documentação de colunas disponível (melhores que os PDFs de dicionário).
 - **Carga verificada**: API REST direto, porque o MCP não cobre.
 

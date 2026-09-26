@@ -1,0 +1,142 @@
+[
+  {
+    "mock": true,
+    "risco_usina_id": "ce-complexo-litoral-eolico",
+    "horario_previsto": "2026-09-25T20:30:00Z",
+    "motivos": {
+      "REL": 70,
+      "CNF": 20,
+      "ENE": 10
+    },
+    "dataset_origem": "ONS — Restrição de operação por constrained-off de usinas eólicas (tm)",
+    "atualizado_em": "2026-09-25T17:26:00Z",
+    "variaveis_shap": {
+      "Velocidade do vento (100 m)": 0.34,
+      "Carga supervisionada prevista": -0.22,
+      "Disponibilidade da transmissão": 0.18,
+      "Geração MMGD estimada": 0.14,
+      "Hora do dia (faixa 18–24)": 0.07,
+      "Temperatura": -0.05
+    }
+  },
+  {
+    "mock": true,
+    "risco_usina_id": "pi-chapada-gaucha-solar",
+    "horario_previsto": "2026-09-26T15:00:00Z",
+    "motivos": {
+      "ENE": 62,
+      "CNF": 25,
+      "REL": 13
+    },
+    "dataset_origem": "ONS — Restrição de operação por constrained-off de usinas fotovoltaicas (tm)",
+    "atualizado_em": "2026-09-25T17:18:00Z",
+    "variaveis_shap": {
+      "Radiação solar global": 0.36,
+      "Geração MMGD estimada": 0.24,
+      "Carga supervisionada prevista": -0.19,
+      "Cobertura de nuvens": -0.11,
+      "Hora do dia (faixa 09–16)": 0.06,
+      "Temperatura": -0.04
+    }
+  },
+  {
+    "mock": true,
+    "risco_usina_id": "rn-lagoa-seigada",
+    "horario_previsto": "2026-09-26T09:00:00Z",
+    "motivos": {
+      "REL": 55,
+      "CNF": 29,
+      "ENE": 16
+    },
+    "dataset_origem": "ONS — Restrição de operação por constrained-off de usinas eólicas (tm)",
+    "atualizado_em": "2026-09-25T17:12:00Z",
+    "variaveis_shap": {
+      "Velocidade do vento (100 m)": 0.34,
+      "Carga supervisionada prevista": -0.22,
+      "Disponibilidade da transmissão": 0.18,
+      "Geração MMGD estimada": 0.14,
+      "Hora do dia (faixa 18–24)": 0.07,
+      "Temperatura": -0.05
+    }
+  },
+  {
+    "mock": true,
+    "risco_usina_id": "go-solar-camaleao",
+    "horario_previsto": "2026-09-26T14:30:00Z",
+    "motivos": {
+      "CNF": 58,
+      "ENE": 27,
+      "REL": 15
+    },
+    "dataset_origem": "ONS — Restrição de operação por constrained-off de usinas fotovoltaicas (tm)",
+    "atualizado_em": "2026-09-25T17:12:00Z",
+    "variaveis_shap": {
+      "Radiação solar global": 0.36,
+      "Geração MMGD estimada": 0.24,
+      "Carga supervisionada prevista": -0.19,
+      "Cobertura de nuvens": -0.11,
+      "Hora do dia (faixa 09–16)": 0.06,
+      "Temperatura": -0.04
+    }
+  },
+  {
+    "mock": true,
+    "risco_usina_id": "ma-eolico-parnaiba-iv",
+    "horario_previsto": "2026-09-26T08:00:00Z",
+    "motivos": {
+      "ENE": 50,
+      "CNF": 32,
+      "REL": 18
+    },
+    "dataset_origem": "ONS — Restrição de operação por constrained-off de usinas eólicas (tm)",
+    "atualizado_em": "2026-09-25T17:05:00Z",
+    "variaveis_shap": {
+      "Velocidade do vento (100 m)": 0.34,
+      "Carga supervisionada prevista": -0.22,
+      "Disponibilidade da transmissão": 0.18,
+      "Geração MMGD estimada": 0.14,
+      "Hora do dia (faixa 18–24)": 0.07,
+      "Temperatura": -0.05
+    }
+  },
+  {
+    "mock": true,
+    "risco_usina_id": "rs-ventos-do-sul",
+    "horario_previsto": "2026-09-26T06:00:00Z",
+    "motivos": {
+      "REL": 52,
+      "CNF": 31,
+      "ENE": 17
+    },
+    "dataset_origem": "ONS — Restrição de operação por constrained-off de usinas eólicas (tm)",
+    "atualizado_em": "2026-09-25T16:59:00Z",
+    "variaveis_shap": {
+      "Velocidade do vento (100 m)": 0.34,
+      "Carga supervisionada prevista": -0.22,
+      "Disponibilidade da transmissão": 0.18,
+      "Geração MMGD estimada": 0.14,
+      "Hora do dia (faixa 18–24)": 0.07,
+      "Temperatura": -0.05
+    }
+  },
+  {
+    "mock": true,
+    "risco_usina_id": "sp-solar-paulista",
+    "horario_previsto": "2026-09-26T16:00:00Z",
+    "motivos": {
+      "CNF": 60,
+      "ENE": 26,
+      "REL": 14
+    },
+    "dataset_origem": "ONS — Restrição de operação por constrained-off de usinas fotovoltaicas (tm)",
+    "atualizado_em": "2026-09-25T16:59:00Z",
+    "variaveis_shap": {
+      "Radiação solar global": 0.36,
+      "Geração MMGD estimada": 0.24,
+      "Carga supervisionada prevista": -0.19,
+      "Cobertura de nuvens": -0.11,
+      "Hora do dia (faixa 09–16)": 0.06,
+      "Temperatura": -0.04
+    }
+  }
+]

@@ -1,0 +1,69 @@
+# Classificador de risco de curtailment por razão (Fase 4, Fatia 5).
+# Código: src/features/curtailment.py, src/models/curtailment.py. Horizontes: os MESMOS da
+# carga (config/modelos_carga.yaml -> horizontes), para o risco e a curva falarem da mesma coisa.
+
+# Razões modeladas. ENE: nunca cortar. CNF: cortável; roda com as mesmas features (sem os
+# limites de exportação NE e N/NE, que não existem no portal nem no MCP), e o relatório diz isso.
+razoes: [ENE, CNF]
+
+# Split cronológico. O ENE era raro até 2023 e passou de ~20% das semi-horas a partir de
+# abr/2025 (docs/reports/classificador_curtailment.md). O treino começa quando o corte ENE
+# passa a existir de forma relevante e inclui o regime novo (abr–dez/2025); o teste é 2026.
+split:
+  inicio_treino: "2023-04-01 00:00"
+  fim_treino: "2025-12-31 23:30"
+  inicio_teste: "2026-01-01 00:00"
+
+# Amostra aleatória (uniforme, semente fixa) das linhas de treino de cada horizonte. Uniforme
+# de propósito: sem reponderar classes, a probabilidade prevista continua calibrada.
+amostra_treino: 1500000
+semente: 42
+
+features:
+  defasagens_recentes: [0, 1, 2, 6]     # passos antes da emissão
+  defasagens_sazonais: [48, 336]        # passos antes do alvo (só se >= horizonte)
+  janelas_media: [6, 48, 336]           # frações de tempo com corte, terminando na emissão
+
+lightgbm_classificador:
+  n_estimators: 300
+  learning_rate: 0.05
+  num_leaves: 63
+  min_child_samples: 200
+  subsample: 0.8
+  subsample_freq: 1
+  colsample_bytree: 0.8
+  verbose: -1
+  n_jobs: -1
+  random_state: 42
+
+# E[MW | corte]: regressão só nas semi-horas com corte daquela razão.
+lightgbm_montante:
+  n_estimators: 300
+  learning_rate: 0.05
+  num_leaves: 63
+  min_child_samples: 100
+  subsample: 0.8
+  subsample_freq: 1
+  colsample_bytree: 0.8
+  verbose: -1
+  n_jobs: -1
+  random_state: 42
+
+# Publicação (Lista de Riscos e Detalhe do Alerta)
+publicacao:
+  top_usinas: 10                        # usinas na lista, pelo montante esperado
+  # severidade pela probabilidade (%): primeiro limiar atingido, de cima para baixo
+  severidade:
+    critical: 80
+    high: 60
+    medium: 40
+    low: 0
+  limiar_decisao: 0.5                   # precisão/recall do relatório
+  variaveis_shap: 6                     # variáveis mostradas no Detalhe do Alerta
+  # Ação recomendada: texto-regra por razão ({faixa} = faixa horária de curtailment do alvo)
+  acao:
+    ENE: "Programar redução por razão energética na faixa {faixa}h"
+    CNF: "Verificar limites de escoamento e coordenar redução na faixa {faixa}h"
+  dataset:
+    eolica: "ONS — Restrição de operação por constrained-off de usinas eólicas (tm)"
+    solar: "ONS — Restrição de operação por constrained-off de usinas fotovoltaicas (tm)"

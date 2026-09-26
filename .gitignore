@@ -1,19 +1,32 @@
 # dados brutos (nunca versionar)
-data/raw/
+Backend/data/raw/
 
 # derivados grandes
 *.parquet
 *.feather
 *.duckdb
 *.duckdb.wal
-data/processed/**/*.csv
+Backend/data/processed/**/*.csv
 # exceção: tabela pequena e de referência, versionada para o time todo usar
-!data/processed/mapeamento_subsistema_area.csv
+!Backend/data/processed/mapeamento_subsistema_area.csv
+
+# estado e trava do Backend/run_heavywork.py (locais de cada máquina)
+Backend/data/_estado_heavywork.json
+Backend/data/_heavywork.lock
+
+# modelos treinados e previsões do replay (etapas 3 e 4 do run_heavywork.py)
+Backend/data/modelos/
+
+# cópia do contrato publicado (regravada a cada run_heavywork.py)
+Backend/output/contrato.json
 
 # banco SQLite do Backend (recriado pelo carregador)
 Backend/**/*.db
 Backend/**/*.sqlite
 Backend/**/*.sqlite3
+
+# temporários do DuckDB (limites em Backend/config/fontes_ons.yaml)
+_duckdb_tmp/
 
 # checkpoints e artefatos de modelo
 *.ckpt

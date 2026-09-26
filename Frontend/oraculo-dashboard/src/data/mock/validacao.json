@@ -1,0 +1,260 @@
+{
+  "mock": true,
+  "erroMedioAbsolutoMw": 701,
+  "rmseMw": 926,
+  "mapePct": 1.9,
+  "skillVsClimatologia": 0.38,
+  "baselineNome": "Climatologia",
+  "historicoErro30d": [
+    {
+      "data": "2026-08-26",
+      "mae": 690,
+      "rmse": 911,
+      "maeBaseline": 1266,
+      "rmseBaseline": 1722
+    },
+    {
+      "data": "2026-08-27",
+      "mae": 788,
+      "rmse": 1040,
+      "maeBaseline": 1185,
+      "rmseBaseline": 1612
+    },
+    {
+      "data": "2026-08-28",
+      "mae": 815,
+      "rmse": 1076,
+      "maeBaseline": 1053,
+      "rmseBaseline": 1432
+    },
+    {
+      "data": "2026-08-29",
+      "mae": 754,
+      "rmse": 995,
+      "maeBaseline": 972,
+      "rmseBaseline": 1322
+    },
+    {
+      "data": "2026-08-30",
+      "mae": 654,
+      "rmse": 863,
+      "maeBaseline": 985,
+      "rmseBaseline": 1339
+    },
+    {
+      "data": "2026-08-31",
+      "mae": 573,
+      "rmse": 756,
+      "maeBaseline": 1116,
+      "rmseBaseline": 1518
+    },
+    {
+      "data": "2026-09-01",
+      "mae": 600,
+      "rmse": 792,
+      "maeBaseline": 1247,
+      "rmseBaseline": 1696
+    },
+    {
+      "data": "2026-09-02",
+      "mae": 698,
+      "rmse": 921,
+      "maeBaseline": 1284,
+      "rmseBaseline": 1746
+    },
+    {
+      "data": "2026-09-03",
+      "mae": 796,
+      "rmse": 1050,
+      "maeBaseline": 1179,
+      "rmseBaseline": 1604
+    },
+    {
+      "data": "2026-09-04",
+      "mae": 823,
+      "rmse": 1086,
+      "maeBaseline": 1047,
+      "rmseBaseline": 1423
+    },
+    {
+      "data": "2026-09-05",
+      "mae": 742,
+      "rmse": 980,
+      "maeBaseline": 966,
+      "rmseBaseline": 1314
+    },
+    {
+      "data": "2026-09-06",
+      "mae": 642,
+      "rmse": 847,
+      "maeBaseline": 1003,
+      "rmseBaseline": 1364
+    },
+    {
+      "data": "2026-09-07",
+      "mae": 581,
+      "rmse": 767,
+      "maeBaseline": 1110,
+      "rmseBaseline": 1510
+    },
+    {
+      "data": "2026-09-08",
+      "mae": 608,
+      "rmse": 803,
+      "maeBaseline": 1241,
+      "rmseBaseline": 1688
+    },
+    {
+      "data": "2026-09-09",
+      "mae": 706,
+      "rmse": 932,
+      "maeBaseline": 1278,
+      "rmseBaseline": 1738
+    },
+    {
+      "data": "2026-09-10",
+      "mae": 784,
+      "rmse": 1035,
+      "maeBaseline": 1197,
+      "rmseBaseline": 1628
+    },
+    {
+      "data": "2026-09-11",
+      "mae": 811,
+      "rmse": 1071,
+      "maeBaseline": 1041,
+      "rmseBaseline": 1415
+    },
+    {
+      "data": "2026-09-12",
+      "mae": 750,
+      "rmse": 990,
+      "maeBaseline": 960,
+      "rmseBaseline": 1306
+    },
+    {
+      "data": "2026-09-13",
+      "mae": 650,
+      "rmse": 858,
+      "maeBaseline": 997,
+      "rmseBaseline": 1356
+    },
+    {
+      "data": "2026-09-14",
+      "mae": 589,
+      "rmse": 777,
+      "maeBaseline": 1128,
+      "rmseBaseline": 1534
+    },
+    {
+      "data": "2026-09-15",
+      "mae": 596,
+      "rmse": 787,
+      "maeBaseline": 1235,
+      "rmseBaseline": 1680
+    },
+    {
+      "data": "2026-09-16",
+      "mae": 694,
+      "rmse": 916,
+      "maeBaseline": 1272,
+      "rmseBaseline": 1730
+    },
+    {
+      "data": "2026-09-17",
+      "mae": 792,
+      "rmse": 1045,
+      "maeBaseline": 1191,
+      "rmseBaseline": 1620
+    },
+    {
+      "data": "2026-09-18",
+      "mae": 819,
+      "rmse": 1081,
+      "maeBaseline": 1059,
+      "rmseBaseline": 1440
+    },
+    {
+      "data": "2026-09-19",
+      "mae": 758,
+      "rmse": 1001,
+      "maeBaseline": 954,
+      "rmseBaseline": 1297
+    },
+    {
+      "data": "2026-09-20",
+      "mae": 638,
+      "rmse": 842,
+      "maeBaseline": 991,
+      "rmseBaseline": 1348
+    },
+    {
+      "data": "2026-09-21",
+      "mae": 577,
+      "rmse": 762,
+      "maeBaseline": 1122,
+      "rmseBaseline": 1526
+    },
+    {
+      "data": "2026-09-22",
+      "mae": 604,
+      "rmse": 798,
+      "maeBaseline": 1253,
+      "rmseBaseline": 1704
+    },
+    {
+      "data": "2026-09-23",
+      "mae": 702,
+      "rmse": 927,
+      "maeBaseline": 1266,
+      "rmseBaseline": 1722
+    },
+    {
+      "data": "2026-09-24",
+      "mae": 800,
+      "rmse": 1056,
+      "maeBaseline": 1185,
+      "rmseBaseline": 1612
+    }
+  ],
+  "modelo": {
+    "nome": "TFT — carga supervisionada",
+    "versao": "0.0.0-placeholder",
+    "dataTreino": "2026-09-20",
+    "periodoTreino": {
+      "inicio": "2021-10-01",
+      "fim": "2025-12-31"
+    },
+    "periodoTeste": {
+      "inicio": "2026-01-01",
+      "fim": "2026-09-24"
+    }
+  },
+  "statusFontes": [
+    {
+      "fonte": "ONS — Dados Abertos (constrained-off)",
+      "online": true,
+      "ultimaSincronizacao": "2026-09-25T17:00:00Z"
+    },
+    {
+      "fonte": "ONS — API de Carga Verificada",
+      "online": true,
+      "ultimaSincronizacao": "2026-09-25T17:30:00Z"
+    },
+    {
+      "fonte": "ERA5 (Copernicus CDS)",
+      "online": true,
+      "ultimaSincronizacao": "2026-09-25T12:00:00Z"
+    },
+    {
+      "fonte": "BDGD (ANEEL)",
+      "online": true,
+      "ultimaSincronizacao": "2026-09-20T09:00:00Z"
+    },
+    {
+      "fonte": "Imagens de satélite",
+      "online": false,
+      "ultimaSincronizacao": "2026-09-24T21:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,415 @@
+[
+  {
+    "mock": true,
+    "riscoUsinaId": "ce-complexo-litoral-eolico",
+    "probabilidadePct": 87.0,
+    "montanteMw": 312.0,
+    "horarioPrevisto": "2026-09-25T20:30:00Z",
+    "motivos": [
+      {
+        "razao": "REL",
+        "pesoPct": 70
+      },
+      {
+        "razao": "CNF",
+        "pesoPct": 20
+      },
+      {
+        "razao": "ENE",
+        "pesoPct": 10
+      }
+    ],
+    "fonteDataset": "ONS — Restrição de operação por constrained-off de usinas eólicas (tm)",
+    "janelaPrevisao": "3h",
+    "atualizadoHaMin": 4,
+    "atualizadoEm": "2026-09-25T17:26:00Z",
+    "metodoExplicacao": "ExplicadorPrecomputado",
+    "shapValues": [
+      {
+        "variavel": "Velocidade do vento (100 m)",
+        "peso": 0.34,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Carga supervisionada prevista",
+        "peso": 0.22,
+        "direcao": "reduz"
+      },
+      {
+        "variavel": "Disponibilidade da transmissão",
+        "peso": 0.18,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Geração MMGD estimada",
+        "peso": 0.14,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Hora do dia (faixa 18–24)",
+        "peso": 0.07,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Temperatura",
+        "peso": 0.05,
+        "direcao": "reduz"
+      }
+    ],
+    "textoAlerta": "⚠ ALERTA — Risco de Curtailment\nProbabilidade de 87% de curtailment de 312 MW em Complexo do Litoral Eólico, hoje às 17:30.\nMotivo: 70% REL · 20% CNF · 10% ENE\nFonte: ONS — Restrição de operação por constrained-off de usinas eólicas (tm) · janela de previsão 3h · atualizado há 4 min"
+  },
+  {
+    "mock": true,
+    "riscoUsinaId": "pi-chapada-gaucha-solar",
+    "probabilidadePct": 64.0,
+    "montanteMw": 249.0,
+    "horarioPrevisto": "2026-09-26T15:00:00Z",
+    "motivos": [
+      {
+        "razao": "ENE",
+        "pesoPct": 62
+      },
+      {
+        "razao": "CNF",
+        "pesoPct": 25
+      },
+      {
+        "razao": "REL",
+        "pesoPct": 13
+      }
+    ],
+    "fonteDataset": "ONS — Restrição de operação por constrained-off de usinas fotovoltaicas (tm)",
+    "janelaPrevisao": "D+1",
+    "atualizadoHaMin": 12,
+    "atualizadoEm": "2026-09-25T17:18:00Z",
+    "metodoExplicacao": "ExplicadorPrecomputado",
+    "shapValues": [
+      {
+        "variavel": "Radiação solar global",
+        "peso": 0.36,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Geração MMGD estimada",
+        "peso": 0.24,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Carga supervisionada prevista",
+        "peso": 0.19,
+        "direcao": "reduz"
+      },
+      {
+        "variavel": "Cobertura de nuvens",
+        "peso": 0.11,
+        "direcao": "reduz"
+      },
+      {
+        "variavel": "Hora do dia (faixa 09–16)",
+        "peso": 0.06,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Temperatura",
+        "peso": 0.04,
+        "direcao": "reduz"
+      }
+    ],
+    "textoAlerta": "⚠ ALERTA — Risco de Curtailment\nProbabilidade de 64% de curtailment de 249 MW em Chapada Gaúcha Solar, amanhã às 12:00.\nMotivo: 62% ENE · 25% CNF · 13% REL\nFonte: ONS — Restrição de operação por constrained-off de usinas fotovoltaicas (tm) · janela de previsão D+1 · atualizado há 12 min"
+  },
+  {
+    "mock": true,
+    "riscoUsinaId": "rn-lagoa-seigada",
+    "probabilidadePct": 45.0,
+    "montanteMw": 98.0,
+    "horarioPrevisto": "2026-09-26T09:00:00Z",
+    "motivos": [
+      {
+        "razao": "REL",
+        "pesoPct": 55
+      },
+      {
+        "razao": "CNF",
+        "pesoPct": 29
+      },
+      {
+        "razao": "ENE",
+        "pesoPct": 16
+      }
+    ],
+    "fonteDataset": "ONS — Restrição de operação por constrained-off de usinas eólicas (tm)",
+    "janelaPrevisao": "D+1",
+    "atualizadoHaMin": 18,
+    "atualizadoEm": "2026-09-25T17:12:00Z",
+    "metodoExplicacao": "ExplicadorPrecomputado",
+    "shapValues": [
+      {
+        "variavel": "Velocidade do vento (100 m)",
+        "peso": 0.34,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Carga supervisionada prevista",
+        "peso": 0.22,
+        "direcao": "reduz"
+      },
+      {
+        "variavel": "Disponibilidade da transmissão",
+        "peso": 0.18,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Geração MMGD estimada",
+        "peso": 0.14,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Hora do dia (faixa 18–24)",
+        "peso": 0.07,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Temperatura",
+        "peso": 0.05,
+        "direcao": "reduz"
+      }
+    ],
+    "textoAlerta": "⚠ ALERTA — Risco de Curtailment\nProbabilidade de 45% de curtailment de 98 MW em Lagoa Seigada, amanhã às 06:00.\nMotivo: 55% REL · 29% CNF · 16% ENE\nFonte: ONS — Restrição de operação por constrained-off de usinas eólicas (tm) · janela de previsão D+1 · atualizado há 18 min"
+  },
+  {
+    "mock": true,
+    "riscoUsinaId": "go-solar-camaleao",
+    "probabilidadePct": 42.0,
+    "montanteMw": 134.0,
+    "horarioPrevisto": "2026-09-26T14:30:00Z",
+    "motivos": [
+      {
+        "razao": "CNF",
+        "pesoPct": 58
+      },
+      {
+        "razao": "ENE",
+        "pesoPct": 27
+      },
+      {
+        "razao": "REL",
+        "pesoPct": 15
+      }
+    ],
+    "fonteDataset": "ONS — Restrição de operação por constrained-off de usinas fotovoltaicas (tm)",
+    "janelaPrevisao": "D+1",
+    "atualizadoHaMin": 18,
+    "atualizadoEm": "2026-09-25T17:12:00Z",
+    "metodoExplicacao": "ExplicadorPrecomputado",
+    "shapValues": [
+      {
+        "variavel": "Radiação solar global",
+        "peso": 0.36,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Geração MMGD estimada",
+        "peso": 0.24,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Carga supervisionada prevista",
+        "peso": 0.19,
+        "direcao": "reduz"
+      },
+      {
+        "variavel": "Cobertura de nuvens",
+        "peso": 0.11,
+        "direcao": "reduz"
+      },
+      {
+        "variavel": "Hora do dia (faixa 09–16)",
+        "peso": 0.06,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Temperatura",
+        "peso": 0.04,
+        "direcao": "reduz"
+      }
+    ],
+    "textoAlerta": "⚠ ALERTA — Risco de Curtailment\nProbabilidade de 42% de curtailment de 134 MW em Solar Camaleão, amanhã às 11:30.\nMotivo: 58% CNF · 27% ENE · 15% REL\nFonte: ONS — Restrição de operação por constrained-off de usinas fotovoltaicas (tm) · janela de previsão D+1 · atualizado há 18 min"
+  },
+  {
+    "mock": true,
+    "riscoUsinaId": "ma-eolico-parnaiba-iv",
+    "probabilidadePct": 38.0,
+    "montanteMw": 67.0,
+    "horarioPrevisto": "2026-09-26T08:00:00Z",
+    "motivos": [
+      {
+        "razao": "ENE",
+        "pesoPct": 50
+      },
+      {
+        "razao": "CNF",
+        "pesoPct": 32
+      },
+      {
+        "razao": "REL",
+        "pesoPct": 18
+      }
+    ],
+    "fonteDataset": "ONS — Restrição de operação por constrained-off de usinas eólicas (tm)",
+    "janelaPrevisao": "D+1",
+    "atualizadoHaMin": 25,
+    "atualizadoEm": "2026-09-25T17:05:00Z",
+    "metodoExplicacao": "ExplicadorPrecomputado",
+    "shapValues": [
+      {
+        "variavel": "Velocidade do vento (100 m)",
+        "peso": 0.34,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Carga supervisionada prevista",
+        "peso": 0.22,
+        "direcao": "reduz"
+      },
+      {
+        "variavel": "Disponibilidade da transmissão",
+        "peso": 0.18,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Geração MMGD estimada",
+        "peso": 0.14,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Hora do dia (faixa 18–24)",
+        "peso": 0.07,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Temperatura",
+        "peso": 0.05,
+        "direcao": "reduz"
+      }
+    ],
+    "textoAlerta": "⚠ ALERTA — Risco de Curtailment\nProbabilidade de 38% de curtailment de 67 MW em Eólico Parnaíba IV, amanhã às 05:00.\nMotivo: 50% ENE · 32% CNF · 18% REL\nFonte: ONS — Restrição de operação por constrained-off de usinas eólicas (tm) · janela de previsão D+1 · atualizado há 25 min"
+  },
+  {
+    "mock": true,
+    "riscoUsinaId": "rs-ventos-do-sul",
+    "probabilidadePct": 24.0,
+    "montanteMw": 120.0,
+    "horarioPrevisto": "2026-09-26T06:00:00Z",
+    "motivos": [
+      {
+        "razao": "REL",
+        "pesoPct": 52
+      },
+      {
+        "razao": "CNF",
+        "pesoPct": 31
+      },
+      {
+        "razao": "ENE",
+        "pesoPct": 17
+      }
+    ],
+    "fonteDataset": "ONS — Restrição de operação por constrained-off de usinas eólicas (tm)",
+    "janelaPrevisao": "D+1",
+    "atualizadoHaMin": 31,
+    "atualizadoEm": "2026-09-25T16:59:00Z",
+    "metodoExplicacao": "ExplicadorPrecomputado",
+    "shapValues": [
+      {
+        "variavel": "Velocidade do vento (100 m)",
+        "peso": 0.34,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Carga supervisionada prevista",
+        "peso": 0.22,
+        "direcao": "reduz"
+      },
+      {
+        "variavel": "Disponibilidade da transmissão",
+        "peso": 0.18,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Geração MMGD estimada",
+        "peso": 0.14,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Hora do dia (faixa 18–24)",
+        "peso": 0.07,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Temperatura",
+        "peso": 0.05,
+        "direcao": "reduz"
+      }
+    ],
+    "textoAlerta": "⚠ ALERTA — Risco de Curtailment\nProbabilidade de 24% de curtailment de 120 MW em Ventos do Sul, amanhã às 03:00.\nMotivo: 52% REL · 31% CNF · 17% ENE\nFonte: ONS — Restrição de operação por constrained-off de usinas eólicas (tm) · janela de previsão D+1 · atualizado há 31 min"
+  },
+  {
+    "mock": true,
+    "riscoUsinaId": "sp-solar-paulista",
+    "probabilidadePct": 21.0,
+    "montanteMw": 52.0,
+    "horarioPrevisto": "2026-09-26T16:00:00Z",
+    "motivos": [
+      {
+        "razao": "CNF",
+        "pesoPct": 60
+      },
+      {
+        "razao": "ENE",
+        "pesoPct": 26
+      },
+      {
+        "razao": "REL",
+        "pesoPct": 14
+      }
+    ],
+    "fonteDataset": "ONS — Restrição de operação por constrained-off de usinas fotovoltaicas (tm)",
+    "janelaPrevisao": "D+1",
+    "atualizadoHaMin": 31,
+    "atualizadoEm": "2026-09-25T16:59:00Z",
+    "metodoExplicacao": "ExplicadorPrecomputado",
+    "shapValues": [
+      {
+        "variavel": "Radiação solar global",
+        "peso": 0.36,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Geração MMGD estimada",
+        "peso": 0.24,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Carga supervisionada prevista",
+        "peso": 0.19,
+        "direcao": "reduz"
+      },
+      {
+        "variavel": "Cobertura de nuvens",
+        "peso": 0.11,
+        "direcao": "reduz"
+      },
+      {
+        "variavel": "Hora do dia (faixa 09–16)",
+        "peso": 0.06,
+        "direcao": "aumenta"
+      },
+      {
+        "variavel": "Temperatura",
+        "peso": 0.04,
+        "direcao": "reduz"
+      }
+    ],
+    "textoAlerta": "⚠ ALERTA — Risco de Curtailment\nProbabilidade de 21% de curtailment de 52 MW em Solar Paulista, amanhã às 13:00.\nMotivo: 60% CNF · 26% ENE · 14% REL\nFonte: ONS — Restrição de operação por constrained-off de usinas fotovoltaicas (tm) · janela de previsão D+1 · atualizado há 31 min"
+  }
+]

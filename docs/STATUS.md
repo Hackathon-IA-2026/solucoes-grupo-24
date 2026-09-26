@@ -2,6 +2,8 @@
 
 Andamento das tarefas. Atualizado ao fim de cada tarefa.
 
+> **Checklist das fases (o que está feito e o que falta): [`docs/FASES.md`](FASES.md).** Este arquivo é o diário detalhado de cada tarefa.
+
 ## 2026-09-21 — Setup, schema do contrato e inventário do portal ONS
 
 ### Parte 1 — Estrutura do repositório ✅
@@ -31,3 +33,429 @@ Andamento das tarefas. Atualizado ao fim de cada tarefa.
 - Fechar o schema com o Luiz.
 - Catálogo de séries a partir do inventário → `data/processed/`.
 - Baselines de carga supervisionada.
+
+## 2026-09-25 — Dashboard: scaffold + design system ✅
+
+- `Frontend/oraculo-dashboard`: React 19 + Vite + TypeScript + Tailwind v4 + React Router.
+- Design system dark SCADA com tokens em `src/index.css` (`@theme`): fundos `#0a0e17`/`#0f1524`,
+  accent ciano `#22d3ee`, escala de risco verde/âmbar/laranja/vermelho, JetBrains Mono para KPIs.
+- Layout base: sidebar fixa com os 8 módulos (Visão Geral, Mapa Híbrido, Despacho Preditivo,
+  Lista de Riscos, Detalhe do Alerta, Excedentes TSO-DSO, Validação, Metodologia), topbar com
+  título, pill "SIN OPERANDO", filtros NORMAL/LOADING/CRITICAL/NO-RISK e relógio em BRT.
+- Menu e rotas gerados do mesmo registro (`src/modules.tsx`): nome/ordem/caminho não divergem.
+- Componentes reutilizáveis: `Card`, `SeverityBadge`, `StatusPill`. Filtros em contexto global
+  (`useSeverityFilter`).
+- Decisão a validar: mapeamento de filtros → cor em `src/theme/severity.ts`
+  (NORMAL=verde, LOADING=âmbar, CRITICAL=vermelho, NO-RISK=neutro; laranja só na escala de risco).
+- "SIN OPERANDO" é estático: ainda não há fonte de estado do SIN no Backend.
+- Páginas vazias, sem nenhum dado exibido. `npm run build` e `npm run lint` limpos.
+
+## 2026-09-25 — Dashboard: contrato de dados mockado ✅
+
+- `src/data/types.ts`: schemas Zod + tipos inferidos (CargaSnapshot, PrevisaoCurva, RiscoUsina,
+  AlertaDetalhado, ExcedenteTsoDso, MetricasValidacao). Validações de negócio no schema:
+  supervisionada = global − MMGD, P10 ≤ P50 ≤ P90, motivos somam 100%.
+- `src/data/mock/*.json` com os seeds pedidos, todos com `mock: true`; séries geradas por
+  `npm run mocks:series` (determinístico). Registro em `docs/real_vs_mock.md`.
+- `src/data/dataSource.ts`: `getCarga/getPrevisao/getRiscos/getAlerta/getExcedentes/getValidacao`,
+  modo `mock` (padrão) ou `api` via `VITE_DATA_SOURCE`; toda resposta validada pelo schema;
+  mock sem flag é rejeitado. Endpoints da API provisórios (Backend ainda não existe).
+- Vitest: `npm test` (11 testes, incluindo os seeds exatos e as guardas do contrato).
+- Desvios do pedido, a validar: campo extra `uf` em RiscoUsina; `prioridade` do excedente em
+  minúsculas (mesma escala de severidade); horizonte `1h` só nos excedentes.
+- Pendente: esses tipos são o contrato do lado do dashboard, mas `docs/schema_contrato.json`
+  (citado acima) não está no repositório — alinhar os dois antes de ligar a API.
+
+## 2026-09-25 — Dashboard: tela Visão Geral ✅
+
+- 3 KPIs (`KpiCard`): carga supervisionada e MMGD estimada (GW, com MW exato e horário BRT) de
+  `getCarga()`; risco de curtailment = média das probabilidades de `getRiscos()` **ponderada
+  pelo montante (MW)** → 57,8% com os mocks, badge de severidade pelos limiares de
+  `src/data/derivados.ts` (25/50/75%, provisórios).
+- Composição da carga global em barra 100% empilhada (`components/charts/BarraComposicao.tsx`):
+  supervisionada × MMGD, legenda com MW e %, hover com tooltip; abaixo, "% MMGD na geração" e
+  "MMGD ÷ capacidade instalada".
+- Novas peças reutilizáveis: `KpiCard`, `MockTag` (selo MOCK em todo dado mock), `Carregando`/
+  `ErroDados`, hook `useDados` (estado loading/ok/erro tipado), `utils/format.ts` (pt-BR, BRT).
+- Cores de gráfico `chart-1` (#0891b2) e `chart-2` (#8b5cf6) validadas para fundo escuro e
+  daltonismo.
+- Testes: 15 (4 novos para os derivados). Build e lint limpos.
+- Conhecido: o layout não é responsivo (sidebar fixa de 256px esmaga o conteúdo no celular).
+
+## 2026-09-25 — Dashboard: tela Despacho Preditivo ✅
+
+- Gráfico Recharts (`components/charts/GraficoPrevisao.tsx`): banda P10–P90 sombreada + linha
+  P50, tooltip com os três quantis, eixo em GW com ticks de 5 GW, horário BRT.
+- Seletor de horizonte 30min / 3h / D+1 (`SegmentedControl`, opções lidas do schema); as três
+  curvas são buscadas uma vez e a troca é instantânea.
+- Rampa: `trechoDeRampa()` em `data/derivados.ts` acha a maior subida do P50 na janela
+  `janelaRampaHoras`; o trecho é destacado e rotulado com o valor calculado (15,8 GW / 3h nos
+  mocks). Teste garante que o valor bate com `rampaProjetadaMw`.
+- Painel lateral de fatores climáticos em `MiniStat` (radiação, vento, temperatura, nuvens).
+- Páginas passaram a ser carregadas sob demanda (`React.lazy` em `modules.ts`): o Recharts só
+  é baixado ao abrir esta tela; bundle inicial voltou para ~275 kB.
+- Mock corrigido: o gerador de séries dava um degrau à meia-noite (gaussiana sem distância
+  circular). Testes: 17.
+
+## 2026-09-25 — Dashboard: tela Lista de Riscos ✅
+
+- Tabela com severidade, usina/UF, distribuidora, fonte, razão, probabilidade (número + barra),
+  montante (MW), horizonte e ação recomendada; legenda das siglas REL/CNF/ENE.
+- Ordenação `ordenarPorSeveridade()` em `data/derivados.ts`: severidade → probabilidade →
+  montante → id (ordem nunca depende da chegada dos dados). Teste novo.
+- Razão com cor categórica própria (`theme/razao.ts` + `RazaoBadge`): ENE=chart-1, CNF=chart-2,
+  REL=chart-3 (#db2777, trio validado). Não usa cor de severidade para não parecer "crítico".
+- Clique ou Enter/Espaço na linha abre `/detalhe-alerta/<id>`; a URL sai só de
+  `rotaDetalheAlerta()` em `modules.ts` (caminho do módulo numa constante única).
+- A página Detalhe do Alerta ainda está vazia (próximo prompt). Testes: 18.
+
+## 2026-09-25 — Detalhe do Alerta + explicabilidade glass box ✅
+
+- `Backend/pipeline/explicabilidade.py` (pasta pedida como `/pipeline`, colocada dentro de
+  `Backend/` pela regra do CLAUDE.md):
+  - `explicar_saida(saida, explicador=None, agora=None)` → payload glass box
+    `{probabilidade, motivos_por_peso, variaveis_shap, dataset_origem, timestamp, ...}`.
+  - Estratégia `Explicador`: `ExplicadorPrecomputado` (stub atual, contribuições vêm na saída)
+    e `ExplicadorShap` (modelo real via `shap`, import tardio). Trocar um pelo outro não muda a
+    chamada — testado com shap 0.51 e um modelo linear.
+  - Motivos em % inteiros que somam 100 (maior resto); validação de campos com `ErroSaidaModelo`.
+  - `gerar_texto_alerta(payload)`: formato exato do protótipo para D+1; dia ("hoje"/"amanhã")
+    e janela vêm do payload para um alerta de 3h não sair como "amanhã ... D+1".
+- `Backend/pipeline/gerar_alertas_mock.py` gera o `alertas.json` do dashboard pelo pipeline
+  (texto do alerta com uma implementação só). Teste falha se o arquivo versionado estiver
+  desatualizado. `tests/test_explicabilidade.py`: 13 testes.
+- Contrato do dashboard: `AlertaDetalhado` ganhou `textoAlerta`, `atualizadoEm` e
+  `metodoExplicacao`.
+- Tela: bloco terminal com o texto, barras SHAP divergentes (tokens `shap-up`/`shap-down`
+  validados), motivos por razão, rastreabilidade (dataset, hora da previsão, janela, método,
+  id); sem id lista os alertas; id inexistente mostra "Alerta não encontrado".
+- Ambiente: `numpy`/`shap`/`pytest` não estão no Python do sistema; testes rodados num venv.
+
+## 2026-09-25 — Merge de `claude/eager-gauss-or90gs` na main ✅
+
+- Entraram o dashboard (`Frontend/oraculo-dashboard`) e o pipeline de explicabilidade
+  (`Backend/pipeline`).
+- Conflitos resolvidos juntando os dois lados:
+  - `README.md`: tecnologias, passos de execução (download → mapeamento → tabelas →
+    explicabilidade → testes → dashboard) e pré-requisitos (Python + Node).
+  - `docs/real_vs_mock.md`: ficaram as tabelas dos dados processados (main) e entraram as seções
+    Dashboard/Backend (branch).
+- `pytest`: 29 passaram, 3 foram pulados e 2 falharam em `tests/test_tabelas.py`. As falhas são
+  dos dados locais em `data/processed`, que nenhum arquivo do merge toca (`carga_global` ≤ 0 em
+  algum registro; 1 corte > 0 sem flag). Investigar em `src/processing/tabelas.py`.
+
+## 2026-09-25 — Prompt 1 (fundação de dados) + reestruturação em `Backend/` 🟡
+
+### Feito
+
+- **Reestruturação** (prompt em `docs/prompts/prompt_reestruturacao_backend.md`): na raiz ficam só `Backend/`, `Frontend/` e `docs/`. `config`, `data`, `notebooks`, `output`, `src`, `tests`, `RDX` e o `pyproject.toml` foram para `Backend/`, que passou a ser a raiz de import (`python -m src...`, `python -m pipeline...`, sempre de dentro de `Backend/`). `src/utils/paths.py` ganhou `RAIZ_REPO` (docs e Frontend). `Backend/tests/test_estrutura.py` falha se voltar a aparecer pasta na raiz. A pasta vazia `reports/` saiu. Venv novo em `Backend/.venv`.
+- `Backend/config/projeto.yaml` com os parâmetros do Prompt 1 (área piloto provisória).
+- Inventário (`docs/inventario_portal_ons.md`): 85 conjuntos via API CKAN + contratos do MCP.
+- MCP oficial do ONS (`ONSBR/TIAGO-Dados-Abertos`) documentado em `docs/mcp_ons.md`: cobre 80/85 conjuntos, mas não a carga verificada.
+- Catálogo: `Backend/data/catalogo_series_selecionadas.md`.
+- Download idempotente (`src/ingestion/download.py`): 15 conjuntos, **0 erros**. Sanidade: tm solar 1,02×, detail solar 1,04×, detail eólica 1,27×, tm eólica 1,64× do esperado (período até set/2026). Log por arquivo em `docs/reports/download_log.csv`.
+- Mapeamento subsistema × área (`Backend/data/processed/mapeamento_subsistema_area.csv` + `docs/mapeamento_subsistema_area.md`), conferido numericamente; `src/utils/joins.py` é a única porta de cruzamento.
+- Tabelas: `calendario.csv`, `carga_supervisionada.csv` (752 mil linhas) e `rotulos_curtailment.parquet` (16 M linhas). `pytest`: 33 passaram, 3 pulados (shap opcional; schema oficial ainda não aprovado).
+- Área piloto: `docs/area_piloto_opcoes.md`.
+- Proposta de schema v1: `docs/schema_contrato_v1_proposta.json`, exemplo e `docs/schema_changelog.md`.
+
+### Bloqueado
+
+- **Limites de exportação NE e N/NE**: não existem no portal nem no MCP. Afeta só a feature de folga do CNF (cortável).
+- **`docs/schema_contrato.json` "atual" nunca foi commitado**: a proposta v1 partiu dos blocos citados neste STATUS.
+- `import torch` falha no Windows (WinError 1114 em `c10.dll`). Não afeta o Prompt 1; afeta o TFT.
+
+### Decisões
+
+- Fuso único **UTC−3 fixo**; timestamp = **início** da semi-hora (`src/utils/tempo.py`). Antes de 2019, fica 1 h deslocado do horário civil com horário de verão.
+- Carga supervisionada = `val_cargaglobal − val_cargammgd` (mesma base, MWmed, 30 min: sem reamostragem). MMGD ausente (antes de 2019-02-15) fica NaN. Carga ≤ 0 vira NaN com `carga_global_invalida`.
+- Rótulos: corte = GNRa; sem GNRa publicada, `max(ref − ger, 0)` (idêntico à GNRa onde ambas existem; `corte_origem` marca). Divisão por razão proporcional aos minutos. `flag_X` = minutos > 0 ou razão declarada. `''` → NULL; minutos fora de [0, 30] → NULL; duplicatas do ONS removidas.
+- `data/raw` só tem Parquet (CSVs convertidos na chegada); resposta vazia da API não gera arquivo.
+- DuckDB sempre via `src/utils/banco_analitico.py`, com limites de memória e disco; consolidação por `id_ons` em grupos ordenados (1 arquivo por usina).
+- A base de MMGD da ANEEL contém CPF/CNPJ e nomes: fica só em `data/raw`, e nenhuma tabela processada seleciona essas colunas.
+
+### Pendências humanas (Tiago)
+
+- **Confirmar a área piloto** (proposta: CEMIG-D, Norte de Minas, polo Janaúba–Jaíba) e **avisar o Luiz**.
+- **Aprovar (ou ajustar) a proposta de schema v1** (`docs/schema_changelog.md`).
+- Se quiser, liberar espaço: o cache do pip tem ~6,8 GB (`pip cache purge`).
+- Torch no Windows: instalar o Visual C++ Redistributable 2015–2022 ou fixar outra versão do torch antes do TFT.
+
+### Enviar ao Luiz
+
+- `docs/area_piloto_opcoes.md` (área piloto provisória).
+- `docs/schema_changelog.md` (proposta v1 do contrato; confirmar se ele tem cópia do rascunho antigo).
+- Mudança de estrutura: o Python agora roda de dentro de `Backend/` (`python -m pipeline.gerar_alertas_mock`).
+
+### Falta no Prompt 1
+
+- Executar `Backend/notebooks/01_eda_bases_tm.ipynb` e `02_figura1_parpel.ipynb` (gera `docs/reports/figura1_parpel.png`).
+
+## 2026-09-25 — Notebooks Jupyter removidos ✅
+
+- Decisão do Tiago: o produto é um serviço (ingestão → processamento → modelos → banco → FastAPI →
+  dashboard) e notebook não é chamado por nenhuma etapa. `Backend/notebooks/` (01_eda_bases_tm,
+  02_figura1_parpel) e `src/utils/notebooks.py` saíram; `jupyter`/`nbconvert`/`ipykernel` saíram do
+  `[dev]` do `pyproject.toml`; `NOTEBOOKS` saiu de `src/utils/paths.py`.
+- Trava: `tests/test_estrutura.py::test_nenhum_notebook_jupyter_versionado` falha se algum `.ipynb`
+  voltar a ser versionado.
+- O item "executar os notebooks" do Prompt 1 fica **substituído** pela Fatia 1 como código do
+  backend (validação de qualidade das bases tm, série histórica de curtailment por razão e
+  episódios de corte), a implementar.
+
+## 2026-09-25 — Plano transcrito para `docs/Oraculo_planejamento.md` ✅
+
+- Transcrição em Markdown do PDF `ORACULO_Planejamento_v2` (seções 1–12; figuras do PAR/PEL
+  indicadas só pela legenda).
+- Seção 13 (adendo, não está no PDF) com as decisões de implementação:
+  - **13.1 Gatilho da ingestão = endpoint FastAPI** (`POST /ingestao` em segundo plano +
+    `GET /ingestao/{id}`; uma execução por vez, `409` se já houver outra). Sem cron/agendador no
+    hackathon. Cadência de 30 min do PDF demonstrada em modo replay.
+  - 13.2 Fatia 1 sem notebooks; 13.3 ingestão via CKAN (o MCP não cobre a carga verificada).
+  - 13.4 Decisões pendentes: área piloto (o PDF não define; CEMIG provisória × RJ/RDX), contrato
+    do dashboard (`types.ts` × `schema_contrato_v1_proposta.json`), campo `distribuidora` do risco.
+
+### Pendências humanas (Tiago)
+
+- Escolher a área piloto (ver 13.4) e avisar o Luiz.
+- Decidir qual contrato vale: `types.ts` do dashboard ou a proposta v1.
+
+## 2026-09-25 — Arquitetura de execução: `run_heavywork.py` + web só de leitura ✅ (definição)
+
+- `docs/Oraculo_planejamento.md` §13.1 reescrita (substitui o gatilho por endpoint registrado acima):
+  - **Trabalho pesado** num script único, `Backend/run_heavywork.py`, sem argumentos (config em
+    `config/*.yaml`): ingestão (baixa só o que falta/está desatualizado) → processamento + qualidade
+    → treino e backtest → previsões da janela da demo (replay) → publicação no banco. Cada etapa
+    pula o que já está em dia.
+  - **Serviço web** (FastAPI + dashboard) só lê o banco: sem endpoint de ingestão, sem agendador,
+    sem dependências pesadas.
+  - Dado bruto só é usado pelas etapas de ingestão e processamento; regra a ser garantida por teste.
+- Ainda **não implementado**: `run_heavywork.py`, o teste de isolamento do bruto, a API e o banco.
+
+## 2026-09-25 — `Backend/run_heavywork.py` (etapas 1 e 2) ✅
+
+### Feito
+
+- `python run_heavywork.py` (de `Backend/`, sem argumentos; config em `config/heavywork.yaml`):
+  ingestão → processamento → treino → previsão → publicação. Treino, previsão e publicação estão
+  declaradas e aparecem como `nao_implementada` no resumo (não fingem rodar).
+- Motor genérico em `src/heavywork/orquestrador.py` (etapas em `src/heavywork/etapas.py`): cada etapa
+  tem uma impressão digital das entradas (dados + código + config) e é **pulada** se nada mudou e as
+  saídas existem; falha interrompe as seguintes e não marca a etapa como concluída. Estado local em
+  `data/_estado_heavywork.json`, trava em `data/_heavywork.lock` (ambos fora do git).
+- Ingestão (`download.py`) agora detecta **arquivo republicado** pelo portal (`size`/`metadata_modified`
+  do CKAN guardados no manifesto) e rebaixa o cadastro da ANEEL após `atualizar_apos_dias`
+  (por arquivo em `fontes_ons.yaml`; ANEEL = 7 dias). Lógica saiu do `main()` para
+  `executar()`; `tabelas.py` e `mapeamento.py` ganharam `construir()`. Linha de comando de cada módulo
+  continua para depuração.
+- Trava de processo movida para `src/utils/trava.py`; log em `src/utils/log.py`; hashes em
+  `src/utils/impressao.py`.
+- Execução real: 1ª rodada rebaixou 15 arquivos republicados (meses de 2026 e detail eólica 2023-05) e
+  reconsolidou as bases detail (eólica 349 s, solar 81 s); ingestão 7,7 min, processamento 1,6 min.
+  Rodada seguinte sem novidade: ingestão 10 s, processamento **pulado**.
+- `pytest`: 53 passaram, 3 pulados.
+
+### Bugs transformados em regra (classe eliminada)
+
+- **Mês republicado duplicaria linhas na base detail** (a consolidação somava a versão nova à antiga):
+  `sql_consolidacao()` faz os meses dos arquivos novos substituírem os mesmos meses do consolidado.
+- **Processamento refeito em toda execução**: a ingestão rebaixa sempre a carga recente e a impressão
+  usava a hora do download. Agora usa o sha256 do conteúdo (`conteudo` no manifesto).
+- **Etapa com nome errado no YAML passaria em silêncio**: `validar_config()` recusa.
+- **Camada de modelos/API lendo o bruto**: `test_so_ingestao_e_processamento_tocam_o_dado_bruto`.
+
+### Decisões
+
+- Comparação de atualização é portal × portal (metadados do CKAN no download × agora), não portal ×
+  disco: se o `size` do CKAN não bater com os bytes servidos, não há rebaixamento em loop.
+- A etapa de ingestão sempre roda (só as fontes sabem se há novidade); o download é idempotente.
+- `src/utils` inteiro entra na impressão do processamento: no pior caso reprocessa à toa (~1,5 min),
+  nunca deixa de reprocessar.
+
+### Pendências
+
+- Peça A da Fatia 1 (qualidade das bases) ainda não entra no processamento.
+- Etapas 3–5 (treino, previsão/replay, publicação no banco) e a API.
+
+## 2026-09-25 — Banco + API FastAPI + publicação (etapa 5) ✅
+
+### Feito
+
+- **Contrato oficial = `types.ts` do dashboard** (decisão do Tiago). Espelho Pydantic em
+  `Backend/src/contrato/modelos.py`; `docs/schema_contrato.json` gerado dele
+  (`python -m src.contrato.esquema`); explicação em `docs/schema_contrato.md`. Proposta v1 e seu
+  teste removidos (histórico no git e em `docs/schema_changelog.md`).
+- **Banco** (`src/db/`): SQLAlchemy 2 + Alembic (`alembic.ini`, `migrations/`), factory única com
+  `DATABASE_URL` ou `Backend/oraculo.db`. Tabelas `execucao` e `recurso` (itens do contrato em JSON).
+- **Publicação** = etapa 5 do `run_heavywork.py` (`src/publicacao/montar.py`): função única
+  `montar_contrato()` -> `output/contrato.json` + banco. **Carga real** (SIN, último dado:
+  2026-09-24 23:30 UTC−3, 83,7 GW, MMGD 206 MW); previsão, riscos, alertas, excedentes e validação
+  vêm dos mocks do dashboard com `mock: true`.
+- Nova tabela processada `capacidade_mmgd.csv` (ANEEL, UF × data, 53,97 GW cadastrados; só UF, data
+  e potência são lidas: nenhuma coluna pessoal).
+- **API** (`Backend/main.py` + `src/api/app.py`): 6 rotas GET do contrato + `/api/saude`; 503 com
+  instrução se o banco não foi publicado; CORS para o `npm run dev`. Testada ao vivo com `python main.py`.
+- Docs: `docs/backend.md` (como rodar), README (tecnologias e `python main.py`), plano §13.1/§13.4,
+  `docs/real_vs_mock.md`. `pytest`: 75 passaram, 1 pulado.
+
+### Bugs transformados em regra
+
+- **Datas sem fuso vindas do SQLite** (`/api/saude` mostrava horário sem `Z`): tipo `UtcDateTime`
+  recusa gravar sem fuso e sempre devolve UTC.
+- **Alias camelCase divergente** (`historicoErro30D` × `historicoErro30d`): pego pelo teste que valida
+  os mocks do dashboard contra o contrato do Backend; esse teste impede divergências futuras.
+- **Publicação pela metade / fora do contrato / id repetido**: recusadas numa transação só.
+- **Serviço web puxando a parte pesada**: teste sobe `main.py` num processo limpo e falha se pandas,
+  DuckDB, ingestão, processamento etc. forem carregados.
+- **Modelo do banco sem migration**: teste compara `src/db/tabelas.py` com as migrations.
+
+### Decisões
+
+- Banco guarda documentos JSON do contrato (não uma coluna por campo): o formato vive num lugar só.
+- `percentualMmgdNaGeracao` = MMGD ÷ carga global × 100; `mmgdSobreCapacidadeInstalada` = MMGD do
+  ONS ÷ capacidade ANEEL cadastrada até a data (data de atualização cadastral como aproximação).
+- SQLite com caminho absoluto: `run_heavywork.py` e `main.py` nunca apontam para bancos diferentes.
+
+### Enviar ao Luiz
+
+- A API está pronta: `python main.py` em `Backend/`; contrato = o `types.ts` dele, sem mudança.
+  Para ligar: `VITE_DATA_SOURCE=api` + proxy `/api` -> `http://127.0.0.1:8000` (ou
+  `VITE_API_BASE_URL=http://127.0.0.1:8000/api`). Só a carga é real; o resto vem com `mock: true`.
+- Ainda pendente com ele: o que mostrar no campo `distribuidora` do risco por usina.
+
+## 2026-09-26 — Dashboard ligado na API do Backend ✅
+
+O que já existia: Backend com 6 rotas do contrato + `/api/saude` (FastAPI, `main.py`) lendo o banco
+publicado pelo `run_heavywork.py`; dashboard com Visão Geral, Despacho Preditivo, Lista de Riscos e
+Detalhe do Alerta, mas lendo só os mocks (`VITE_DATA_SOURCE=mock` era o padrão).
+
+Feito:
+- **API é o padrão do dashboard**; mock virou opt-in explícito (`npm run dev:mock` = `vite --mode mock`).
+  Os testes do Vitest fixam `VITE_DATA_SOURCE=mock` em `vite.config.ts`, sem depender de `.env` local.
+- **Proxy do Vite** (`/api` → FastAPI) com host/porta/prefixo **lidos de `Backend/config/api.yaml`**
+  (dependência dev `yaml`): a porta existe num lugar só, o proxy nunca aponta para uma porta antiga.
+- **Backend serve o build do dashboard** (`dashboard_dist` em `config/api.yaml`): `npm run build` +
+  `python main.py` = demo num servidor só (http://127.0.0.1:8000/). SPA fallback para as rotas do
+  React Router; caminho inexistente sob `/api` responde 404 JSON (nunca `index.html` com 200, que
+  esconderia um endpoint errado como "JSON inválido"); arquivo fora de `dist/` é recusado.
+- **`/api/saude` tipada** (`Saude`, Pydantic) + `SaudeApiSchema`/`getSaude()` no dashboard.
+- **Pill de origem dos dados na topbar** (`FonteDados`): "DADOS MOCK" | "DADOS DE dd/mm HH:MM"
+  (instante do replay) | "API INDISPONÍVEL" (causa no tooltip). Dado mock nunca passa por real.
+- **Erros da API legíveis na tela:** o `detail` do FastAPI entra na mensagem (o 503 diz para rodar
+  `python run_heavywork.py`); Backend desligado mostra a instrução de subir o `main.py`.
+- `StatusPill` não quebra linha (`whitespace-nowrap`).
+- `pyproject.toml`: faltava `scikit-learn` (o `LGBMRegressor`/`LGBMClassifier` exigem; os testes de
+  modelos falhavam num ambiente limpo).
+
+Verificação: publiquei os mocks num SQLite temporário, subi `python main.py` e `npm run dev`, e abri
+Visão Geral, Despacho Preditivo, Lista de Riscos e Detalhe do Alerta no Chromium (Playwright) pelos dois
+caminhos (Vite com proxy e build servido pelo FastAPI): todas as chamadas `/api/*` com 200, nenhuma tela
+com "Falha ao carregar dados", zero erros no console. Com o Backend desligado, a tela mostra "API
+INDISPONÍVEL" e a instrução. Backend: 103 testes passam (3 novos em `test_db_api.py`); 2 de
+`test_publicacao.py` falham neste ambiente por falta de `data/processed/calendario.csv` (dado local,
+não relacionado). Dashboard: build, lint e 18 testes limpos.
+
+Pendente (👤 Tiago + Luiz): as telas Excedentes, Validação e Mapa Híbrido prontas na branch
+`claude/eager-gauss-or90gs` ainda não estão no `main`; elas mudam o contrato (`lat`/`lon` em risco e
+excedente, `modelo` e `baselineNome`/`maeBaseline` na validação, recurso novo `DensidadeMmgd`) e
+exigem espelhar isso no Backend — mudança de schema, aguardando decisão.
+## 2026-09-25 — Dashboard: tela Excedentes TSO-DSO ✅
+
+- Tabela por área de concessão: área, distribuidora, fonte, excedente (MW), badge de
+  prioridade com rótulo High/Medium/Low (cor da escala de severidade), horizonte, ação e botão
+  "Executar" — só interface: ao clicar a linha mostra "simulado · nada enviado".
+- KPIs: excedente total (733 MW), MW em prioridade alta, nº de áreas.
+- `ordenarExcedentes()` (prioridade → MW → área) com `compararSeveridade()` comum às
+  ordenações (+ teste).
+- `components/ui/Tabela.tsx`: moldura única de tabela (rolagem, cabeçalho, quebra só nas
+  colunas `quebra`); Lista de Riscos migrada para ela.
+- Pendente: "transformação de fronteira" (subestação/trafo TSO-DSO de cada área) não existe no
+  contrato; não foi inventada. Testes: 19.
+
+## 2026-09-25 — Dashboard: tela Validação ✅
+
+- KPIs MAE, RMSE, MAPE e skill vs. climatologia.
+- Dois gráficos Recharts lado a lado (MAE e RMSE, um eixo cada — sem eixo duplo): modelo
+  (ciano) vs. baseline (tracejado), 30 dias, tooltip com ganho sobre o baseline.
+- Cards de status por fonte (pill online/offline + última sincronização em BRT e "há X").
+- Metadados do modelo (placeholder `0.0.0-placeholder`, com períodos de treino/teste).
+- Limitações declaradas em `src/content/limitacoes.ts` (fonte única, reaproveitável).
+- Contrato `MetricasValidacao`: + `baselineNome`, `maeBaseline`/`rmseBaseline` por dia e
+  `modelo` (schema recusa teste que comece antes do fim do treino). Skill agora é derivado do
+  histórico no gerador (teste confere).
+- `utils/escala.ts::ticksRedondos()`: regra única de ticks para todos os gráficos (tirou os
+  350/1.050 MW); Despacho Preditivo migrado. Testes: 21.
+
+## 2026-09-25 — Dashboard: Mapa Híbrido ✅
+
+- react-leaflet: usinas de `getRiscos()` como círculos na cor da severidade (tamanho ∝ MW) e
+  excedentes de `getExcedentes()` como losangos na cor da prioridade.
+- Camadas ligáveis (`ToggleChip`): usinas, excedentes e densidade de MMGD — heatmap
+  `leaflet.heat` com dados SINTÉTICOS (`getDensidadeMmgd()`, `mmgd_densidade.json`, mock),
+  gradiente violeta (identidade da MMGD).
+- Painel "Subestações em risco" ordenado por severidade e sincronizado com os marcadores
+  (hover destaca nos dois sentidos; clique no item centraliza). Clique no marcador de risco
+  abre o Detalhe do Alerta; no de excedente, a tela Excedentes.
+- Fundo offline: contorno do Brasil (Natural Earth via world-atlas, `npm run geo:brasil`) sempre
+  desenhado; tiles escuros da CARTO por baixo quando a rede permite (bloqueados no ambiente de
+  desenvolvimento, então as capturas mostram só o contorno).
+- Contrato: `lat`/`lon` em RiscoUsina e ExcedenteTsoDso (schema recusa coordenada fora do
+  Brasil, ex.: lat↔lon trocados); novo `DensidadeMmgd`.
+- `theme/tokens.ts::corToken()` para Leaflet/canvas lerem as cores de index.css; `ToggleChip`
+  compartilhado — os filtros da topbar passaram a usá-lo (corrige o NO-RISK desligado, que era
+  indistinguível do ligado: agora fica riscado e com ponto vazado). Testes: 23.
+## 2026-09-26 — Fase 3 (baseline de carga) ✅ e Fase 4 (classificador de curtailment) 🟡
+
+- **Carga** (`src/models/carga.py`, `config/modelos_carga.yaml`): persistência, sazonal-naïve (dia e semana), climatologia e LightGBM quantílico por série (SE, S, NE, N, SIN) e horizonte (30 min, 3 h, D+1). Banda P10–P90 calibrada por conformal (CQR) e modelo reajustado com o treino inteiro. Teste fora da amostra de jul/2025 a set/2026: o LightGBM ganha do melhor baseline nas 15 combinações. SIN: MAE de 555 MW (30 min), 1 559 MW (3 h) e 1 685 MW (D+1), com MAPE entre 0,8% e 2,5% e cobertura P10–P90 em torno de 74%. Relatório em `docs/reports/baseline_carga.md`.
+- Publicação: a `validacao` é real; a `previsao` tem pontos reais, mas sai com `mock: true` porque os fatores climáticos ainda são mock.
+- Garantias:
+  - `src/features/defasagens.py` recusa defasagem que olhe depois da emissão;
+  - split único em `src/models/split.py`;
+  - testes de vazamento: futuro perturbado e treino idêntico mudando o período de teste;
+  - impressão digital das etapas derivada dos imports (`codigo_de`).
+- **Bug transformado em regra:** o LightGBM 4.7.0 dá "access violation" no Windows. A versão foi fixada em <4.7 e ganhou um teste de fumaça.
+- **Curtailment** (`src/features/curtailment.py`, `src/models/curtailment.py`, `config/modelos_curtailment.yaml`): classificador ENE/CNF + montante esperado, SHAP exato (`ExplicadorLightGBM`), publicação de riscos e alertas, etapas `treino_curtailment` e `previsao_curtailment`. Testes sintéticos passam. **Ainda não rodou com dado real**: a próxima execução de `python run_heavywork.py` treina, estimativa ~15 min.
+- Etapas renomeadas de `treino`/`previsao` para `treino_carga`/`previsao_carga`; o estado local foi migrado.
+
+## 2026-09-26 — Telas Excedentes, Validação e Mapa Híbrido integradas + contrato v3 ✅
+
+Aprovado pelo Tiago: trazer as três telas do Luiz (branch `claude/eager-gauss-or90gs`, que não
+estavam na main) e adaptar o Backend às mudanças de schema que elas trazem.
+
+Frontend:
+- Cherry-pick dos 3 commits (Excedentes TSO-DSO + `Tabela`; Validação + `GraficoErro`; Mapa
+  Híbrido com react-leaflet e heatmap). Conflitos resolvidos juntando os dois lados (`saude` e
+  `mmgdDensidade` em `ENDPOINTS`; `yaml` e `world-atlas` nas dependências; lockfile regenerado).
+- Com isso as 7 telas de dados funcionam pela API (Metodologia segue vazia).
+
+Backend (contrato v3, detalhes em `docs/schema_changelog.md`):
+- `src/contrato/modelos.py`: `lat`/`lon` (caixa do Brasil) em risco e excedente; validação com
+  `baselineNome`, `maeBaseline`/`rmseBaseline` e `modelo` (com a regra do split cronológico);
+  recurso novo `DensidadeMmgd`. `RECURSOS` agora tem a rota de cada recurso (`DefRecurso`).
+- **Rotas da API geradas de `RECURSOS`** e `esquema.py` sem cópia própria das rotas: recurso
+  novo = uma linha. Teste confere que toda rota existe no `dataSource.ts` (as duas pontas não
+  divergem mais em silêncio).
+- **Banco publicado com contrato anterior → 503 "rode run_heavywork.py"**, não 500: toda resposta
+  é revalidada contra o contrato atual. Evita que a próxima mudança de schema derrube o dashboard
+  de quem ainda não republicou.
+- Publicação (`montar.py`):
+  - validação: erro diário da climatologia lado a lado; metadados do modelo — período de treino
+    do split, teste até o último dia com real conhecido, versão = hash da config de treino e
+    data do treino, gravados em `data/modelos/carga/metadados.json` pela etapa `treino_carga`
+    (modelo antigo sem o arquivo: versão da config atual e data do `modelos.joblib`);
+  - riscos: `lat`/`lon` = sede da UF (`posicao_uf` em `config/publicacao.yaml`), porque não há
+    coordenada por usina no que o projeto ingere → risco continua `mock: true`
+    (`POSICAO_USINA_REAL`); UF sem posição faz a publicação falhar;
+  - `mmgd_densidade`: mock do dashboard (sintético) até a Fase 6.
+- `docs/schema_contrato.json` regenerado; `schema_contrato.md`, `real_vs_mock.md`, `backend.md`.
+
+Verificação: backend 118 testes passam (novos: rota × dataSource, posição fora do Brasil, split
+invertido, 503 de contrato anterior, todas as rotas servidas, baseline/metadados da validação,
+posições das 27 UFs, versão muda com a config). Dashboard: 23 testes, lint e build limpos. Ponta a
+ponta no Chromium com o build servido pelo FastAPI: as 7 telas de dados carregam com 200 em todas
+as rotas `/api/*` (inclusive `/api/mmgd/densidade`); os únicos erros de console são tiles/fontes
+externos bloqueados pela rede deste ambiente.
+
+Pendente: rodar `python run_heavywork.py` na máquina com os dados para republicar no contrato v3
+(até lá a API responde 503 nos recursos que mudaram). Coordenada real por usina (SIGA/ANEEL)
+tiraria o `mock` de posição dos riscos.

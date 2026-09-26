@@ -1,0 +1,54 @@
+# Etapa 5 do run_heavywork.py (publicação no banco). Ver docs/Oraculo_planejamento.md §13.1.
+
+# O "agora" da publicação (modo replay).
+#   ultimo_dado  -> última semi-hora com carga global e MMGD dos 4 subsistemas (decisão do
+#                   Tiago em 2026-09-25, enquanto a janela da demo não é definida)
+#   ISO-8601 com fuso, ex. "2025-08-10T13:00:00-03:00" -> última semi-hora completa até ele
+agora: ultimo_dado
+
+# Cópia do JSON publicado, para inspeção e exportação (a mesma função monta o banco e o arquivo).
+arquivo_export: output/contrato.json
+
+# Tela Validação: fontes exibidas (rótulo -> conjuntos do manifesto de download). Conjunto
+# baixado que não esteja em nenhum grupo faz a publicação falhar (fonte nunca some da tela).
+# Só entram fontes que o projeto de fato ingere (ERA5, BDGD e satélite ainda não).
+status_fontes:
+  "ONS — API de Carga Verificada": [carga_verificada, carga_programada]
+  "ONS — Dados Abertos (constrained-off)": [coff_eolica_tm, coff_solar_tm, coff_eolica_detail, coff_solar_detail]
+  "ONS — Dados Abertos (operação e cadastro)": [termica_despacho, intercambio_nacional, fator_capacidade,
+                                                balanco_subsistema, curva_carga, capacidade_geracao,
+                                                usina_conjunto, modalidade_usina]
+  "ANEEL — Cadastro de MMGD": [aneel_mmgd_empreendimentos]
+
+# Posição exibida no Mapa Híbrido para cada usina da Lista de Riscos: a SEDE (capital) da UF da
+# usina, [lat, lon] em WGS84. Aproximação, porque o projeto ainda não ingere coordenada por usina
+# (as bases do ONS não trazem): enquanto for assim o risco sai mock=True (POSICAO_USINA_REAL em
+# src/publicacao/montar.py; registrado em docs/real_vs_mock.md). UF ausente aqui = publicação falha.
+posicao_uf:
+  AC: [-9.97, -67.81]   # Rio Branco
+  AL: [-9.67, -35.74]   # Maceió
+  AM: [-3.12, -60.02]   # Manaus
+  AP: [0.03, -51.07]    # Macapá
+  BA: [-12.97, -38.50]  # Salvador
+  CE: [-3.73, -38.53]   # Fortaleza
+  DF: [-15.79, -47.88]  # Brasília
+  ES: [-20.32, -40.34]  # Vitória
+  GO: [-16.69, -49.26]  # Goiânia
+  MA: [-2.53, -44.30]   # São Luís
+  MG: [-19.92, -43.94]  # Belo Horizonte
+  MS: [-20.45, -54.62]  # Campo Grande
+  MT: [-15.60, -56.10]  # Cuiabá
+  PA: [-1.46, -48.49]   # Belém
+  PB: [-7.12, -34.86]   # João Pessoa
+  PE: [-8.05, -34.88]   # Recife
+  PI: [-5.09, -42.80]   # Teresina
+  PR: [-25.43, -49.27]  # Curitiba
+  RJ: [-22.91, -43.17]  # Rio de Janeiro
+  RN: [-5.79, -35.21]   # Natal
+  RO: [-8.76, -63.90]   # Porto Velho
+  RR: [2.82, -60.67]    # Boa Vista
+  RS: [-30.03, -51.23]  # Porto Alegre
+  SC: [-27.59, -48.55]  # Florianópolis
+  SE: [-10.91, -37.07]  # Aracaju
+  SP: [-23.55, -46.63]  # São Paulo
+  TO: [-10.18, -48.33]  # Palmas

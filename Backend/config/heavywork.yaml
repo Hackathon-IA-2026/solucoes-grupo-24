@@ -1,0 +1,26 @@
+# Configuração do Backend/run_heavywork.py (o script não tem argumentos de linha de comando:
+# tudo que muda o comportamento dele fica aqui). Arquitetura: docs/Oraculo_planejamento.md §13.1.
+
+# Liga/desliga cada etapa. Nome errado aqui é erro na hora (não passa em silêncio).
+etapas:
+  ingestao: true
+  processamento: true
+  treino_carga: true
+  treino_curtailment: true
+  previsao_carga: true
+  previsao_curtailment: true
+  publicacao: true
+
+# Etapas para refazer mesmo sem mudança nas entradas, ex.: [processamento].
+# Normalmente não é preciso: mudança nos dados baixados, no código ou na config do
+# processamento já refaz a etapa sozinha. Volte para [] depois de usar.
+forcar: []
+
+# Textos de estimativa impressos antes de etapas longas (regra do CLAUDE.md).
+estimativas:
+  ingestao_completa: "download completo: ~1,6 GB, ~30 min (medido no Prompt 1)"
+  processamento: "~2 min (medido em 2026-09-25: 1,6 min para mapeamento + 3 tabelas; rótulos = 16 M linhas)"
+  treino_carga: "~9 min (medido em 2026-09-26: 4,4 min com um ajuste por quantil; o reajuste pós-calibração dobra)"
+  treino_curtailment: "~8 min (estimado: 3 horizontes × 290 usinas de features + 12 LightGBM em 1,5 M linhas)"
+  previsao_carga: "~30 s (medido em 2026-09-26: 22 s)"
+  previsao_curtailment: "~6 min (estimado: ~10 M previsões + relatório)"

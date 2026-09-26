@@ -1,0 +1,120 @@
+/*
+ * Design system O.R.A.C.U.L.O. — dark mode estilo SCADA de sala de controle.
+ *
+ * Decisão: as tokens vivem SÓ aqui, no bloco @theme do Tailwind v4. Cada token vira
+ * utilitário automaticamente (ex.: --color-risk-high -> bg-risk-high, text-risk-high,
+ * border-risk-high). Componentes nunca usam hex solto: trocar uma cor é mudar uma linha.
+ */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+@import "tailwindcss";
+
+@theme {
+  /* Fundos: navy quase preto. "base" é o fundo da página; "surface" é o de cards e barras. */
+  --color-base: #0a0e17;
+  --color-surface: #0f1524;
+  --color-surface-raised: #151c2e; /* hover/seleção sobre surface */
+  --color-line: #1e293b;           /* bordas e divisórias finas */
+
+  /* Texto */
+  --color-ink: #e2e8f0;            /* texto principal */
+  --color-ink-muted: #94a3b8;      /* rótulos, legendas */
+  --color-ink-faint: #64748b;      /* texto desabilitado */
+
+  /* Accent primário: dados, linhas de gráfico, item ativo da navegação */
+  --color-accent: #22d3ee;
+
+  /* Escala de risco (fonte única: src/theme/severity.ts aponta para estes nomes) */
+  --color-risk-low: #22c55e;
+  --color-risk-medium: #eab308;
+  --color-risk-high: #f97316;
+  --color-risk-critical: #ef4444;
+  --color-risk-none: #64748b;      /* NO-RISK: neutro, fora da escala de alerta */
+
+  /*
+   * Cores categóricas de gráfico (identidade de série, não risco). Validadas com o
+   * validador de paleta do skill dataviz contra o fundo surface (#0f1524): banda de
+   * luminosidade do modo escuro, separação para daltonismo (ΔE deutan 12,6) e contraste.
+   * O accent #22d3ee fica claro demais para área preenchida, por isso chart-1 é um
+   * ciano mais escuro. Ordem fixa: chart-1 sempre a 1ª série, chart-2 a 2ª, chart-3 a 3ª.
+   * O trio chart-1/2/3 também passou no validador (normal e daltonismo).
+   */
+  --color-chart-1: #0891b2;
+  --color-chart-2: #8b5cf6;
+  --color-chart-3: #db2777;
+
+  /*
+   * Par DIVERGENTE da explicação SHAP (polaridade, não categoria nem risco): quente = a
+   * variável aumenta a probabilidade de curtailment; frio = reduz. Validado no mesmo
+   * validador (fundo escuro + daltonismo). Sempre acompanhado de sinal/rótulo (+/−).
+   */
+  /* pico claro do gradiente de densidade de MMGD (mesma família do chart-2, violeta) */
+  --color-mmgd-pico: #ddd6fe;
+
+  --color-shap-up: #ea580c;
+  --color-shap-down: #0284c7;
+
+  /* Tipografia: sans para texto corrido, mono para números/KPIs (painel de operação) */
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", monospace;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-base text-ink font-sans antialiased;
+    color-scheme: dark;
+  }
+}
+
+/*
+ * Números de painel: algarismos de largura fixa (tabular-nums) para que relógio e KPIs
+ * não "tremam" quando o valor muda.
+ */
+@utility kpi {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Leaflet: fundo do mapa na cor da página enquanto os tiles não carregam (ou se bloqueados),
+   e controles/tooltips no tema escuro. Prefixo `:root` = especificidade maior que a do
+   leaflet.css, que é carregado DEPOIS (no chunk da página) e senão venceria a cascata. */
+:root .leaflet-container {
+  background: var(--color-base);
+  font-family: var(--font-sans);
+}
+:root .leaflet-tooltip {
+  background: var(--color-base);
+  color: var(--color-ink);
+  border: 1px solid var(--color-line);
+  box-shadow: none;
+  font-size: 12px;
+}
+:root .leaflet-tooltip-top::before {
+  border-top-color: var(--color-line);
+}
+:root .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--color-base) 80%, transparent);
+  color: var(--color-ink-faint);
+}
+:root .leaflet-control-attribution a {
+  color: var(--color-ink-muted);
+}
+:root .leaflet-bar a {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-bottom-color: var(--color-line);
+}
+:root .leaflet-bar a:hover {
+  background: var(--color-surface-raised);
+}
+:root .leaflet-bar {
+  border: 1px solid var(--color-line);
+  box-shadow: none;
+}
