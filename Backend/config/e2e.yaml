@@ -1,0 +1,47 @@
+# Harness de integração ponta a ponta (pipeline/teste_e2e.py): bases ONS → modelos → JSON do
+# contrato → dashboard → alerta (+ auditoria da MMGD).
+#
+# Decisão (difere do pedido original, que tinha um data_sources_config.json com "mock"/"real"
+# escrito à mão por etapa): aqui só ficam CAMINHOS e parâmetros (regra do CLAUDE.md: config em
+# config/*.yaml). Se a etapa é real ou mock é LIDO dos próprios dados — existência do artefato e
+# a flag `mock`/`is_mock` de cada registro. Uma chave manual poderia dizer "real" enquanto o dado
+# diz mock:true, e o relatório mentiria. Quando o Tiago entregar a saída real (TFT,
+# classificadores, excedentes), basta ela existir: a publicação passa a gravar mock:false, o
+# relatório muda sozinho e o dashboard não muda nada (ele lê a API, que valida o contrato).
+
+etapas:
+  bases_ons:
+    descricao: Tabelas processadas do ONS (etapa 2 do run_heavywork.py)
+    artefatos:
+      - data/processed/carga_supervisionada.csv
+      - data/processed/rotulos_curtailment.parquet
+      - data/processed/calendario.csv
+  modelos:
+    descricao: Modelos treinados e previsões fora da amostra (etapas 3 e 4)
+    artefatos:
+      - data/modelos/carga
+      - data/modelos/curtailment
+  contrato:
+    descricao: JSON do contrato publicado (etapa 5; mesma função que alimenta banco e API)
+    arquivo: output/contrato.json
+  auditoria:
+    descricao: Auditoria da MMGD em 3 camadas (Luiz) — saída real, se existir
+    arquivo_real: output/auditoria/auditoria_camadas_2_3.json
+
+relatorio: ../docs/reports/teste_e2e.md
+
+cenarios:
+  dia_dos_pais_2024:
+    descricao: >-
+      Dia dos Pais de 2024 (2º domingo de agosto): primeira vez em que o ONS comandou restrição
+      total de eólicas e fotovoltaicas por baixa demanda (planejamento v2, seção 3.1).
+    data: "2024-08-11"
+    # Valores de REFERÊNCIA DOCUMENTAL (não são saída do projeto): ONS, PAR/PEL 2025 — figura
+    # "Curvas de carga supervisionada mínima" (valor instantâneo do dia de mínima de 2024).
+    referencia:
+      fonte: ONS, PAR/PEL 2025 — Sumário Executivo (curvas de carga supervisionada mínima)
+      carga_supervisionada_minima_mw: 39024
+      mmgd_instalada_mw: 32809
+    # Fração de usinas com corte numa semi-hora a partir da qual o instante conta como
+    # "restrição generalizada" no relatório (proxy da restrição total; parâmetro, não dado).
+    limiar_fracao_usinas_cortadas: 0.8

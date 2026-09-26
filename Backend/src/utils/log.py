@@ -20,3 +20,16 @@ def configurar(arquivo: Path | None = None) -> None:
             h = logging.FileHandler(arquivo, encoding="utf-8")
             h.setFormatter(logging.Formatter(FORMATO))
             raiz.addHandler(h)
+
+
+def console_utf8() -> None:
+    """Saída do terminal em UTF-8 (acentos e "·" legíveis no console do Windows, que usa cp1252).
+
+    Chamado no main() dos scripts que imprimem relatório. Sem efeito onde o console já é UTF-8;
+    `errors="replace"` garante que um caractere fora do código de página nunca derruba o script.
+    """
+    import sys
+
+    for fluxo in (sys.stdout, sys.stderr):
+        if hasattr(fluxo, "reconfigure"):
+            fluxo.reconfigure(encoding="utf-8", errors="replace")
