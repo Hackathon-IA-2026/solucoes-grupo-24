@@ -3,11 +3,14 @@
  * Porte de 02-PROTOTIPO/web/js/views/bess.js (V.bess). A interface não calcula nada: os pesos
  * vão ao servidor, que refaz a pontuação.
  */
-import { useEffect, useState, type ReactNode } from 'react'
+import L from 'leaflet'
+import { Fragment, useEffect, useState, type ReactNode } from 'react'
+import { CircleMarker, Marker, Tooltip } from 'react-leaflet'
 import { Api, ApiError, type Envelope } from '../api'
 import { barChart, color, heatStrip, lineChart, scatter } from '../charts'
 import { useOraculo, usePersistido } from '../estado'
 import { num, pct } from '../format'
+import { MapaOsm, limitesDe } from '../MapaOsm'
 import { BarRow, Carregando, Chip, Conteudo, ErroBloco, Grafico, Kpi, OCard, Pagina, Proveniencia, StatLines, Vazio, useApi } from '../ui'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -352,8 +355,84 @@ function Legenda({ cor, label }: { cor: string; label: string }) {
   )
 }
 
+type ModoMapa = 'osm' | 'svg'
+
+/** Regras comuns aos dois fundos: cor, raio e texto do hover. */
+const corSitio = (p: Dado): string => (p.rank <= 10 ? 'crimson' : p.score >= 0.5 ? 'amber' : 'teal')
+const raioSitio = (p: Dado, maxE: number): number => 3 + 16 * Math.sqrt((p.cut_gwh || 0) / maxE)
+const tituloSitio = (p: Dado): string => '#' + p.rank + ' ' + p.name + ' · ' + num(p.cut_gwh, 0) + ' GWh/ano cortados · pontuação ' + num(p.score, 2)
+
 function Mapa({ pts, sel, onPick }: { pts: Dado[]; sel: string | null; onPick: (c: string) => void }) {
+  const [modo, setModo] = usePersistido<ModoMapa>('oraculo.bsMapa', 'osm')
   if (!pts.length) return <Vazio>Sem sítios localizados.</Vazio>
+  return (
+    <div>
+      <div className="chips small" style={{ marginBottom: 8 }}>
+        <Chip on={modo === 'osm'} onClick={() => setModo('osm')}>
+          OpenStreetMap
+        </Chip>
+        <Chip on={modo === 'svg'} onClick={() => setModo('svg')}>
+          Esquemático
+        </Chip>
+      </div>
+      {modo === 'osm' ? <MapaOsmSitios pts={pts} sel={sel} onPick={onPick} /> : <MapaSvg pts={pts} sel={sel} onPick={onPick} />}
+      <div className="chips small" style={{ marginTop: 8, gap: 10 }}>
+        <Legenda cor="crimson" label="top 10 da pontuação" />
+        <Legenda cor="amber" label="pontuação ≥ 0,5" />
+        <Legenda cor="teal" label="demais" />
+        <span className="small muted">tamanho ∝ √ energia cortada</span>
+      </div>
+      {modo === 'osm' ? <div className="card-note">Fundo: © OpenStreetMap contributors.</div> : null}
+    </div>
+  )
+}
+
+/** Rótulo do posto (top 10) sobre o círculo, como o <text> do esquemático. */
+function rotuloRank(rank: number): L.DivIcon {
+  return L.divIcon({
+    className: '',
+    iconSize: [24, 12],
+    iconAnchor: [12, 6],
+    html: '<span style="display:block;text-align:center;line-height:12px;font:700 9px var(--o-mono);color:#fff;pointer-events:none">' + rank + '</span>',
+  })
+}
+
+/* Mesma semântica do esquemático sobre o OSM: maiores primeiro (os menores ficam por cima) e
+   rótulo do posto nos 10 primeiros. A chave pela ordem refaz as camadas quando o filtro muda,
+   para a ordem de desenho acompanhar a do SVG. */
+function MapaOsmSitios({ pts, sel, onPick }: { pts: Dado[]; sel: string | null; onPick: (c: string) => void }) {
+  const maxE = Math.max(...pts.map((p) => p.cut_gwh || 0).concat([1]))
+  const sorted = pts.slice().sort((a, b) => (b.cut_gwh || 0) - (a.cut_gwh || 0))
+  const ordem = sorted.map((p) => p.code).join('|')
+  return (
+    <MapaOsm limites={limitesDe(pts)} altura={420} maxZoom={11}>
+      <Fragment key={ordem}>
+        {sorted.map((p) => {
+          const col = corSitio(p)
+          const on = p.code === sel
+          return (
+            <CircleMarker
+              key={p.code}
+              center={[p.lat, p.lon]}
+              radius={raioSitio(p, maxE)}
+              pathOptions={{ fillColor: color(col), fillOpacity: on ? 0.95 : 0.55, color: color(on ? 'teal' : col), weight: on ? 2.6 : 1, opacity: 1 }}
+              eventHandlers={{ click: () => onPick(p.code) }}
+            >
+              <Tooltip direction="top">{tituloSitio(p)}</Tooltip>
+            </CircleMarker>
+          )
+        })}
+        {sorted
+          .filter((p) => p.rank <= 10)
+          .map((p) => (
+            <Marker key={'r' + p.code} position={[p.lat, p.lon]} icon={rotuloRank(p.rank)} interactive={false} keyboard={false} />
+          ))}
+      </Fragment>
+    </MapaOsm>
+  )
+}
+
+function MapaSvg({ pts, sel, onPick }: { pts: Dado[]; sel: string | null; onPick: (c: string) => void }) {
   const lats = pts.map((p) => p.lat)
   const lons = pts.map((p) => p.lon)
   let la0 = Math.min(...lats)
@@ -374,11 +453,10 @@ function Mapa({ pts, sel, onPick }: { pts: Dado[]; sel: string | null; onPick: (
   const maxE = Math.max(...pts.map((p) => p.cut_gwh || 0).concat([1]))
   const sorted = pts.slice().sort((a, b) => (b.cut_gwh || 0) - (a.cut_gwh || 0))
   return (
-    <div>
       <svg viewBox={'0 0 ' + W + ' ' + H.toFixed(0)} width="100%" role="img" aria-label="Mapa de sítios de corte" style={{ display: 'block' }}>
         {sorted.map((p) => {
-          const r = 3 + 16 * Math.sqrt((p.cut_gwh || 0) / maxE)
-          const col = p.rank <= 10 ? 'crimson' : p.score >= 0.5 ? 'amber' : 'teal'
+          const r = raioSitio(p, maxE)
+          const col = corSitio(p)
           const on = p.code === sel
           const x = sx(p.lon)
           const y = sy(p.lat)
@@ -395,10 +473,10 @@ function Mapa({ pts, sel, onPick }: { pts: Dado[]; sel: string | null; onPick: (
                 style={{ cursor: 'pointer' }}
                 onClick={() => onPick(p.code)}
               >
-                <title>{'#' + p.rank + ' ' + p.name + ' · ' + num(p.cut_gwh, 0) + ' GWh/ano cortados · pontuação ' + num(p.score, 2)}</title>
+                <title>{tituloSitio(p)}</title>
               </circle>
               {p.rank <= 10 ? (
-                <text x={x.toFixed(1)} y={(y + 3.5).toFixed(1)} textAnchor="middle" style={{ font: '700 9px var(--mono)', fill: '#fff', pointerEvents: 'none' }}>
+                <text x={x.toFixed(1)} y={(y + 3.5).toFixed(1)} textAnchor="middle" style={{ font: '700 9px var(--o-mono)', fill: '#fff', pointerEvents: 'none' }}>
                   {p.rank}
                 </text>
               ) : null}
@@ -406,13 +484,6 @@ function Mapa({ pts, sel, onPick }: { pts: Dado[]; sel: string | null; onPick: (
           )
         })}
       </svg>
-      <div className="chips small" style={{ marginTop: 8, gap: 10 }}>
-        <Legenda cor="crimson" label="top 10 da pontuação" />
-        <Legenda cor="amber" label="pontuação ≥ 0,5" />
-        <Legenda cor="teal" label="demais" />
-        <span className="small muted">tamanho ∝ √ energia cortada</span>
-      </div>
-    </div>
   )
 }
 

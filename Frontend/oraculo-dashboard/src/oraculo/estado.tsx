@@ -29,6 +29,19 @@ interface Ctx {
   /** muda a cada "recarregar": entra nas dependências de useApi */
   versao: number
   recarregar: () => Promise<void>
+  /** tema do protótipo ('dark' | 'light'), no atributo data-theme do <html> */
+  tema: Tema
+  alternarTema: () => void
+}
+
+export type Tema = 'dark' | 'light'
+
+function lerTema(): Tema {
+  try {
+    return localStorage.getItem('oraculo.theme') === 'light' ? 'light' : 'dark'
+  } catch {
+    return 'dark'
+  }
 }
 
 const OraculoCtx = createContext<Ctx | null>(null)
@@ -47,6 +60,18 @@ export function OraculoProvider({ children }: { children: ReactNode }) {
   const [erro, setErro] = useState<ApiError | null>(null)
   const [area, setAreaState] = useState(lerArea)
   const [versao, setVersao] = useState(0)
+  const [tema, setTema] = useState<Tema>(lerTema)
+
+  // Mesmo mecanismo do protótipo: data-theme no <html> e escolha lembrada em oraculo.theme.
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', tema)
+    try {
+      localStorage.setItem('oraculo.theme', tema)
+    } catch {
+      // armazenamento indisponível: o tema vale só nesta sessão
+    }
+  }, [tema])
+  const alternarTema = useCallback(() => setTema((t) => (t === 'dark' ? 'light' : 'dark')), [])
 
   useEffect(() => {
     let vivo = true
@@ -82,7 +107,10 @@ export function OraculoProvider({ children }: { children: ReactNode }) {
     setVersao((v) => v + 1)
   }, [])
 
-  const valor = useMemo(() => ({ meta, health, erro, area, setArea, versao, recarregar }), [meta, health, erro, area, setArea, versao, recarregar])
+  const valor = useMemo(
+    () => ({ meta, health, erro, area, setArea, versao, recarregar, tema, alternarTema }),
+    [meta, health, erro, area, setArea, versao, recarregar, tema, alternarTema],
+  )
   return <OraculoCtx.Provider value={valor}>{children}</OraculoCtx.Provider>
 }
 

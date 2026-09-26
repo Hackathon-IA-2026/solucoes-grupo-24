@@ -1,48 +1,68 @@
 /*
- * Folha de estilo das telas do protótipo O.R.A.C.U.L.O. (gerada de 02-PROTOTIPO/web/css/oraculo.css).
- * Tudo escopado em .oraculo (a raiz de cada página do protótipo) para não vazar para as telas
- * do dashboard; o tooltip dos gráficos (.o-tooltip) vive no <body>.
+ * Sistema visual do protótipo O.R.A.C.U.L.O., fiel a 02-PROTOTIPO/web/css/oraculo.css
+ * (derivado dele, regra a regra: mesma paleta, tema claro e escuro, casca, componentes e
+ * gráficos). Acréscimos no fim: integração React, filtros do contrato e mapas OpenStreetMap.
+ *
+ * Diferenças só de mecânica, não de aparência:
+ * - variáveis com prefixo --o- (as do Tailwind usam --radius, --shadow...);
+ * - componentes e elementos (tabela, botão...) escopados em .oraculo (raiz das telas do
+ *   protótipo) e #top, para não reestilizar as telas do dashboard do contrato, que usam
+ *   Tailwind; essas telas herdam a paleta pelo mapeamento de tokens no fim do arquivo;
+ * - a classe .okpi virou .okpi (colidia com o utilitário `kpi` do dashboard);
+ * - tema: atributo data-theme no <html>, como no original (localStorage oraculo.theme).
  */
 :root {
-  /* Paleta do protótipo O.R.A.C.U.L.O. (deck PAR/PEL), harmonizada com as tokens do dashboard
-     (fundo, superfície, bordas e texto de src/index.css). Prefixo --o-: não colide com as
-     variáveis do Tailwind (--color-*, --radius...). Lida também por src/oraculo/charts.ts. */
-  --o-navy: #17296b;
-  --o-navy-2: #2b4393;
-  --o-teal: #22d3ee;
-  --o-teal-d: #0891b2;
-  --o-green: #5ac88a;
+  color-scheme: dark;
+
+  --o-navy:    #17296b;
+  --o-navy-2:  #2b4393;
+  --o-teal:    #4fd1c5;
+  --o-teal-d:  #0e7c74;
+  --o-green:   #5ac88a;
   --o-green-d: #2e9b57;
-  --o-amber: #f0b030;
+  --o-amber:   #f0b030;
   --o-amber-d: #c06410;
   --o-crimson: #ef5b5b;
   --o-crimson-d: #b3262a;
-  --o-purple: #b98ad6;
-  --o-bg: #0a0e17;
-  --o-bg-2: #0c1220;
-  --o-panel: #0f1524;
-  --o-panel-2: #151c2e;
-  --o-line: #1e293b;
-  --o-line-2: #2c3a52;
-  --o-ink: #e2e8f0;
-  --o-ink-2: #cbd5e1;
-  --o-muted: #94a3b8;
-  --o-faint: #64748b;
-  --o-radius: 3px;
-  --o-radius-sm: 2px;
+  --o-purple:  #b98ad6;
+
+  --o-bg:      #0b1020;
+  --o-bg-2:    #101832;
+  --o-panel:   #151f3c;
+  --o-panel-2: #1b2749;
+  --o-line:    #26335c;
+  --o-line-2:  #33426f;
+  --o-ink:     #e8edf8;
+  --o-ink-2:   #b8c4e0;
+  --o-muted:   #7f8db0;
+  --o-faint:   #5b688c;
+
+  --o-radius: 10px;
+  --o-radius-sm: 6px;
   --o-shadow: 0 8px 28px rgba(0, 0, 0, .35);
-  --o-mono: var(--font-mono);
-  --o-sans: var(--font-sans);
+  --o-mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+  --o-sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
 }
-
-/* Raiz das telas do protótipo: tipografia e cor base (o Tailwind zera margens e estilos). */
-.oraculo { font-size: 13px; line-height: 1.45; color: var(--o-ink); }
-.oraculo h3, .oraculo h4 { font-weight: 650; }
-.oraculo details > summary { list-style: revert; }
-.oraculo ul.actions { list-style: disc; }
-.oraculo-legado { font-size: 11px; color: var(--o-faint); }
-
-.oraculo body {
+:root[data-theme="light"] {
+  color-scheme: light;
+  --o-bg:      #f4f6fb;
+  --o-bg-2:    #ffffff;
+  --o-panel:   #ffffff;
+  --o-panel-2: #f1f4fa;
+  --o-line:    #dde3ef;
+  --o-line-2:  #c8d2e6;
+  --o-ink:     #16203c;
+  --o-ink-2:   #3d4a6b;
+  --o-muted:   #67748f;
+  --o-faint:   #8c98b3;
+  --o-teal:    #0e7c74;
+  --o-green:   #2e9b57;
+  --o-amber:   #c06410;
+  --o-crimson: #b3262a;
+  --o-purple:  #7b2c8a;
+  --o-shadow: 0 4px 18px rgba(20, 35, 70, .10);
+}
+html, body {
   margin: 0; padding: 0; height: 100%;
   background: var(--o-bg); color: var(--o-ink);
   font-family: var(--o-sans);
@@ -51,30 +71,83 @@
 }
 .oraculo a { color: var(--o-teal); text-decoration: none; }
 .oraculo a:hover { text-decoration: underline; }
-.oraculo .badge {
+#shell { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+#sidebar {
+  background: var(--o-bg-2); border-right: 1px solid var(--o-line);
+  display: flex; flex-direction: column; position: sticky; top: 0;
+  height: 100vh; overflow-y: auto;
+}
+.brand { padding: 18px 18px 14px; border-bottom: 1px solid var(--o-line); }
+.brand-mark {
+  font-weight: 700; font-size: 17px; letter-spacing: .04em; color: var(--o-ink);
+}
+.brand-mark span { color: var(--o-teal); }
+.brand-sub { font-size: 10.5px; color: var(--o-muted); margin-top: 5px; line-height: 1.35; }
+.brand-team {
+  margin-top: 9px; font-size: 10px; color: var(--o-faint);
+  text-transform: uppercase; letter-spacing: .07em;
+}
+#sidebar nav { padding: 10px 8px; flex: 1; }
+.nav-group {
+  font-size: 9.5px; text-transform: uppercase; letter-spacing: .1em;
+  color: var(--o-faint); padding: 12px 10px 5px;
+}
+#sidebar nav a {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: var(--o-radius-sm);
+  color: var(--o-ink-2); font-size: 13px; text-decoration: none;
+  border-left: 2px solid transparent;
+}
+#sidebar nav a:hover { background: var(--o-panel); color: var(--o-ink); text-decoration: none; }
+#sidebar nav a.active {
+  background: var(--o-panel-2); color: var(--o-ink); font-weight: 600;
+  border-left-color: var(--o-teal);
+}
+#sidebar nav a .ico { width: 16px; height: 16px; flex: 0 0 16px; opacity: .85; }
+.side-foot {
+  padding: 12px 16px 16px; border-top: 1px solid var(--o-line);
+  font-size: 10.5px; color: var(--o-faint);
+}
+.side-foot a { display: block; margin-top: 4px; color: var(--o-muted); }
+#main { display: flex; flex-direction: column; min-width: 0; }
+header#top {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 12px 22px; background: var(--o-bg-2);
+  border-bottom: 1px solid var(--o-line); position: sticky; top: 0; z-index: 20;
+}
+#top h1 { font-size: 16px; margin: 0; font-weight: 650; letter-spacing: -.01em; }
+#top .sub { font-size: 11.5px; color: var(--o-muted); margin-top: 2px; }
+.spacer { flex: 1; }
+.badge {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 4px 10px; border-radius: 999px; font-size: 10.5px;
   font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
   border: 1px solid transparent; white-space: nowrap;
 }
-.oraculo .badge-live { background: rgba(90,200,138,.14); color: var(--o-green); border-color: rgba(90,200,138,.35); }
-.oraculo .badge-cache { background: rgba(79,209,197,.13); color: var(--o-teal);  border-color: rgba(79,209,197,.33); }
-.oraculo .badge-demo { background: rgba(240,176,48,.15); color: var(--o-amber); border-color: rgba(240,176,48,.4); }
-.oraculo .badge-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.oraculo select, .oraculo button, .oraculo input {
+.badge-live { background: rgba(90,200,138,.14); color: var(--o-green); border-color: rgba(90,200,138,.35); }
+.badge-cache { background: rgba(79,209,197,.13); color: var(--o-teal);  border-color: rgba(79,209,197,.33); }
+.badge-demo { background: rgba(240,176,48,.15); color: var(--o-amber); border-color: rgba(240,176,48,.4); }
+.badge-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+#top select, .oraculo select, #top button, .oraculo button, #top input, .oraculo input {
   font-family: inherit; font-size: 12.5px; color: var(--o-ink);
   background: var(--o-panel); border: 1px solid var(--o-line-2);
   border-radius: var(--o-radius-sm); padding: 6px 10px;
 }
-.oraculo select:hover, .oraculo button:hover { border-color: var(--o-teal-d); }
-.oraculo button { cursor: pointer; }
-.oraculo button.primary {
+#top select:hover, .oraculo select:hover, #top button:hover, .oraculo button:hover { border-color: var(--o-teal-d); }
+#top button, .oraculo button { cursor: pointer; }
+#top button.primary, .oraculo button.primary {
   background: var(--o-navy-2); border-color: var(--o-navy-2); color: #fff; font-weight: 600;
 }
-.oraculo button.primary:hover { filter: brightness(1.12); }
-.oraculo button.ghost { background: transparent; }
-.oraculo .field { display: flex; align-items: center; gap: 7px; }
-.oraculo .field label { font-size: 10.5px; color: var(--o-muted); text-transform: uppercase; letter-spacing: .06em; }
+#top button.primary:hover, .oraculo button.primary:hover { filter: brightness(1.12); }
+#top button.ghost, .oraculo button.ghost { background: transparent; }
+.field { display: flex; align-items: center; gap: 7px; }
+.field label { font-size: 10.5px; color: var(--o-muted); text-transform: uppercase; letter-spacing: .06em; }
+#content { padding: 20px 22px 44px; min-width: 0; }
+.view-head { margin-bottom: 16px; }
+.view-head h2 {
+  margin: 0 0 4px; font-size: 19px; font-weight: 650; letter-spacing: -.015em;
+}
+.view-head p { margin: 0; color: var(--o-muted); font-size: 12.5px; max-width: 92ch; }
 .oraculo .grid { display: grid; gap: 14px; }
 .oraculo .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .oraculo .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -86,6 +159,8 @@
   .oraculo .g3, .oraculo .g-2-1, .oraculo .g-1-2 { grid-template-columns: 1fr;}
 }
 @media (max-width: 1040px) {
+  #shell { grid-template-columns: 1fr;}
+  #sidebar { position: static; height: auto;}
   .oraculo .g2 { grid-template-columns: 1fr;}
 }
 .oraculo .card {
@@ -390,4 +465,65 @@ body.help-locked { overflow: hidden; }
   .oraculo .help-overlay { padding: 0;}
   .oraculo .help-panel { width: 100%; height: 100%; border-radius: 0; border: 0;}
   .oraculo .help-actions { width: 100%;}
+}
+
+/* ---------------------------------------------------------------- integração React */
+/* Raiz das telas do protótipo: o Tailwind zera margens e estilos de título/lista. */
+.oraculo { min-width: 0; }
+.oraculo details > summary { display: list-item; }
+.oraculo ul.actions { list-style: disc; }
+.oraculo h4 { font-weight: 650; }
+#sidebar nav a svg.ico { stroke-width: 1.7; }
+#top .dash-extra { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
+/* filtros de severidade das telas do contrato no formato .chip do protótipo */
+#top .dash-extra button {
+  font-size: 10.5px; padding: 3px 9px; border-radius: 999px; line-height: 1.3;
+  background: var(--o-panel-2); border-color: var(--o-line-2); white-space: nowrap;
+}
+#top .dash-extra [role="group"] { background: transparent; border: 0; gap: 6px; padding: 0; }
+#top > div:first-child { min-width: 0; flex: 0 1 auto; }
+
+/*
+ * Telas do dashboard do contrato (Tailwind): as tokens delas passam a apontar para a paleta do
+ * protótipo, então seguem o mesmo visual e trocam de tema junto. Sem @layer: vence o @theme.
+ */
+:root {
+  --color-fundo: var(--o-bg);
+  --color-surface: var(--o-panel);
+  --color-surface-raised: var(--o-panel-2);
+  --color-line: var(--o-line);
+  --color-ink: var(--o-ink);
+  --color-ink-muted: var(--o-muted);
+  --color-ink-faint: var(--o-faint);
+  --color-accent: var(--o-teal);
+  --font-sans: var(--o-sans);
+  --font-mono: var(--o-mono);
+}
+:root[data-theme="light"] body { color-scheme: light; }
+
+
+/* ---------------------------------------------------------------- mapas OpenStreetMap */
+/* Moldura no mesmo desenho dos gráficos do protótipo; tiles escurecidos no tema escuro. */
+.osm-mapa {
+  position: relative; border: 1px solid var(--o-line); border-radius: var(--o-radius-sm);
+  overflow: hidden; background: var(--o-panel-2);
+}
+.osm-mapa .leaflet-container { background: var(--o-panel-2); font-family: var(--o-sans); }
+.osm-escuro .leaflet-tile-pane { filter: invert(1) hue-rotate(185deg) brightness(.85) contrast(.92) saturate(.5); }
+.osm-mapa .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--o-panel) 82%, transparent); color: var(--o-muted); font-size: 10px;
+}
+.osm-mapa .leaflet-control-attribution a { color: var(--o-teal); }
+.osm-mapa .leaflet-bar a { background: var(--o-panel); color: var(--o-ink); border-bottom-color: var(--o-line); }
+.osm-mapa .leaflet-bar a:hover { background: var(--o-panel-2); }
+.osm-mapa .leaflet-bar { border: 1px solid var(--o-line-2); box-shadow: none; }
+.osm-mapa .leaflet-tooltip, .osm-mapa .leaflet-popup-content-wrapper, .osm-mapa .leaflet-popup-tip {
+  background: var(--o-bg-2); color: var(--o-ink); border: 1px solid var(--o-line-2);
+  box-shadow: var(--o-shadow); font-size: 11.5px;
+}
+.osm-mapa .leaflet-tooltip-top::before { border-top-color: var(--o-line-2); }
+.osm-aviso {
+  position: absolute; left: 8px; top: 8px; z-index: 500; max-width: 70%;
+  background: var(--o-panel); border: 1px solid var(--o-line-2); border-left: 3px solid var(--o-amber);
+  border-radius: var(--o-radius-sm); padding: 6px 9px; font-size: 11px; color: var(--o-ink-2);
 }

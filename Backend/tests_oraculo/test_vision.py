@@ -293,7 +293,20 @@ def test_adaptador_yolo_declara_a_ausencia_do_runtime():
     if not info.available:
         assert info.reason, "a indisponibilidade precisa ser explicada"
         assert "PyPI" in info.reason or "runtime" in info.reason.lower()
-        assert info.runtime == "indisponível"
+        # Runtime instalado sem sessao de pesos (torch vem como dependencia do
+        # Backend do time) tambem e "indisponivel", e o motivo diz que faltam os pesos.
+        if info.runtime == "indisponível":
+            assert "PyPI" in info.reason
+        else:
+            assert "pesos" in info.reason
+
+
+def test_runtime_sem_pesos_nao_ativa_o_yolo():
+    """Com torch instalado mas sem sessao, o YOLO devolveria zero paineis: nao pode vencer."""
+    y = D.YoloSegAdapter()
+    y._runtime, y._reason = "torch", ""
+    assert y.info().available is False
+    assert D.build_detector().info().kind != "yolo" or D.build_detector().session is not None
 
 
 def test_backend_ativo_cai_para_o_classico_sem_runtime():

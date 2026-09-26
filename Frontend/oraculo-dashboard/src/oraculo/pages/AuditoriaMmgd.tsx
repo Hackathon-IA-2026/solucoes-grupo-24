@@ -10,9 +10,13 @@
  */
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Polygon, Tooltip } from 'react-leaflet'
 import { ApiError } from '../api'
+import { color } from '../charts'
+import { usePersistido } from '../estado'
+import { MapaOsm, limitesDe } from '../MapaOsm'
 import { num, pct } from '../format'
-import { Conteudo, Kpi, OCard, Pagina, StatLines, Vazio, useApi } from '../ui'
+import { Chip, Conteudo, Kpi, OCard, Pagina, StatLines, Vazio, useApi } from '../ui'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Dado = any
@@ -58,6 +62,7 @@ function Corpo({ d }: { d: Dado }) {
   const c1 = d.camada1
   const a = d.camadas23
   const [sel, setSel] = useState<string | null>(null)
+  const [vista, setVista] = usePersistido('oraculo.audMapa', 'osm')
   const porId: Record<string, Dado> = Object.fromEntries((a.deteccoes || []).map((x: Dado) => [x.id, x]))
   const total = (a.deteccoes || []).length
   const noFator = (a.deteccoes || []).filter((x: Dado) => x.entra_no_fator)
@@ -90,9 +95,21 @@ function Corpo({ d }: { d: Dado }) {
         <OCard
           title="Camada 1 · painéis detectados"
           hint={'EPSG:4326 · raio de casamento ' + num(a.parametros?.raio_casamento_m) + ' m'}
-          note="Polígono do painel (máscara do YOLO-seg ou caixa; no mock, retângulo sintético) colorido pela classificação das camadas 2/3. Clique para ver o desempate."
+          note="Polígono do painel (máscara do YOLO-seg ou caixa; no mock, retângulo sintético) colorido pela classificação das camadas 2/3. Clique para ver o desempate. Fundo: © OpenStreetMap contributors."
         >
-          <MapaPaineis features={c1.features || []} porId={porId} sel={sel} onSel={setSel} />
+          <div className="chips" style={{ marginBottom: 10 }}>
+            <Chip on={vista === 'osm'} onClick={() => setVista('osm')}>
+              OpenStreetMap
+            </Chip>
+            <Chip on={vista === 'esq'} onClick={() => setVista('esq')}>
+              Esquemático
+            </Chip>
+          </div>
+          {vista === 'osm' ? (
+            <MapaPaineisOsm features={c1.features || []} porId={porId} sel={sel} onSel={setSel} />
+          ) : (
+            <MapaPaineis features={c1.features || []} porId={porId} sel={sel} onSel={setSel} />
+          )}
           <div className="legend">
             {CLASSES.map((k) => (
               <span className="legend-item" key={k}>
@@ -235,6 +252,40 @@ function Corpo({ d }: { d: Dado }) {
         </OCard>
       </div>
     </>
+  )
+}
+
+/** Painéis sobre o OpenStreetMap: mesmos polígonos e cores do esquemático, em lon/lat reais. */
+function MapaPaineisOsm({ features, porId, sel, onSel }: { features: Dado[]; porId: Record<string, Dado>; sel: string | null; onSel: (id: string) => void }) {
+  if (!features.length) return <Vazio>Nenhum painel detectado.</Vazio>
+  const pontos = features.flatMap((f) => (f.geometry.coordinates[0] as [number, number][]).map(([lon, lat]) => ({ lat, lon })))
+  const CORES: Record<string, string> = {
+    Cadastrada: color('green'),
+    'Lag de Sistema': color('teal'),
+    'Divergência cadastral': color('amber'),
+    'Não homologada': color('crimson'),
+  }
+  return (
+    <MapaOsm limites={limitesDe(pontos, 0.35)} altura={300} maxZoom={20}>
+      {features.map((f) => {
+        const p = f.properties
+        const r = porId[p.id] || {}
+        const cor = CORES[r.classificacao] || color('muted')
+        const anel = (f.geometry.coordinates[0] as [number, number][]).map(([lon, lat]) => [lat, lon] as [number, number])
+        return (
+          <Polygon
+            key={p.id + (sel === p.id ? '-sel' : '')}
+            positions={anel}
+            pathOptions={{ color: sel === p.id ? color('ink') : cor, weight: sel === p.id ? 3 : 1.5, fillColor: cor, fillOpacity: 0.7 }}
+            eventHandlers={{ click: () => onSel(p.id) }}
+          >
+            <Tooltip direction="top">
+              {p.id} · {r.classificacao || '—'} · {num(p.area_m2, 1)} m² · {num(r.capacidade_estimada_kw, 2)} kWp
+            </Tooltip>
+          </Polygon>
+        )
+      })}
+    </MapaOsm>
   )
 }
 

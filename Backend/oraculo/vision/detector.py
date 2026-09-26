@@ -382,12 +382,23 @@ class YoloSegAdapter:
 
     # ------------------------------------------------------------- info
     def info(self) -> DetectorInfo:
-        ok = self.session is not None or self._runtime != ""
+        # Disponivel = ha sessao de inferencia com os pesos carregados. So o runtime
+        # (torch instalado como dependencia de outra parte do projeto) nao basta: sem
+        # sessao, detect_tile devolve vazio e o YOLO "ativo" zeraria a MMGD do mapa.
+        ok = self.session is not None
+        if ok:
+            reason = ""
+        elif self._runtime:
+            reason = ("Runtime %s presente, mas os pesos %s não estão carregados: "
+                      "sem sessão de inferência o adaptador não detecta nada, então "
+                      "o detector clássico segue ativo." % (self._runtime, self.p.weights))
+        else:
+            reason = self._reason
         return DetectorInfo(
             name="YOLOv8-seg (segmentação de instâncias) — %s" % self.p.weights,
             kind="yolo",
             available=ok,
-            reason="" if ok else self._reason,
+            reason=reason,
             params=self.p.to_dict(),
             runtime=self._runtime or "indisponível",
         )

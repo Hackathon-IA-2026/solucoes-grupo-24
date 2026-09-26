@@ -4,8 +4,11 @@
  * consumo predominante e nível de penetração de MMGD, com a amostra de ortoimagem e detecções.
  */
 import { useState } from 'react'
+import { Circle, CircleMarker, Polygon, Rectangle, Tooltip } from 'react-leaflet'
 import { Api, type Envelope } from '../api'
+import { color } from '../charts'
 import { usePersistido } from '../estado'
+import { ImagemGeo, MapaOsm, limitesDaCena, limitesDe, pixelParaLatLon } from '../MapaOsm'
 import { num, pct, signed } from '../format'
 import { BarRow, Chip, Conteudo, Kpi, OCard, Pagina, Proveniencia, StatLines, Vazio, useApi } from '../ui'
 
@@ -117,42 +120,47 @@ function Corpo({ body, uf, sel, setSel, setUf }: { body: Envelope; uf: string; s
       </div>
 
       <div className="grid g-1-2" style={{ marginBottom: 14 }}>
-        <OCard title="Subestações analisadas" hint="clique para abrir o detalhe">
-          <div className="table-wrap scroll-y">
-            <table>
-              <thead>
-                <tr>
-                  <th>Subestação</th>
-                  <th>Classe predominante</th>
-                  <th>MMGD</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.sub_id} className={r.sub_id === selId ? 'sel' : ''} style={{ cursor: 'pointer' }} onClick={() => setSel(r.sub_id)}>
-                    <td>
-                      <strong>{r.name}</strong>
-                      <br />
-                      <span className="small faint">
-                        {r.uf} · {r.sub_id} · {num(r.voltage_kv)}/{num(r.secondary_kv)} kV
-                      </span>
-                    </td>
-                    <td className="small">
-                      {r.class_label || '—'}
-                      <br />
-                      <span className="faint">conf. {pct(r.class_confidence, 0)}</span>
-                    </td>
-                    <td>
-                      <LevelChip lv={r.mmgd_level} />
-                      <br />
-                      <span className="small faint mono">{num(r.mmgd_kwp_per_km2)} kWp/km²</span>
-                    </td>
+        <div>
+          <OCard title="Subestações analisadas" hint="clique para abrir o detalhe">
+            <div className="table-wrap scroll-y">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Subestação</th>
+                    <th>Classe predominante</th>
+                    <th>MMGD</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {rows.map((r) => (
+                    <tr key={r.sub_id} className={r.sub_id === selId ? 'sel' : ''} style={{ cursor: 'pointer' }} onClick={() => setSel(r.sub_id)}>
+                      <td>
+                        <strong>{r.name}</strong>
+                        <br />
+                        <span className="small faint">
+                          {r.uf} · {r.sub_id} · {num(r.voltage_kv)}/{num(r.secondary_kv)} kV
+                        </span>
+                      </td>
+                      <td className="small">
+                        {r.class_label || '—'}
+                        <br />
+                        <span className="faint">conf. {pct(r.class_confidence, 0)}</span>
+                      </td>
+                      <td>
+                        <LevelChip lv={r.mmgd_level} />
+                        <br />
+                        <span className="small faint mono">{num(r.mmgd_kwp_per_km2)} kWp/km²</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </OCard>
+          <div style={{ marginTop: 14 }}>
+            <MapaSubestacoes rows={rows} selId={selId} setSel={setSel} />
           </div>
-        </OCard>
+        </div>
         <Detalhe key={selId} subId={selId} />
       </div>
 
@@ -216,6 +224,132 @@ function Corpo({ body, uf, sel, setSel, setUf }: { body: Envelope; uf: string; s
   )
 }
 
+/** Subestações da lista sobre o OSM: cor pelo nível de MMGD, círculo claro do raio de análise. */
+function MapaSubestacoes({ rows, selId, setSel }: { rows: Dado[]; selId: string; setSel: (s: string) => void }) {
+  const [raios, setRaios] = usePersistido('oraculo.mapaOsmRaios', true)
+  const pts = rows.filter((r) => Number.isFinite(r.lat) && Number.isFinite(r.lon))
+  const limites = limitesDe(pts, 0.25)
+  // a selecionada por último, para ficar por cima das demais
+  const ordem = [...pts].sort((a, b) => (a.sub_id === selId ? 1 : 0) - (b.sub_id === selId ? 1 : 0))
+  return (
+    <OCard
+      title="Subestações no mapa"
+      hint="clique para abrir o detalhe"
+      note={'Cor pelo nível de penetração de MMGD' + (raios ? '; círculo claro = raio de análise da subestação' : '') + '. © OpenStreetMap contributors.'}
+    >
+      {limites ? (
+        <MapaOsm limites={limites} altura={400} maxZoom={12}>
+          {raios &&
+            ordem.map((r) =>
+              Number.isFinite(r.radius_km) && r.radius_km > 0 ? (
+                <Circle
+                  key={'raio-' + r.sub_id}
+                  center={[r.lat, r.lon]}
+                  radius={r.radius_km * 1000}
+                  interactive={false}
+                  pathOptions={{ color: nivelCor(r.mmgd_level), weight: 1, opacity: 0.5, fillOpacity: r.sub_id === selId ? 0.14 : 0.06 }}
+                />
+              ) : null,
+            )}
+          {ordem.map((r) => {
+            const cor = nivelCor(r.mmgd_level)
+            const on = r.sub_id === selId
+            return (
+              <CircleMarker
+                key={r.sub_id}
+                center={[r.lat, r.lon]}
+                radius={on ? 10 : 7}
+                pathOptions={{ color: on ? color('ink') : cor, weight: on ? 3 : 1.5, fillColor: cor, fillOpacity: 0.85 }}
+                eventHandlers={{ click: () => setSel(r.sub_id) }}
+              >
+                <Tooltip direction="top">
+                  <strong>{r.name}</strong> ({r.uf}) · {r.sub_id}
+                  <br />
+                  classe: {r.class_label || r.class_dominant || '—'}
+                  <br />
+                  MMGD: {r.mmgd_level || '—'} · {num(r.mmgd_kwp_per_km2)} kWp/km²
+                </Tooltip>
+              </CircleMarker>
+            )
+          })}
+        </MapaOsm>
+      ) : (
+        <Vazio>Sem coordenadas nas subestações listadas.</Vazio>
+      )}
+      <div className="chips" style={{ marginTop: 8 }}>
+        {Object.keys(LEVEL_COLORS).map((lv) => (
+          <LevelChip key={lv} lv={lv} />
+        ))}
+        <Chip on={raios} onClick={() => setRaios(!raios)}>
+          raio de análise
+        </Chip>
+      </div>
+    </OCard>
+  )
+}
+
+function nivelCor(lv: string | null | undefined): string {
+  return color((lv && LEVEL_COLORS[lv]) || 'muted')
+}
+
+/** Detecções como polígonos georreferenciados (cantos da caixa, em pixels da cena). */
+function DeteccoesGeo({ geo, dets }: { geo: Dado; dets: Dado[] }) {
+  const cor = color('teal')
+  return (
+    <>
+      {dets.map((x, i) => {
+        const b = x.box
+        if (!Array.isArray(b) || b.length < 4) return null
+        const [x0, y0, x1, y1] = b as number[]
+        const anel = [pixelParaLatLon(geo, x0, y0), pixelParaLatLon(geo, x1, y0), pixelParaLatLon(geo, x1, y1), pixelParaLatLon(geo, x0, y1)]
+        const sc = Math.max(0, Math.min(1, Number(x.score) || 0))
+        return (
+          <Polygon key={i} positions={anel} pathOptions={{ color: cor, weight: 2, opacity: 0.6 + 0.4 * sc, fillColor: cor, fillOpacity: 0.1 + 0.45 * sc }}>
+            <Tooltip direction="top">
+              #{i + 1} · {num(x.area_m2, 1)} m² · {num(x.kwp, 2)} kWp · score {num(x.score, 3)}
+            </Tooltip>
+          </Polygon>
+        )
+      })}
+    </>
+  )
+}
+
+function geoValida(g: Dado): boolean {
+  return (
+    !!g &&
+    Number.isFinite(g.center_lat) &&
+    Number.isFinite(g.center_lon) &&
+    Array.isArray(g.extent_m) &&
+    g.extent_m.length === 2 &&
+    g.width_px > 0 &&
+    g.height_px > 0
+  )
+}
+
+/** Cena georreferenciada sobre o OSM: imagem com opacidade, contorno da cena e detecções. */
+function CenaOsm({ url, geo, dets, opacidade }: { url: string; geo: Dado; dets: Dado[]; opacidade: number }) {
+  const lim = limitesDaCena(geo)
+  return (
+    <MapaOsm limites={lim} altura={400} maxZoom={19}>
+      <ImagemGeo key={url} url={url} limites={lim} opacidade={opacidade} />
+      <Rectangle bounds={lim} interactive={false} pathOptions={{ color: color('amber'), weight: 1.5, dashArray: '5 4', fill: false }} />
+      <DeteccoesGeo geo={geo} dets={dets} />
+    </MapaOsm>
+  )
+}
+
+/** Chip com o controle deslizante da opacidade da imagem sobre o OSM. */
+function ChipOpacidade({ v, setV }: { v: number; setV: (v: number) => void }) {
+  return (
+    <label className="chip" style={{ gap: 6 }}>
+      opacidade
+      <input type="range" min={0} max={1} step={0.05} value={v} style={{ width: 90 }} onChange={(e) => setV(parseFloat(e.target.value))} />
+      <span>{pct(v, 0)}</span>
+    </label>
+  )
+}
+
 const IMG_MODOS: [string, string][] = [
   ['', 'detecções'],
   ['?truth=1&tiles=1', 'verdade + ladrilhos'],
@@ -244,24 +378,38 @@ function DetalheCorpo({ d }: { d: Dado }) {
   const mt = ev.match || {}
   const vis = d.vision || {}
   const dets: Dado[] = (vis.detections || []).slice(0, 24)
+  const [osm, setOsm] = usePersistido('oraculo.mapaOsm', true)
+  const [opac, setOpac] = usePersistido('oraculo.mapaOsmOpacidade', 0.85)
+  const geo = geoValida(vis.geo) ? vis.geo : null
+  const verOsm = osm && !!geo
+  const nota = [
+    (d.notes || []).join(' '),
+    verOsm ? 'Cena sintética georreferenciada (GSD ' + num(geo.gsd_m, 2) + ' m) sobre o OpenStreetMap; © OpenStreetMap contributors.' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <>
       <OCard
         title={'Detalhe · ' + (s.name || '') + ' (' + (s.uf || '') + ')'}
         hint={num(s.frontier_mva) + ' MVA de fronteira · raio ' + num(s.radius_km, 2) + ' km · morfologia ' + (d.urban_hint ?? '')}
-        note={(d.notes || []).join(' ') || undefined}
+        note={nota || undefined}
       >
         <div className="grid g2" style={{ gap: 12 }}>
           <div>
             <div className="okpi-label" style={{ marginBottom: 6 }}>
               Amostra de ortoimagem com as detecções
             </div>
-            <img
-              src={d.image_url + img}
-              style={{ width: '100%', borderRadius: 6, border: '1px solid var(--o-line)' }}
-              alt="amostra de ortoimagem com painéis detectados"
-            />
+            {verOsm ? (
+              <CenaOsm url={d.image_url + img} geo={geo} dets={vis.detections || []} opacidade={opac} />
+            ) : (
+              <img
+                src={d.image_url + img}
+                style={{ width: '100%', borderRadius: 6, border: '1px solid var(--o-line)' }}
+                alt="amostra de ortoimagem com painéis detectados"
+              />
+            )}
             <div className="chips" style={{ marginTop: 8 }}>
               {IMG_MODOS.map(([q, rot]) => (
                 <Chip key={q} on={img === q} onClick={() => setImg(q)}>
@@ -269,6 +417,16 @@ function DetalheCorpo({ d }: { d: Dado }) {
                 </Chip>
               ))}
             </div>
+            <div className="chips" style={{ marginTop: 6 }}>
+              <Chip on={osm} onClick={() => setOsm(true)}>
+                Sobre o OpenStreetMap
+              </Chip>
+              <Chip on={!osm} onClick={() => setOsm(false)}>
+                Imagem
+              </Chip>
+              {verOsm && <ChipOpacidade v={opac} setV={setOpac} />}
+            </div>
+            {osm && !geo && <div className="small faint">Esta cena não traz georreferência (vision.geo): exibindo só a imagem.</div>}
           </div>
           <div>
             <div className="okpi-label">1 · Perfil predominante de consumo</div>

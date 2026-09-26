@@ -22,7 +22,7 @@ import {
 /*
  * Cada página é carregada sob demanda (React.lazy): o bundle inicial leva só o layout, e
  * bibliotecas pesadas de uma tela (Recharts, mapa...) só descem quando ela é aberta.
- * <ModuleFrame> envolve a página em <Suspense>.
+ * A casca (oraculo/Casca.tsx) envolve a página em <Suspense>.
  */
 /** Caminho do Detalhe do Alerta: usado no registro E em rotaDetalheAlerta() — uma fonte só. */
 const DETALHE_ALERTA_PATH = '/detalhe-alerta'
@@ -42,6 +42,10 @@ export interface ModuleDef {
   grupo?: string
   /** id do painel na documentação Sphinx do protótipo (ajuda F1, /api/docs/status) */
   ajuda?: string
+  /** título da tela na topbar, quando difere do rótulo do menu (títulos do protótipo) */
+  titulo?: string
+  /** ícone do protótipo (chave de ICONES em oraculo/Casca.tsx); sem ele, usa `icon` */
+  icone?: string
 }
 
 /** Módulos do dashboard do contrato (types.ts ↔ Backend/src/api), no grupo próprio do menu. */

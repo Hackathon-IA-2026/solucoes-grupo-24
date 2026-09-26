@@ -233,6 +233,9 @@ class MapaMixin:
             "pr_curve": ref_eval["pr_curve"],
             "reference": {
                 "urban_class": "misto", "seed": 11,
+                # georreferencia da cena (centro, GSD, extensao): o mapa OSM da tela de
+                # visao sobrepoe a imagem no lugar certo sem estimar pelas deteccoes
+                "geo": ref_scene.geo.to_dict(),
                 "truth": ref_eval["count"]["truth"],
                 "pred": ref_eval["count"]["pred"],
                 "detections": ref_scan.to_dict(max_detections=120)["detections"],

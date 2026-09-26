@@ -5,12 +5,15 @@
  * ./Correlacao.tsx (mesma base agregada, mesma espera de construção).
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState, type ReactNode } from 'react'
+import L from 'leaflet'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { CircleMarker, Pane, Polyline, Tooltip } from 'react-leaflet'
 import { Link, useNavigate } from 'react-router-dom'
 import { Api, ApiError, type Envelope } from '../api'
 import { color, stackedBars } from '../charts'
 import { usePersistido, useOraculo } from '../estado'
 import { num, pct, when } from '../format'
+import { MapaOsm, limitesDe } from '../MapaOsm'
 import { BarRow, Carregando, Chip, Conteudo, ErroBloco, Grafico, Kpi, OCard, Pagina, Proveniencia, StatLines, Vazio, useApi } from '../ui'
 
 type Dado = any
@@ -155,11 +158,134 @@ function LegendDot({ c, label }: { c: string; label: string }) {
 // ------------------------------------------------------------ mapa
 /* Projeção equiretangular com correção de cos(lat): suficiente na escala de um estado ou do
    país, e sem dependência de biblioteca. */
-function Mapa({ map, sel, onPick }: { map: Dado; sel: string | null; onPick: (id: string) => void }) {
+type ModoMapa = 'osm' | 'svg'
+
+/** Texto do <title> (esquemático) e do tooltip (OSM): o mesmo nos dois fundos. */
+function tituloSed(d: Dado, byIdx: Record<number, Dado>): string {
+  return 'SED · ' + num(d.e, 1) + ' GWh/ano · p=' + num(d.p, 2) + (d.f >= 0 && byIdx[d.f] ? ' → ' + byIdx[d.f].name : ' · sem SE no raio')
+}
+
+function tituloFronteira(f: Dado): string {
+  return f.name + ' · ' + num(f.mva) + ' MVA · ' + num(f.n) + ' SEDs · ' + num(f.e, 0) + ' GWh/ano'
+}
+
+function Mapa({ map, sel, onPick, modo, setModo }: { map: Dado; sel: string | null; onPick: (id: string) => void; modo: ModoMapa; setModo: (m: ModoMapa) => void }) {
   const fr: Dado[] = map?.frontier || []
   const seds: Dado[] = map?.seds || []
+  if (!fr.length && !seds.length) return <Vazio>Sem pontos.</Vazio>
+  return (
+    <div>
+      <div className="chips small" style={{ marginBottom: 8 }}>
+        <Chip on={modo === 'osm'} onClick={() => setModo('osm')}>
+          OpenStreetMap
+        </Chip>
+        <Chip on={modo === 'svg'} onClick={() => setModo('svg')}>
+          Esquemático
+        </Chip>
+      </div>
+      {modo === 'osm' ? <MapaOsmFronteira fr={fr} seds={seds} sel={sel} onPick={onPick} /> : <MapaSvg fr={fr} seds={seds} sel={sel} onPick={onPick} />}
+      <div className="chips small" style={{ marginTop: 8, gap: 10 }}>
+        <LegendDot c="navy" label="SE de fronteira (tamanho ∝ √MVA)" />
+        <LegendDot c="green" label="SED, p ≥ 0,7" />
+        <LegendDot c="teal" label="0,5–0,7" />
+        <LegendDot c="amber" label="0,3–0,5" />
+        <LegendDot c="crimson" label="< 0,3 ambígua" />
+        <LegendDot c="muted" label="sem SE no raio" />
+      </div>
+    </div>
+  )
+}
+
+/* Mesma semântica do esquemático, sobre o OSM: a ordem de desenho do SVG (vínculos, SEDs,
+   SEs de fronteira) vira ordem de panes; as SEDs (milhares) vão num renderer canvas. */
+function MapaOsmFronteira({ fr, seds, sel, onPick }: { fr: Dado[]; seds: Dado[]; sel: string | null; onPick: (id: string) => void }) {
+  const byIdx: Record<number, Dado> = {}
+  fr.forEach((f) => {
+    byIdx[f.i] = f
+  })
+  const s = fr.find((f) => f.id === sel)
+  const maxMva = Math.max(...fr.map((f) => f.mva || 1), 1)
+  return (
+    <MapaOsm limites={limitesDe(fr.concat(seds))} altura={420} maxZoom={12}>
+      <Pane name="fr-vinculos" style={{ zIndex: 405 }}>
+        {s
+          ? seds.map((d, i) =>
+              d.f !== s.i ? null : (
+                <Polyline
+                  key={'l' + s.i + '-' + i}
+                  positions={[
+                    [d.lat, d.lon],
+                    [s.lat, s.lon],
+                  ]}
+                  interactive={false}
+                  pathOptions={{ color: color(probColor(d.p)), weight: 0.8, opacity: 0.7 }}
+                />
+              ),
+            )
+          : null}
+      </Pane>
+      <Pane name="fr-seds" style={{ zIndex: 410 }}>
+        <CamadaSeds seds={seds} s={s} byIdx={byIdx} />
+      </Pane>
+      <Pane name="fr-se" style={{ zIndex: 420 }}>
+        {fr.map((f) => {
+          const r = 3 + 7 * Math.sqrt((f.mva || 0) / maxMva)
+          const on = !!s && f.i === s.i
+          return (
+            <CircleMarker
+              key={'f' + f.id}
+              center={[f.lat, f.lon]}
+              radius={r}
+              pathOptions={{
+                fillColor: color(f.n ? 'navy' : 'muted'),
+                fillOpacity: on ? 0.95 : 0.55,
+                color: color(on ? 'teal' : 'navy'),
+                weight: on ? 2.4 : 1,
+                opacity: 1,
+              }}
+              eventHandlers={{ click: () => onPick(f.id) }}
+            >
+              <Tooltip direction="top">{tituloFronteira(f)}</Tooltip>
+            </CircleMarker>
+          )
+        })}
+      </Pane>
+    </MapaOsm>
+  )
+}
+
+function CamadaSeds({ seds, s, byIdx }: { seds: Dado[]; s: Dado | undefined; byIdx: Record<number, Dado> }) {
+  // monta dentro do pane "fr-seds", que já existe quando o renderer é criado
+  const renderer = useMemo(() => L.canvas({ pane: 'fr-seds', tolerance: 3 }), [])
+  return (
+    <>
+      {seds.map((d, i) => {
+        const on = !!s && d.f === s.i
+        return <SedOsm key={'d' + i} d={d} on={on} dim={!!s && !on} texto={tituloSed(d, byIdx)} renderer={renderer} />
+      })}
+    </>
+  )
+}
+
+/** SED no OSM; tooltip ligado direto na camada (sem um portal React por ponto). */
+function SedOsm({ d, on, dim, texto, renderer }: { d: Dado; on: boolean; dim: boolean; texto: string; renderer: L.Renderer }) {
+  const ref = useRef<L.CircleMarker | null>(null)
+  useEffect(() => {
+    ref.current?.bindTooltip(texto, { direction: 'top' })
+  }, [texto])
+  return (
+    <CircleMarker
+      ref={ref}
+      center={[d.lat, d.lon]}
+      radius={on ? 2.6 : 1.5}
+      renderer={renderer}
+      pathOptions={{ stroke: false, fillColor: color(d.f < 0 ? 'muted' : probColor(d.p)), fillOpacity: dim ? 0.35 : 0.8 }}
+    />
+  )
+}
+
+function MapaSvg({ fr, seds, sel, onPick }: { fr: Dado[]; seds: Dado[]; sel: string | null; onPick: (id: string) => void }) {
   const pts = fr.map((f) => [f.lat, f.lon]).concat(seds.map((s) => [s.lat, s.lon]))
-  if (!pts.length) return <Vazio>Sem pontos.</Vazio>
   const lats = pts.map((p) => p[0])
   const lons = pts.map((p) => p[1])
   let la0 = Math.min(...lats)
@@ -185,7 +311,6 @@ function Mapa({ map, sel, onPick }: { map: Dado; sel: string | null; onPick: (id
   const maxMva = Math.max(...fr.map((f) => f.mva || 1), 1)
 
   return (
-    <div>
       <svg viewBox={'0 0 ' + W + ' ' + H.toFixed(0)} width="100%" role="img" aria-label="Mapa de SEs de fronteira e subestações de distribuição" style={{ display: 'block' }}>
         {s
           ? seds.map((d, i) =>
@@ -198,7 +323,7 @@ function Mapa({ map, sel, onPick }: { map: Dado; sel: string | null; onPick: (id
           const on = !!s && d.f === s.i
           return (
             <circle key={'d' + i} cx={sx(d.lon).toFixed(1)} cy={sy(d.lat).toFixed(1)} r={on ? 2.6 : 1.5} fill={color(d.f < 0 ? 'muted' : probColor(d.p))} opacity={s && !on ? 0.35 : 0.8}>
-              <title>{'SED · ' + num(d.e, 1) + ' GWh/ano · p=' + num(d.p, 2) + (d.f >= 0 && byIdx[d.f] ? ' → ' + byIdx[d.f].name : ' · sem SE no raio')}</title>
+              <title>{tituloSed(d, byIdx)}</title>
             </circle>
           )
         })}
@@ -218,20 +343,11 @@ function Mapa({ map, sel, onPick }: { map: Dado; sel: string | null; onPick: (id
               style={{ cursor: 'pointer' }}
               onClick={() => onPick(f.id)}
             >
-              <title>{f.name + ' · ' + num(f.mva) + ' MVA · ' + num(f.n) + ' SEDs · ' + num(f.e, 0) + ' GWh/ano'}</title>
+              <title>{tituloFronteira(f)}</title>
             </circle>
           )
         })}
       </svg>
-      <div className="chips small" style={{ marginTop: 8, gap: 10 }}>
-        <LegendDot c="navy" label="SE de fronteira (tamanho ∝ √MVA)" />
-        <LegendDot c="green" label="SED, p ≥ 0,7" />
-        <LegendDot c="teal" label="0,5–0,7" />
-        <LegendDot c="amber" label="0,3–0,5" />
-        <LegendDot c="crimson" label="< 0,3 ambígua" />
-        <LegendDot c="muted" label="sem SE no raio" />
-      </div>
-    </div>
   )
 }
 
@@ -271,6 +387,7 @@ function Corpo({
   setOrder: (v: string) => void
 }) {
   const [sel, setSel] = usePersistido<string | null>('oraculo.frSel', null)
+  const [modoMapa, setModoMapa] = usePersistido<ModoMapa>('oraculo.frMapa', 'osm')
   const d = body.data
   const k = d.kpis || {}
   const rows: Dado[] = d.rows || []
@@ -331,8 +448,12 @@ function Corpo({
       </div>
 
       <div className="grid g2" style={{ marginBottom: 14 }}>
-        <OCard title="Mapa" hint="clique numa SE de fronteira" note="Posição da SED = mediana das UCs de média e alta tensão que ela atende, não a coordenada do barramento.">
-          <Mapa map={d.map} sel={selEf} onPick={setSel} />
+        <OCard
+          title="Mapa"
+          hint="clique numa SE de fronteira"
+          note={'Posição da SED = mediana das UCs de média e alta tensão que ela atende, não a coordenada do barramento.' + (modoMapa === 'osm' ? ' Fundo: © OpenStreetMap contributors.' : '')}
+        >
+          <Mapa map={d.map} sel={selEf} onPick={setSel} modo={modoMapa} setModo={setModoMapa} />
         </OCard>
         <OCard title="SEs de fronteira" hint={num(rows.length) + ' no filtro'}>
           <div className="table-wrap scroll-y" style={{ maxHeight: 520 }}>

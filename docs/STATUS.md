@@ -556,3 +556,28 @@ estão intactos.
   (`%20`). `test_servico_web_nao_carrega_a_parte_pesada` passou a permitir numpy (o protótipo calcula
   no serviço); pandas/DuckDB/modelos continuam proibidos.
 - Ambiente: `Backend/.venv` com Python 3.12 (o 3.14 da máquina está fora de `requires-python`).
+
+## 2026-09-26 — Branch `feat/design-prototipo-original`: visual do protótipo + OpenStreetMap ✅
+
+- **Visual do protótipo de volta, fiel ao original** (`02-PROTOTIPO/web`): casca `src/oraculo/Casca.tsx`
+  com a mesma marcação (`#shell`, `#sidebar`, `.brand`, `nav`, `#top`, `#content`), ícones, grupos e
+  rótulos do menu original; `src/oraculo/oraculo.css` derivado regra a regra do CSS original (paleta,
+  raios, sombras, fontes do sistema). Comparado por captura de tela com `/legado` (Despacho, Risco,
+  Curva do pato, Fronteira): idêntico.
+- **Tema claro e escuro** como no original: botão ☾/☀ na topbar, `data-theme` no `<html>`, escolha em
+  `localStorage` (`oraculo.theme`, a mesma chave da interface original), aplicado antes do primeiro paint.
+- **Dashboard do contrato dentro da casca**: grupo próprio no menu; as tokens do Tailwind apontam
+  para a paleta do protótipo, então seguem o visual e o tema; filtros de severidade e origem da
+  publicação aparecem na topbar só nessas telas. Saíram `AppLayout`, `Sidebar`, `Topbar`,
+  `ModuleFrame`, `Clock` e `oraculo/Barra.tsx`.
+- **OpenStreetMap** (`src/oraculo/MapaOsm.tsx`, único arquivo com tile remoto; o teste
+  `semServicoExterno` trava a regra): cena georreferenciada da subestação sobreposta ao OSM com as
+  detecções em polígonos e opacidade ajustável (Perfis por subestação, Visão computacional),
+  subestações no mapa, SE × SED (Fronteira), sítios de BESS e painéis da auditoria MMGD. O mapa
+  esquemático original continua em cada tela (chip "Esquemático"). No tema escuro os tiles são
+  escurecidos; sem rede, as camadas vetoriais seguem e um aviso aparece.
+- **Correção no backend**: com o `torch` instalado (dependência do time), o adaptador YOLO do
+  protótipo se declarava disponível sem pesos carregados e zerava a MMGD do mapa. Agora só fica ativo
+  com sessão de inferência; o detector clássico volta a ser usado. `/api/mapa/vision` devolve
+  `reference.geo`.
+- Testes: protótipo 522 passaram (1 pulado); frontend 45 passaram; `tsc -b`, `oxlint` e build limpos.
