@@ -15,8 +15,9 @@ Passos (`construir_areas`):
 1. Área inicial: fecho convexo dos transformadores MT/BT de cada subestação; sem transformadores
    suficientes, um círculo mínimo em volta da subestação (a "semente" que depois reclama
    território no Voronoi; ex.: subestações de transporte).
-2. Sobreposições: as áreas de influência mais internas (a subestação cai dentro de mais áreas alheias)
-   recortam primeiro, depois as de maior potência; cada área de influência fica só com o que sobrou.
+2. Sobreposições: onde os fechos de várias subestações se sobrepõem, cada ponto fica com a
+   subestação MAIS PRÓXIMA entre as que o cobrem (mudança em relação ao RDX, ver
+   `resolver_sobreposicoes`).
 3. Vazios no estado: vazio com uma vizinha é absorvido por ela; com várias, é dividido por
    Voronoi entre as subestações vizinhas.
 4. Recorte pelo limite do estado e simplificação (1 m).
@@ -65,31 +66,63 @@ def areas_iniciais(subs: gpd.GeoDataFrame, trafos: gpd.GeoDataFrame, cfg: dict) 
 
 # --------------------------------------------------------------------------- 2. sobreposições
 def resolver_sobreposicoes(areas: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-    """Cada ponto do mapa fica com uma área de influência só.
+    """Cada ponto do mapa fica com uma área de influência só: a da subestação mais próxima entre
+    as que o cobrem.
 
-    Ordem de prioridade: sementes primeiro (mudança em relação ao RDX, ver abaixo); depois a do
-    RDX: profundidade de contenção (quantas áreas ALHEIAS contêm a subestação; as mais internas
-    primeiro, para não serem engolidas pela maior) e, no empate, maior potência nominal. Cada
-    área de influência fica com a sua área menos o que já foi tomado.
+    Para cada par de fechos que se sobrepõem, a parte da sobreposição mais perto da outra
+    subestação (lado dela da mediatriz entre as duas) sai desta área. O resultado:
+    - sem sobreposição (um ponto só fica do lado da mais próxima);
+    - nada que era coberto fica descoberto (o ponto fica com a mais próxima de quem o cobria);
+    - toda subestação fica com o próprio entorno, se o fecho dela o cobria.
+    Por que mudou: o RDX fazia "quem vem antes na fila (profundidade de contenção, depois
+    potência) leva a sobreposição inteira". Com fechos que se cobrem mutuamente (Barra e Barra 2,
+    Mackenzie e Camerino, Parada Angélica e Nova Parada Angélica, Saturnino Braga e Goitacazes),
+    a primeira da fila levava inclusive o ponto da outra subestação, que ficava fora da própria
+    área de influência. A regra da mais próxima também dispensa a fila: as internas e as sementes
+    ficam com o entorno delas porque ele está mais perto delas.
+    `profundidade` (quantos fechos alheios contêm a subestação) continua calculada, só como
+    informação.
     """
     areas = areas.reset_index(drop=True)
-    # Pares (subestação i, área j) com o ponto da subestação i dentro da área j (posições).
-    i_ponto, i_area = areas.sindex.query(np.asarray(areas["ponto_sub"]), predicate="within")
-    alheias = i_ponto[i_area != i_ponto]
-    areas["profundidade"] = np.bincount(alheias, minlength=len(areas))
-    # Sementes antes de tudo: são círculos de 10 m em volta da própria subestação e, sem esta
-    # regra, um fecho de mesma profundidade e maior potência as engolia (a área de influência sumia e a
-    # subestação ficava fora da própria área de influência). Com ela, toda semente sobrevive.
-    areas["_semente"] = areas["origem"] == "semente"
-    areas = areas.sort_values(["_semente", "profundidade", "potencia_nominal_mva"],
-                              ascending=[False, False, False]).drop(columns="_semente")
-    tomado = None
+    pontos = np.asarray(areas["ponto_sub"])
+    i_ponto, i_area = areas.sindex.query(pontos, predicate="within")
+    areas["profundidade"] = np.bincount(i_ponto[i_area != i_ponto], minlength=len(areas))
+
+    geoms = list(areas.geometry)
+    i_esq, i_dir = areas.sindex.query(areas.geometry.values, predicate="intersects")
     novas = []
-    for geom in areas.geometry:
-        novas.append(geom if tomado is None else geom.difference(tomado))
-        tomado = geom if tomado is None else tomado.union(geom)
+    for i, geom in enumerate(geoms):
+        pi = pontos[i]
+        for j in i_dir[(i_esq == i) & (i_dir != i)]:
+            pj = pontos[j]
+            if pi.equals(pj):
+                # subestações no mesmo ponto: não há mediatriz; a sobreposição fica com a que vem
+                # antes na camada (senão as duas ficariam com ela e haveria sobreposição)
+                if j < i:
+                    geom = geom.difference(geoms[j])
+                continue
+            sobre = geom.intersection(geoms[j])
+            if sobre.is_empty or sobre.area == 0:
+                continue
+            # Semiplano só do tamanho do par: um semiplano de 1.000 km (1ª versão) cortava com
+            # vértices de coordenada enorme e deixava a geometria à beira da instabilidade numérica.
+            x0, y0, x1, y1 = geom.union(geoms[j]).bounds
+            alcance = 2 * max(x1 - x0, y1 - y0, 1.0)
+            geom = geom.difference(sobre.intersection(_semiplano_de(pj, pi, alcance)))
+        novas.append(shapely.make_valid(geom))
     areas["geometry"] = novas
-    return areas.sort_index()
+    return areas
+
+
+def _semiplano_de(pj, pi, alcance: float) -> shapely.Polygon:
+    """Semiplano dos pontos mais perto de `pj` que de `pi` (lado de pj da mediatriz)."""
+    mx, my = (pi.x + pj.x) / 2, (pi.y + pj.y) / 2
+    dx, dy = pj.x - pi.x, pj.y - pi.y
+    n = (dx * dx + dy * dy) ** 0.5
+    dx, dy = dx / n * alcance, dy / n * alcance      # direção de pi para pj
+    px, py = -dy, dx                                  # perpendicular (ao longo da mediatriz)
+    return shapely.Polygon([(mx + px, my + py), (mx + px + dx, my + py + dy),
+                            (mx - px + dx, my - py + dy), (mx - px, my - py)])
 
 
 # --------------------------------------------------------------------------- 3. vazios
@@ -126,9 +159,22 @@ def preencher_vazios(areas: gpd.GeoDataFrame, limite: shapely.Geometry, cfg: dic
             if not parte.is_empty:
                 pecas[i].append(parte)
     areas = areas.copy()
-    # buffer(+e).buffer(-e) (do RDX) fecha as frestas entre as peças; make_valid garante polígono válido
-    areas["geometry"] = [shapely.make_valid(unary_union(pecas[i]).buffer(0.1).buffer(-0.1)) for i in areas.index]
+    areas["geometry"] = [limpar(unary_union(pecas[i])) for i in areas.index]
     return areas
+
+
+def limpar(geom: shapely.Geometry, folga_m: float = 0.1, tolerancia: float = 1e-3) -> shapely.Geometry:
+    """Fecha as frestas entre peças (buffer +e/−e, como no RDX) sem nunca encolher a área.
+
+    O buffer negativo do GEOS falha com vértices quase colineares: ele zerou áreas de 482 km²
+    (Areal, Enel RJ). Se a limpeza perder mais que `tolerancia` da área, vale a geometria só
+    corrigida (make_valid): uma fresta de 10 cm é melhor que uma área sumida.
+    """
+    base = shapely.make_valid(geom)
+    limpo = shapely.make_valid(base.buffer(folga_m).buffer(-folga_m))
+    if base.area > 0 and limpo.area < base.area * (1 - tolerancia):
+        return base
+    return limpo
 
 
 # --------------------------------------------------------------------------- 4. classificação
@@ -238,4 +284,27 @@ def construir_areas(limite_uf: gpd.GeoDataFrame, cfg: dict | None = None) -> gpd
     areas["lat_sub"], areas["lon_sub"] = pontos.y.round(6), pontos.x.round(6)
     areas = areas.drop(columns="ponto_sub").merge(pd.concat(classes, ignore_index=True), on="area_id")
     areas = areas.merge(subs[["area_id", "distribuidora", "cod_sub", "nome"]], on="area_id")
-    return areas.to_crs("EPSG:4326")
+    return so_validas(areas.to_crs("EPSG:4326"))
+
+
+def so_validas(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """Corrige (make_valid, só a parte poligonal) e EXIGE geometria válida em toda linha.
+
+    Simplificação e reprojeção podem gerar autointerseções (47 áreas na 1ª versão); uma geometria
+    inválida quebra operações seguintes (o set_precision da camada do mapa estourou com
+    "TopologyException"). Corrigir aqui, na saída, e conferir, torna isso impossível a jusante.
+    """
+    gdf = gdf.copy()
+    gdf["geometry"] = [g if g.is_empty else _so_poligonos(shapely.make_valid(g)) for g in gdf.geometry]
+    ruins = gdf.loc[~gdf.geometry.is_valid, "area_id"].tolist()
+    if ruins:
+        raise ValueError(f"áreas de influência com geometria inválida mesmo após make_valid: {ruins[:10]}")
+    return gdf
+
+
+def _so_poligonos(g: shapely.Geometry) -> shapely.Geometry:
+    """make_valid pode devolver coleção com linhas/pontos soltos: fica só a parte de área."""
+    if g.geom_type in ("Polygon", "MultiPolygon"):
+        return g
+    partes = [p for p in getattr(g, "geoms", []) if p.geom_type in ("Polygon", "MultiPolygon")]
+    return unary_union(partes) if partes else shapely.Polygon()

@@ -588,3 +588,15 @@ estão intactos.
 
 - Terceira classe de bug: a ingestão levava ~25 min em **toda** execução. O ONS republica os 2 últimos meses do `coff_*_detail`, e o consolidado (só `id_ons=`, um arquivo por usina com todos os anos) era reescrito inteiro (~80 M linhas) a cada mês rebaixado. `consolidar_id_ons` agora grava em `ano=<AAAA>/id_ons=<id>/` e só refaz os anos dos meses novos; os anos fechados ficam intocados. A troca de pastas é recuperável (`_recuperar_troca`): antes, o `rmtree` + `rename` podia perder o consolidado se o processo morresse no meio. O layout antigo é migrado inteiro uma vez, na próxima execução (~25 min, só dessa vez). Testes: incremental não toca o ano fechado, migração do layout antigo e troca interrompida.
 - `run_heavywork.py` completo na main, com a Fase 6: execução 7 publicada e as 8 telas do dashboard respondendo 200 (riscos e previsão seguem mock, conforme `docs/real_vs_mock.md`).
+
+## 2026-09-26 — Mapa das áreas de influência no dashboard + correções achadas na conferência ✅
+
+- Pedido do Tiago: validar a Fase 6 vendo no mapa. **Contrato v4 (aditivo)**: recurso `areas_influencia`, `GET /api/areas-influencia`, GeoJSON das 447 áreas com MMGD e excedente (`docs/schema_changelog.md`). Backend: `src/spatial/camada_mapa.py`. O pico de excedente é calculado uma vez por publicação (`montar.pico_excedentes`) e alimenta a tela Excedentes e o mapa (mesmos números).
+- Dashboard: camada "Áreas de influência (MMGD)" (`CamadaAreas.tsx`) com tooltip (nome, subestação mãe, MMGD, lag, excedente), botões "Área piloto"/"Brasil" e contorno laranja nas fronteiras com excedente e tracejado nas satélites delas. O rótulo "(sintético)" da densidade só aparece quando o dado é mock. Mock de 3 áreas reais congeladas.
+- **Bugs achados olhando o mapa e tornados impossíveis**:
+  - polígono vazio (semente de 10 m apagada pela simplificação para a web) passava no Backend e derrubava a tela: o contrato do Backend agora exige o mesmo do Zod (anel ≥ 4 pontos), e a simplificação nunca apaga uma área;
+  - 5 subestações perdiam o próprio ponto para a vizinha (regra do RDX "a primeira da fila leva a sobreposição"): a sobreposição passa a ir para a subestação mais próxima;
+  - `buffer(+e).buffer(−e)` zerava áreas de até 482 km²: a limpeza não pode mais encolher uma área;
+  - 47 geometrias inválidas na saída: `so_validas` corrige e confere.
+- Verificação: pytest 151 ok (1 pulado); dashboard 23 testes, tsc, oxlint e build limpos. O JSON real da API passa no Zod. Conferência numérica e visual no navegador em `docs/metodo_espacial.md` ("Conferência no mapa").
+- Para ver: a API em :8000 precisa ser reiniciada (`python main.py`) para ter a rota nova; depois é só abrir o Mapa Híbrido.

@@ -174,3 +174,74 @@ def test_prioridade_e_densidade():
     pts = ex.pontos_densidade(pd.DataFrame({"lat_rep": [-22.9, -22.5, -22.1], "lon_rep": [-43.2, -43.0, -42.0],
                                             "capacidade_mmgd_corrigida_kw": [100.0, 50.0, 0.0]}))
     assert [p[2] for p in pts] == [1.0, 0.5]  # área de influência sem MMGD fica fora do calor
+
+
+# --------------------------------------------------------------------------- camada do mapa
+from src.contrato.modelos import AreasInfluencia  # noqa: E402
+from src.spatial import camada_mapa  # noqa: E402
+
+
+def _geo_areas():
+    base = dict(distribuidora="LIGHT", classificacao="Distribuição plena", area_mae=None, area_km2=1.0,
+                capacidade_mmgd_corrigida_kw=2000.0, capacidade_lag_kw=500.0, fator_correcao=np.nan)
+    return gpd.GeoDataFrame(
+        [dict(base, area_id="L:1", nome="SE UM", lat_sub=-22.9, lon_sub=-43.2),
+         dict(base, area_id="L:2", nome="SE DOIS", lat_sub=-22.8, lon_sub=-43.1),
+         dict(base, area_id="L:3", nome="SE VAZIA", lat_sub=-22.7, lon_sub=-43.0)],
+        geometry=[box(-43.25, -22.95, -43.15, -22.85), box(-43.15, -22.85, -43.05, -22.75), Point(0, 0).buffer(0)],
+        crs="EPSG:4326")
+
+
+def test_camada_do_mapa_passa_no_contrato_e_so_fronteira_tem_excedente():
+    pico = pd.DataFrame({"area_id": ["L:1"], "excedente_mw": [3.14159], "horizonte": ["3h"]})
+    fs = camada_mapa.feicoes(_geo_areas(), pico, 30, CRS, 5)
+    assert [f["properties"]["areaId"] for f in fs] == ["L:1", "L:2"]  # a vazia fica fora
+    p1, p2 = (f["properties"] for f in fs)
+    assert p1["excedenteMw"] == 3.14 and p1["horizonteExcedente"] == "3h"
+    assert p2["excedenteMw"] is None and p2["horizonteExcedente"] is None  # não é fronteira
+    assert p1["capacidadeMmgdMw"] == 2.0 and p1["fatorCorrecao"] is None
+    AreasInfluencia.model_validate({"mock": False, "type": "FeatureCollection", "descricao": "x", "features": fs})
+
+
+def test_geojson_com_lat_lon_trocados_e_recusado():
+    fs = camada_mapa.feicoes(_geo_areas(), pd.DataFrame(columns=["area_id", "excedente_mw", "horizonte"]), 30, CRS, 5)
+    anel = fs[0]["geometry"]["coordinates"][0]
+    fs[0]["geometry"]["coordinates"] = [[[lat, lon] for lon, lat in anel]]
+    with pytest.raises(ValueError, match="fora do Brasil"):
+        AreasInfluencia.model_validate({"mock": False, "type": "FeatureCollection", "descricao": "x", "features": fs})
+
+
+def test_area_pequena_nao_some_na_simplificacao_e_poligono_vazio_e_recusado():
+    geo = _geo_areas()
+    geo.loc[0, "geometry"] = Point(-43.2, -22.9).buffer(0.0001)  # semente de ~10 m (SESD Serra Alta)
+    fs = camada_mapa.feicoes(geo, pd.DataFrame(columns=["area_id", "excedente_mw", "horizonte"]), 30, CRS, 5)
+    doc = {"mock": False, "type": "FeatureCollection", "descricao": "x", "features": fs}
+    AreasInfluencia.model_validate(doc)  # nenhum anel degenerado
+    assert fs[0]["properties"]["areaId"] == "L:1"
+    fs[0]["geometry"]["coordinates"] = []
+    with pytest.raises(ValueError, match="vazio"):
+        AreasInfluencia.model_validate(doc)
+
+
+def test_fechos_que_se_cobrem_mutuamente_cada_subestacao_fica_com_o_proprio_entorno():
+    # Caso Barra × Barra 2: cada subestação está dentro do fecho da outra. Na regra antiga (fila
+    # por potência) a maior levava a sobreposição inteira, inclusive o ponto da outra.
+    subs = _subs({"A": (0, 0), "B": (600, 0)}, {"A": 100, "B": 10})
+    trafos = _trafos([("A", -500, -500), ("A", 900, -500), ("A", 900, 500), ("A", -500, 500),
+                      ("B", -300, -400), ("B", 1100, -400), ("B", 1100, 400), ("B", -300, 400)])
+    ini = areas_influencia.areas_iniciais(subs, trafos, CFG)
+    r = areas_influencia.resolver_sobreposicoes(ini).set_index("area_id")
+    assert r.loc["A", "geometry"].contains(Point(0, 0)) and r.loc["B", "geometry"].contains(Point(600, 0))
+    assert r.loc["A", "geometry"].intersection(r.loc["B", "geometry"]).area < 1e-6
+    # nada que era coberto ficou descoberto
+    assert r.geometry.union_all().area == pytest.approx(ini.geometry.union_all().area, rel=1e-6)
+
+
+def test_limpeza_nunca_encolhe_a_area(monkeypatch):
+    quadrado = box(0, 0, 1000, 1000)
+    assert areas_influencia.limpar(quadrado).area == pytest.approx(1e6, rel=1e-6)
+    # Simula a falha do GEOS (buffer negativo que devolve vazio): a área original fica.
+    import shapely as shp
+    orig = shp.Polygon.buffer
+    monkeypatch.setattr(shp.Polygon, "buffer", lambda self, d, *a, **k: shp.Polygon() if d < 0 else orig(self, d, *a, **k))
+    assert areas_influencia.limpar(quadrado).area == pytest.approx(1e6, rel=1e-6)

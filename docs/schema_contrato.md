@@ -28,6 +28,7 @@ Todas as rotas são GET, com prefixo `/api` (`Backend/config/api.yaml`), e serve
 | excedentes | `/api/excedentes` | `ExcedenteTsoDso[]` | **real** (`mock: false`): subestações de fronteira do RJ, `docs/metodo_espacial.md` |
 | validacao | `/api/validacao` | `MetricasValidacao` | **real** (`mock: false`) |
 | mmgd_densidade | `/api/mmgd/densidade` | `DensidadeMmgd` (heatmap: `pontos` = `[lat, lon, intensidade 0–1]`) | **real** (`mock: false`): capacidade de MMGD por área de influência do RJ |
+| areas_influencia | `/api/areas-influencia` | `AreasInfluencia` (GeoJSON `FeatureCollection`, coordenadas `[lon, lat]`) | **real** (`mock: false`): polígonos das áreas de influência do RJ + MMGD e excedente de cada uma |
 
 Fora do contrato: `/api/saude` informa a execução servida (`execucaoId`, `geradoEm`, `instanteReferencia`).
 

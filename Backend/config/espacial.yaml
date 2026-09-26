@@ -75,3 +75,10 @@ densidade:
   # Heatmap do Mapa Híbrido: um ponto por área de influência (ponto interno do polígono), intensidade =
   # capacidade de MMGD da área de influência ÷ a maior capacidade entre as áreas de influência (0–1).
   descricao: "Capacidade instalada de MMGD por área de influência da subestação (BDGD LIGHT + Enel RJ, cruzada com o cadastro da ANEEL)"
+
+mapa:
+  # Camada de polígonos do Mapa Híbrido (recurso areas_influencia do contrato,
+  # src/spatial/camada_mapa.py). Simplificação só para a web: o arquivo em output/ tem 1 m.
+  simplificacao_m: 30
+  casas_decimais: 5        # ~1 m no RJ; JSON menor sem perda visível
+  descricao: "Áreas de influência das subestações da LIGHT e da Enel RJ (BDGD 2025): capacidade de MMGD cadastrada e excedente previsto nas próximas 24 h"

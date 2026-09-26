@@ -18,7 +18,7 @@ A BDGD é lida **de dentro do .zip** (GDAL `/vsizip/`, via pyogrio). Descompacta
 É um polígono por subestação, e juntos eles cobrem o estado sem sobreposição. O método é o do RDX:
 
 1. **Área inicial**: fecho convexo dos transformadores MT/BT (`UNTRMT`) da subestação. Quando há menos de 3, vira uma semente de 10 m em volta dela.
-2. **Sobreposições**: as sementes são resolvidas primeiro. Depois vêm as áreas de influência mais internas (a subestação cai dentro de áreas alheias) e, por fim, as de maior potência AT/MT. Cada área de influência fica com o que sobrou.
+2. **Sobreposições**: onde os fechos de várias subestações se sobrepõem, cada ponto fica com a subestação **mais próxima** entre as que o cobrem (corte pela mediatriz de cada par).
 3. **Vazios do estado**: um vazio que toca só uma área de influência é absorvido por ela. Um vazio que toca várias é dividido por Voronoi entre as subestações vizinhas.
 4. **Recorte pelo limite do IBGE e simplificação de 1 m.** Se o recorte apagar uma área de influência inteira (ilha ou faixa de praia fora da malha), o erro é do limite e não da rede, então a área de influência fica sem recorte.
 
@@ -29,7 +29,9 @@ Mudanças em relação ao RDX, cada uma com o motivo:
 | Mudança | Por quê |
 |---|---|
 | Cálculos em CRS métrico (EPSG:31983) | o RDX fazia as diferenças de polígonos em graus |
-| Sementes resolvidas antes de tudo | um fecho de mesma profundidade engolia a semente, e a subestação sumia (10 casos na BDGD 2025) |
+| Sobreposição vai para a subestação mais próxima (não mais "a primeira da fila leva tudo") | com fechos que se cobrem mutuamente (Barra × Barra 2, Mackenzie × Camerino, Parada Angélica × Nova Parada Angélica, Saturnino Braga × Goitacazes), a primeira da fila levava inclusive o ponto da outra subestação. Achado na conferência do mapa. A regra nova também protege sementes e subestações internas sem precisar da fila |
+| Limpeza de frestas que nunca encolhe a área | o `buffer(+0,1).buffer(−0,1)` do RDX zerou áreas de até 482 km² (Areal, Enel RJ) por instabilidade numérica do GEOS |
+| Geometria válida garantida na saída | simplificação e reprojeção deixavam 47 áreas inválidas, e o mapa quebrava |
 | Área de influência vazia não é descartada; o recorte que apagaria a área de influência é ignorado | o RDX descartava em silêncio (Paquetá, Posto Seis) |
 | Voronoi com `ordered=True` | correspondência célula → subestação direta, sem a busca geométrica que falhava na borda |
 | MMGD = CEG no padrão `GD.` | o RDX contava qualquer CEG e somava 2,2 GW de usinas grandes da UGAT da LIGHT como MMGD |
@@ -77,3 +79,12 @@ O excedente de uma subestação de fronteira em uma semi-hora é **max(0, geraç
 | `docs/reports/desempate_mmgd.md` e `alimentadores_fluxo_reverso.csv` | relatório do desempate e evidência medida |
 
 No contrato (schema inalterado), `excedentes` e `mmgd_densidade` passam a sair daqui com `mock: false`.
+
+## Conferência no mapa (dashboard)
+
+A camada **Áreas de influência (MMGD)** do Mapa Híbrido desenha os polígonos (`GET /api/areas-influencia`). O violeta fica mais forte onde há mais MMGD. O contorno laranja marca a subestação de fronteira com excedente previsto e o laranja tracejado marca as satélites dela, onde estão a carga e a MMGD. O botão **Área piloto** enquadra o RJ. A conferência de 2026-09-26 mediu o seguinte:
+
+- os losangos da tela Excedentes caem dentro da área da própria subestação (Sapucaia fica na borda, a 0,3 m, efeito da simplificação), e o excedente de cada área bate com o da tela;
+- 447 polígonos, 0 inválidos, 1.908,7 MW no total (igual à espacialização);
+- 6 subestações ficam fora da própria área. Cinco são casos físicos, em que a subestação fica longe dos próprios trafos (Valença Nova a 4 km, Itaguaí, Angra, Fundão, Polo Industrial Resende). Na sexta, Posto Seis, o limite do IBGE corta a subestação na praia;
+- sobram ~1,8 km² de sobreposição entre polígonos, porque a simplificação a 30 m é feita área por área. Os cálculos usam o arquivo com 1 m de tolerância, que não tem esse efeito.

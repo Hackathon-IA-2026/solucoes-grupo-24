@@ -18,6 +18,7 @@
 import { z } from 'zod'
 import {
   AlertaDetalhadoSchema,
+  AreasInfluenciaSchema,
   CargaSnapshotSchema,
   DensidadeMmgdSchema,
   ExcedenteTsoDsoSchema,
@@ -26,6 +27,7 @@ import {
   RiscoUsinaSchema,
   SaudeApiSchema,
   type AlertaDetalhado,
+  type AreasInfluencia,
   type CargaSnapshot,
   type DensidadeMmgd,
   type ExcedenteTsoDso,
@@ -54,6 +56,7 @@ const ENDPOINTS = {
   validacao: '/validacao',
   saude: '/saude',
   mmgdDensidade: '/mmgd/densidade',
+  areasInfluencia: '/areas-influencia',
 } as const
 
 /** Erro de leitura com contexto (qual recurso e por quê). */
@@ -202,10 +205,18 @@ export async function getSaude(): Promise<SaudeApi | null> {
   return validar('saude', SaudeApiSchema, await buscarApi('saude', ENDPOINTS.saude))
 }
 
-/** Pontos de densidade de MMGD para o heatmap do Mapa Híbrido (hoje sintéticos). */
+/** Pontos de densidade de MMGD para o heatmap do Mapa Híbrido (capacidade por área de influência). */
 export function getDensidadeMmgd(): Promise<DensidadeMmgd> {
   return ler('mmgdDensidade', DensidadeMmgdSchema, {
     mock: () => import('./mock/mmgd_densidade.json'),
     api: ENDPOINTS.mmgdDensidade,
+  })
+}
+
+/** Polígonos das áreas de influência das subestações da área piloto (camada do Mapa Híbrido). */
+export function getAreasInfluencia(): Promise<AreasInfluencia> {
+  return ler('areasInfluencia', AreasInfluenciaSchema, {
+    mock: () => import('./mock/areas_influencia.json'),
+    api: ENDPOINTS.areasInfluencia,
   })
 }

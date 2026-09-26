@@ -123,7 +123,7 @@ Método completo em `docs/metodo_espacial.md`.
 - [ ] 👤 Gabarito para o YOLO (`gabarito.csv` com imagens da área): o modelo em uso (`best.pt`, versão antiga do treinamento do time, checkpoint de 2023) marcou "solar-panel" em fotos sem painel
 - [x] Excedentes por subestação de fronteira (MMGD − carga, persistência sazonal), conferidos contra o fluxo reverso medido na BDGD
 - [x] Publicar `excedentes` e `mmgd_densidade` reais (`mock: false`, schema inalterado)
-- [ ] 👤 Contrato do Mapa Híbrido (áreas de influência em GeoJSON): combinar com o Luiz antes de mudar o schema
+- [x] Contrato do Mapa Híbrido: recurso `areas_influencia` (GeoJSON, contrato v4 aditivo, pedido do Tiago) + camada no dashboard — 👤 Luiz revisar
 - [ ] Melhorar o excedente: fator de geração por área de influência (irradiância) e perfil de carga intradiário por classe
 
 ## Fase 7 — Entrega ⬜

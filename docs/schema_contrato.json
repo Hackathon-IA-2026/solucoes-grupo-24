@@ -763,6 +763,214 @@
         "title": "DensidadeMmgd",
         "type": "object"
       }
+    },
+    "areas_influencia": {
+      "rota": "GET /api/areas-influencia",
+      "resposta": {
+        "$defs": {
+          "FeatureArea": {
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "const": "Feature",
+                "title": "Type",
+                "type": "string"
+              },
+              "geometry": {
+                "$ref": "#/$defs/GeometriaArea"
+              },
+              "properties": {
+                "$ref": "#/$defs/PropriedadesArea"
+              }
+            },
+            "required": [
+              "type",
+              "geometry",
+              "properties"
+            ],
+            "title": "FeatureArea",
+            "type": "object"
+          },
+          "GeometriaArea": {
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "enum": [
+                  "Polygon",
+                  "MultiPolygon"
+                ],
+                "title": "Type",
+                "type": "string"
+              },
+              "coordinates": {
+                "items": {},
+                "title": "Coordinates",
+                "type": "array"
+              }
+            },
+            "required": [
+              "type",
+              "coordinates"
+            ],
+            "title": "GeometriaArea",
+            "type": "object"
+          },
+          "PropriedadesArea": {
+            "additionalProperties": false,
+            "properties": {
+              "areaId": {
+                "minLength": 1,
+                "title": "Areaid",
+                "type": "string"
+              },
+              "nome": {
+                "minLength": 1,
+                "title": "Nome",
+                "type": "string"
+              },
+              "distribuidora": {
+                "minLength": 1,
+                "title": "Distribuidora",
+                "type": "string"
+              },
+              "classificacao": {
+                "minLength": 1,
+                "title": "Classificacao",
+                "type": "string"
+              },
+              "areaMae": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Areamae"
+              },
+              "latSub": {
+                "maximum": 6,
+                "minimum": -34,
+                "title": "Latsub",
+                "type": "number"
+              },
+              "lonSub": {
+                "maximum": -28,
+                "minimum": -74,
+                "title": "Lonsub",
+                "type": "number"
+              },
+              "areaKm2": {
+                "minimum": 0,
+                "title": "Areakm2",
+                "type": "number"
+              },
+              "capacidadeMmgdMw": {
+                "minimum": 0,
+                "title": "Capacidademmgdmw",
+                "type": "number"
+              },
+              "capacidadeLagMw": {
+                "minimum": 0,
+                "title": "Capacidadelagmw",
+                "type": "number"
+              },
+              "fatorCorrecao": {
+                "anyOf": [
+                  {
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Fatorcorrecao"
+              },
+              "excedenteMw": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Excedentemw"
+              },
+              "horizonteExcedente": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "1h",
+                      "3h",
+                      "D+1"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Horizonteexcedente"
+              }
+            },
+            "required": [
+              "areaId",
+              "nome",
+              "distribuidora",
+              "classificacao",
+              "areaMae",
+              "latSub",
+              "lonSub",
+              "areaKm2",
+              "capacidadeMmgdMw",
+              "capacidadeLagMw"
+            ],
+            "title": "PropriedadesArea",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Camada de polígonos do Mapa Híbrido: uma área de influência por subestação.",
+        "properties": {
+          "mock": {
+            "title": "Mock",
+            "type": "boolean"
+          },
+          "type": {
+            "const": "FeatureCollection",
+            "title": "Type",
+            "type": "string"
+          },
+          "descricao": {
+            "minLength": 1,
+            "title": "Descricao",
+            "type": "string"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/$defs/FeatureArea"
+            },
+            "minItems": 1,
+            "title": "Features",
+            "type": "array"
+          }
+        },
+        "required": [
+          "mock",
+          "type",
+          "descricao",
+          "features"
+        ],
+        "title": "AreasInfluencia",
+        "type": "object"
+      }
     }
   }
 }
