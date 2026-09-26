@@ -46,6 +46,8 @@ function icone(classificacao: string, grande: boolean): L.DivIcon {
       className: 'icone-se',
       iconSize: [lado, lado],
       iconAnchor: [lado / 2, lado / 2],
+      // tooltip acima do selo: sem isso o DivIcon ancora o tooltip no centro e ele cobre o ícone
+      tooltipAnchor: [0, -lado / 2],
     })
     cacheIcones.set(k, i)
   }
@@ -102,11 +104,16 @@ export function RedeBdgd({
       {props
         .filter((p) => classes.has(p.classificacao) || p.areaId === sel)
         .map((p) => (
+          // key estável: selecionar NÃO remonta o marcador (antes a chave mudava com a seleção e o
+          // Leaflet removia o elemento sob o mouse no meio do clique — o ícone sumia). O react-leaflet
+          // troca só o ícone (setIcon) e o zIndexOffset. autoPanOnFocus desligado: o clique foca o
+          // ícone (tabindex) e o Leaflet 1.9 arrastava o mapa para "mostrar" o foco.
           <Marker
-            key={p.areaId + (p.areaId === sel ? '+' : '')}
+            key={p.areaId}
             position={[p.latSub, p.lonSub]}
             icon={icone(p.classificacao, p.areaId === sel)}
             zIndexOffset={p.areaId === sel ? 1000 : 0}
+            autoPanOnFocus={false}
             eventHandlers={{ click: () => onSel(p.areaId) }}
           >
             <Tooltip direction="top">

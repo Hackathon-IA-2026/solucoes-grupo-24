@@ -559,4 +559,8 @@ body.help-locked { overflow: hidden; }
 }
 .icone-se .se-selo img { height: 62%; width: auto; }
 .icone-se .se-selo.sel { border-width: 3.5px; box-shadow: 0 0 0 3px rgba(255,255,255,.85), 0 2px 6px rgba(0,0,0,.6); }
-.icone-se:hover .se-selo { transform: scale(1.12); }
+/* hover/foco sem transform: o scale() dentro do marcador (que já é posicionado por translate3d
+   numa camada animada) fazia o navegador desenhar artefatos no hover. Destaque só por sombra;
+   sem o contorno de foco padrão do navegador ao clicar (fica só para navegação por teclado). */
+.icone-se:focus { outline: none; }
+.icone-se:hover .se-selo, .icone-se:focus-visible .se-selo { box-shadow: 0 0 0 3px rgba(255,255,255,.7), 0 2px 6px rgba(0,0,0,.6); }

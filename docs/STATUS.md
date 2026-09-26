@@ -701,3 +701,12 @@ estão intactos.
   vaza para o mapa.
 - Testes: `tests_oraculo/test_satelite_real.py` (GSD, projeção, recorte e georreferência com ladrilho
   falso, sem rede); backend 106 passaram (visão + API + novo); frontend 45; `tsc` e `oxlint` limpos.
+
+## 2026-09-26 — Mapa (/mapa): ícones das subestações da BDGD estáveis no clique e no hover
+
+- `RedeBdgd.tsx`: o marcador tinha `key` que mudava com a seleção, então o clique remontava o
+  marcador sob o mouse (o ícone sumia). Agora a chave é estável e o react-leaflet só troca o ícone
+  (`setIcon`) e o `zIndexOffset`; `autoPanOnFocus={false}` evita o mapa "pular" quando o clique
+  foca o ícone; `tooltipAnchor` põe o tooltip acima do selo em vez de cobri-lo.
+- `oraculo.css`: hover sem `transform: scale()` (gerava artefato visual dentro do marcador
+  posicionado por `translate3d`); destaque por sombra e sem contorno de foco no clique.
