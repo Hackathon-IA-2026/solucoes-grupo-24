@@ -20,6 +20,16 @@ import { useOraculo } from './estado'
 export const OSM_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 export const OSM_ATRIBUICAO = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
 
+/**
+ * Fundo de satélite (como o "Satélite (Google)" do mapa do RDX, Backend/RDX/main.py). Esri World
+ * Imagery e não Google: não exige chave e o uso é permitido com atribuição; o tile do Google sem
+ * a API oficial fere os termos de uso. Liberado no teste semServicoExterno junto com o OSM.
+ */
+export const SATELITE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+export const SATELITE_ATRIBUICAO = 'Imagem &copy; Esri, Maxar, Earthstar Geographics e comunidade de usuários GIS'
+
+export type Fundo = 'mapa' | 'satelite'
+
 export type Limites = [[number, number], [number, number]]
 
 /** Limites [[latS, lonO], [latN, lonL]] de um conjunto de pontos, com folga. */
@@ -107,6 +117,7 @@ export function MapaOsm({
   animar = false,
   zoomMin,
   sobreposicao,
+  fundo = 'mapa',
 }: {
   limites: Limites | null
   altura?: number
@@ -120,20 +131,29 @@ export function MapaOsm({
   zoomMin?: number
   /** conteúdo HTML por cima do mapa, fora do Leaflet (ex.: legenda) */
   sobreposicao?: ReactNode
+  /** fundo do mapa: OpenStreetMap (padrão) ou imagem de satélite */
+  fundo?: Fundo
 }) {
   const { tema } = useOraculo()
   const [semTiles, setSemTiles] = useState(false)
   const eventos = useMemo(() => ({ tileerror: () => setSemTiles(true), tileload: () => setSemTiles(false) }), [])
   const centro = limites ? L.latLngBounds(limites).getCenter() : L.latLng(-15.8, -47.9)
   return (
-    <div className={'osm-mapa' + (tema === 'dark' ? ' osm-escuro' : '')} style={{ height: altura, ...estilo }}>
+    <div className={'osm-mapa' + (tema === 'dark' && fundo === 'mapa' ? ' osm-escuro' : '')} style={{ height: altura, ...estilo }}>
       <MapContainer center={centro} zoom={limites ? 12 : 4} scrollWheelZoom={rolagem} minZoom={zoomMin} style={{ height: '100%', width: '100%' }} attributionControl>
-        <TileLayer url={OSM_URL} attribution={OSM_ATRIBUICAO} maxZoom={19} eventHandlers={eventos} />
+        {/* key: trocar o fundo remonta a camada (o TileLayer não troca de url pelas props) */}
+        <TileLayer
+          key={fundo}
+          url={fundo === 'satelite' ? SATELITE_URL : OSM_URL}
+          attribution={fundo === 'satelite' ? SATELITE_ATRIBUICAO : OSM_ATRIBUICAO}
+          maxZoom={19}
+          eventHandlers={eventos}
+        />
         <Enquadrar limites={limites} maxZoom={maxZoom} animar={animar} />
         {children}
       </MapContainer>
       {sobreposicao}
-      {semTiles && <div className="osm-aviso">OpenStreetMap indisponível nesta rede: exibindo só as camadas georreferenciadas.</div>}
+      {semTiles && <div className="osm-aviso">{fundo === 'satelite' ? 'Imagem de satélite' : 'OpenStreetMap'} indisponível nesta rede: exibindo só as camadas georreferenciadas.</div>}
     </div>
   )
 }

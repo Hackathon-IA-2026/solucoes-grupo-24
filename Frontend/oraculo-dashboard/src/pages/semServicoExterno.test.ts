@@ -10,6 +10,9 @@
  * telas do protótipo com imagem georreferenciada. Ali o tile é contexto (o dado é vetorial por
  * cima) e, sem rede, o mapa continua funcionando e avisa. O teste abaixo trava a regra: tile
  * remoto só naquele arquivo e só do OSM (nada de provedor com chave, como a CARTO).
+ *
+ * 2026-09-26: o mesmo arquivo passou a oferecer o fundo de satélite do mapa do RDX (Backend/RDX/main.py)
+ * com a Esri World Imagery — sem chave, uso permitido com atribuição. É o único outro endereço aceito.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
@@ -44,11 +47,11 @@ describe('nenhuma dependência de serviço externo em tempo de execução', () =
     for (const { p, s } of fontes) expect(s, p).not.toMatch(/fonts\.googleapis|@import\s+url\(\s*['"]?https?:/)
   })
 
-  it('o único tile remoto é o do OpenStreetMap, num arquivo só', () => {
+  it('os únicos tiles remotos são o do OpenStreetMap e o de satélite da Esri, num arquivo só', () => {
     const comTile = fontes.filter(({ s }) => /\bTileLayer\b/.test(s)).map(({ p }) => p)
     expect(comTile.length).toBe(1)
     expect(comTile[0]).toMatch(MAPA_OSM)
     const osm = fontes.find(({ p }) => MAPA_OSM.test(p))!.s
-    for (const url of osm.match(/https?:\/\/[^'"\s]*\{z\}[^'"\s]*/g) || []) expect(url).toMatch(/^https:\/\/tile\.openstreetmap\.org\//)
+    for (const url of osm.match(/https?:\/\/[^'"\s]*\{z\}[^'"\s]*/g) || []) expect(url).toMatch(/^https:\/\/(tile\.openstreetmap\.org|server\.arcgisonline\.com\/ArcGIS\/rest\/services\/World_Imagery)\//)
   })
 })

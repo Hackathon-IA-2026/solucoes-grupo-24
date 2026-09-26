@@ -9,6 +9,7 @@
  * TRACEJADO nas satélites dessa subestação: a carga e a MMGD que geram o excedente estão nelas
  * (a área própria da subestação de fronteira costuma ser pequena, ex.: SETD Influência).
  * Passar o mouse destaca a área e mostra os números que vieram da API (nada é recalculado aqui).
+ * Opcional (tela Perfis por subestação): `onClicar` seleciona a área e `selecionada` a destaca.
  */
 import { useMemo } from 'react'
 import type { Layer, LeafletMouseEvent, Path } from 'leaflet'
@@ -17,7 +18,15 @@ import type { AreasInfluencia, PropriedadesArea } from '../../data/types'
 import { corToken } from '../../theme/tokens'
 import { formatNum } from '../../utils/format'
 
-export function CamadaAreas({ areas }: { areas: AreasInfluencia }) {
+export function CamadaAreas({
+  areas,
+  selecionada = null,
+  onClicar,
+}: {
+  areas: AreasInfluencia
+  selecionada?: string | null
+  onClicar?: (p: PropriedadesArea) => void
+}) {
   const cores = useMemo(
     () => ({
       mmgd: corToken('--color-chart-2'),
@@ -42,6 +51,8 @@ export function CamadaAreas({ areas }: { areas: AreasInfluencia }) {
     const p = f!.properties as PropriedadesArea
     const exporta = exportadoras.has(p.areaId)
     const satelite = !exporta && p.areaMae !== null && exportadoras.has(p.areaMae)
+    if (p.areaId === selecionada)
+      return { color: cores.destaque, weight: 3, opacity: 1, dashArray: undefined, fillColor: cores.mmgd, fillOpacity: 0.06 + 0.74 * Math.sqrt(p.capacidadeMmgdMw / maxMw) }
     return {
       color: exporta || satelite ? cores.excedente : cores.contorno,
       weight: exporta ? 2.5 : satelite ? 1.5 : 0.5,
@@ -56,16 +67,19 @@ export function CamadaAreas({ areas }: { areas: AreasInfluencia }) {
     const p = f.properties as PropriedadesArea
     camada.bindTooltip(textoTooltip(p, nomes), { sticky: true, direction: 'top' })
     // Área com excedente por cima das vizinhas: senão o contorno laranja some sob as bordas delas.
-    if (exportadoras.has(p.areaId) || (p.areaMae !== null && exportadoras.has(p.areaMae)))
+    if (exportadoras.has(p.areaId) || (p.areaMae !== null && exportadoras.has(p.areaMae)) || p.areaId === selecionada)
       camada.on('add', () => (camada as Path).bringToFront())
     camada.on({
       mouseover: (e: LeafletMouseEvent) => (e.target as Path).setStyle({ weight: 3, color: cores.destaque }).bringToFront(),
       mouseout: (e: LeafletMouseEvent) => (e.target as Path).setStyle(estilo(f)),
+      ...(onClicar ? { click: () => onClicar(p) } : {}),
     })
   }
 
   // key: o GeoJSON do react-leaflet não redesenha quando `data` muda; trocar a chave força.
-  return <GeoJSON key={areas.features.length} data={areas as GeoJSON.FeatureCollection} style={estilo} onEachFeature={aoCriar} />
+  return (
+    <GeoJSON key={areas.features.length + '|' + (selecionada ?? '')} data={areas as GeoJSON.FeatureCollection} style={estilo} onEachFeature={aoCriar} />
+  )
 }
 
 /** Tooltip em HTML simples (o Leaflet recebe string); só texto vindo da API, escapado. */

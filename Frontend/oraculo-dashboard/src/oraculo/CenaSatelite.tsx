@@ -129,6 +129,8 @@ export function CamadaCena({
 export function LegendaCena() {
   return (
     <div className="osm-legenda">
+      {/* a cena do protótipo é gerada (não é foto): o aviso fica no próprio mapa, onde a imagem aparece */}
+      <strong style={{ color: 'var(--o-amber)' }}>Imagem sintética de demonstração</strong>
       <span>
         <i style={{ background: 'var(--o-teal)', opacity: 0.8 }} /> painel detectado (mais opaco = mais confiança)
       </span>

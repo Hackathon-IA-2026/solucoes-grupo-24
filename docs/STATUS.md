@@ -658,3 +658,29 @@ estão intactos.
 - ⚠️ Um `run_heavywork.py --help` rodou o pipeline de verdade (o script não lê argumentos) e foi parado antes do treino: ingestão incremental (SIGA, malha municipal BR, janelas novas da API de carga) e processamento concluíram e ficaram registrados no estado. Os relatórios dessa execução parcial foram descartados. Pelas impressões digitais, o próximo `run_heavywork.py` refaz espacialização, treinos (~50 min), previsões e publicação, porque a carga processada ganhou dados novos.
 - Verificação: `pytest tests` 173 ok (8 pulados); API com o banco copiado: rotas do contrato, `/api/areas-influencia` (447 áreas, `mock: false`), `/api/health` do protótipo e `/api-docs` respondem 200. `tests_oraculo`: 670 ok; 22 falham só por `import torch` (WinError 1114 no venv do HackaIA_Oraculo usado aqui), não pelo código.
 - Pendências: `cadastro.py` (SIGA, MMGD por município, carga por área) ainda não está ligado em `tabelas.construir`; unificar a ingestão e as subestações do protótipo (`oraculo/ons`, `oraculo/substations`) com `src/ingestion` e `src/spatial`; `run_heavywork.py` sem `--help`/`--dry-run`.
+
+## 2026-09-26 — Perfis por subestação: rede da BDGD no desenho do mapa do RDX (dado real) ✅
+
+- **Motivo**: a cena de satélite do protótipo é sintética (a própria API diz "imagem de demonstração");
+  sobre o OSM ela não mostrava nada real. Decisão do Tiago: usar os dados reais da BDGD, com o mapa
+  do RDX (`Backend/RDX/main.py`) como base.
+- **Nível RJ do mapa** (`src/oraculo/pages/Mapa.tsx` + `src/oraculo/RedeBdgd.tsx`), tudo do recurso
+  `areas_influencia` (`mock: false`): áreas de influência com a camada do time (`CamadaAreas`, agora
+  com clique e seleção); subestações com os ícones do RDX por classificação (plena, satélite,
+  transformadora pura, transporte/manobra), cada classe liga/desliga; hierarquia de alimentação
+  mãe → satélite em linha tracejada animada (o AntPath do RDX, em CSS); fundo Mapa × Satélite.
+  As subestações de fronteira do ONS (protótipo) continuam como camada.
+- **Painel da subestação da BDGD**: distribuidora, classificação, mãe (link), área, MMGD, lag de
+  cadastro, fator de correção e excedente previsto; lista das satélites que ela alimenta (links).
+  Sem seleção: totais do RJ (447 áreas, 1.908,7 MW de MMGD, 293,5 MW de lag — os mesmos números de
+  `docs/metodo_espacial.md`).
+- **Saiu** o terceiro nível do mapa (cena sintética da subestação). O bloco de visão computacional
+  do detalhe foi rotulado "amostra sintética (demonstração)"; o mapa de `/visao` avisa na legenda.
+- **Fundo de satélite**: Esri World Imagery (sem chave, uso com atribuição) no lugar do tile do
+  Google do RDX (sem a API oficial fere os termos). `semServicoExterno.test.ts` passou a aceitar
+  esse endereço, ainda só em `MapaOsm.tsx`.
+- **Lacuna**: o popup do RDX tinha carga instalada por classe de consumidor e sazonalidade de 12
+  meses (UCBT/UCMT da BDGD). A pipeline migrada não gera o recorte por classe e o contrato não
+  traz esses campos; entrar com eles é mudança de schema (combinar com o Luiz).
+- Testes: frontend 45 passaram; `tsc -b` e `oxlint` limpos. Conferido no navegador pelo DOM (447
+  áreas, 306 ícones com as classes padrão, 176 ligações, seleção por área/ícone/link, tiles da Esri).

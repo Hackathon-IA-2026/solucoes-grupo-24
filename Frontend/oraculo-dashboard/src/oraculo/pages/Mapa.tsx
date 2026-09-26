@@ -2,9 +2,9 @@
  * Mapa Inteligente de perfis de carga e GD (protótipo, painel "mapa"). Porte de
  * 02-PROTOTIPO/web/js/views/mapa.js (V.mapa). Para cada subestação de fronteira: classe de
  * consumo predominante e nível de penetração de MMGD, com a amostra de ortoimagem e detecções.
- * Abre no mapa do Brasil; escolher a UF aproxima o mapa e carrega as subestações dela; a
- * subestação abre, no mesmo mapa, a amostra de satélite com os painéis detectados (visão
- * computacional), e o banco de ensaio do detector fecha a tela.
+ * Abre no mapa do Brasil; escolher a UF aproxima o mapa e mostra a rede de distribuição da BDGD
+ * no desenho do mapa do RDX (áreas de influência, classificação, hierarquia, fundo satélite)
+ * e as subestações de fronteira do ONS; o banco de ensaio do detector fecha a tela.
  */
 import L from 'leaflet'
 import { useMemo, useState, type ReactNode } from 'react'
@@ -14,8 +14,12 @@ import ufsGeo from '../../data/geo/ufs.geo.json'
 import { Api, type Envelope } from '../api'
 import { color } from '../charts'
 import { useOraculo, usePersistido } from '../estado'
-import { CamadaCena, ControlesCena, DetalheDeteccao, LegendaCena, TabelaDeteccoes, geoValida, limitesDoEntorno } from '../CenaSatelite'
-import { MapaOsm, limitesDaCena, type Limites } from '../MapaOsm'
+import { CamadaAreas } from '../../components/mapa/CamadaAreas'
+import { getAreasInfluencia } from '../../data/dataSource'
+import type { AreasInfluencia } from '../../data/types'
+import { TabelaDeteccoes } from '../CenaSatelite'
+import { MapaOsm, type Fundo, type Limites } from '../MapaOsm'
+import { ChipsClasses, PainelSubestacaoBdgd, RedeBdgd } from '../RedeBdgd'
 import { num, pct, signed } from '../format'
 import { BarRow, Chip, Conteudo, Kpi, OCard, Pagina, Proveniencia, StatLines, Vazio, useApi } from '../ui'
 import { PainelVisao } from './Visao'
@@ -84,7 +88,7 @@ function limitesDaUf(uf: string): Limites | null {
 
 export default function Mapa() {
   // a tela sempre abre no Brasil; escolher a UF aproxima o mapa e abre os dados dela
-  const [uf, setUfBruto] = useState('')
+  const [uf, setUf] = useState('')
   const [sel, setSel] = usePersistido<string | null>('oraculo.mapaSel', null)
   // a análise da UF leva alguns segundos: com uma UF só liberada, já pede os dados dela na
   // abertura, e o tempo em que a pessoa olha o mapa (e o voo) cobre parte da espera
@@ -92,84 +96,51 @@ export default function Mapa() {
   const estado = useApi(() => Api.get('mapa/substations', { uf: ufDados, limit: 50, frontier_only: 1 }), [ufDados])
   const rows: Dado[] = uf && estado.status === 'ok' ? ((estado.dado as Envelope).data as Dado).rows || [] : []
   const selId: string | null = sel && rows.some((r) => r.sub_id === sel) ? sel : (rows[0]?.sub_id ?? null)
-
-  // Detalhe da subestação selecionada: buscado aqui (e não no painel) porque o mapa usa a
-  // mesma resposta para desenhar a cena de satélite e as detecções no terceiro nível de zoom.
   const detalhe = useApi(() => (selId ? Api.get('mapa/substations/' + encodeURIComponent(selId)) : Promise.resolve(null)), [selId])
   const dSub: Dado | null = detalhe.status === 'ok' && detalhe.dado ? (detalhe.dado as Envelope).data : null
-  const vis: Dado = dSub?.vision || {}
-  const geo = geoValida(vis.geo) ? vis.geo : null
-  const dets: Dado[] = vis.detections || []
 
-  // Estado da cena (Brasil → UF → subestação): ligada, vista da imagem, opacidade, detecção escolhida
-  const [verCena, setVerCena] = useState(false)
-  const [entorno, setEntorno] = useState(false)
-  const [modoImg, setModoImg] = useState('')
-  const [opac, setOpac] = usePersistido('oraculo.mapaOsmOpacidade', 0.85)
-  const [mostrarDets, setMostrarDets] = usePersistido('oraculo.mapaDets', true)
-  const [selDet, setSelDet] = useState<{ sub: string; i: number } | null>(null)
-  const iDet = selDet && selDet.sub === selId ? selDet.i : null
-  const cenaAtiva = !!uf && verCena && !!geo && !!dSub
-
-  const setUf = (u: string) => {
-    setUfBruto(u)
-    setVerCena(false)
-  }
-  const abrirCena = () => {
-    setEntorno(false)
-    setVerCena(true)
-    document.getElementById('mapa-perfis')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-  // escolher uma detecção (no mapa ou na tabela) também leva o mapa para a cena
-  const escolherDet = (i: number) => {
-    if (!selId) return
-    setSelDet({ sub: selId, i })
-    setVerCena(true)
-  }
-
-  const cena: CenaNoMapa | null =
-    cenaAtiva && geo
-      ? {
-          nome: dSub.substation?.name || selId || '',
-          limites: entorno ? limitesDoEntorno(geo) : limitesDaCena(geo),
-          hint: num(vis.kept_count) + ' painéis detectados · ' + num(vis.total_kwp, 1) + ' kWp na amostra',
-          camada: (
-            <CamadaCena url={dSub.image_url + modoImg} geo={geo} dets={dets} opacidade={opac} sel={iDet} onSel={escolherDet} mostrarDets={mostrarDets} />
-          ),
-          rodape: (
-            <>
-              {iDet !== null && dets[iDet] && <DetalheDeteccao det={dets[iDet]} i={iDet} />}
-              <ControlesCena
-                modo={modoImg}
-                setModo={setModoImg}
-                opacidade={opac}
-                setOpacidade={setOpac}
-                mostrarDets={mostrarDets}
-                setMostrarDets={setMostrarDets}
-                entorno={entorno}
-                setEntorno={setEntorno}
-                extra={<Chip onClick={() => setVerCena(false)}>← voltar a {NOME_UF[uf] || uf}</Chip>}
-              />
-            </>
-          ),
-        }
-      : null
+  // Rede da BDGD (dado real: áreas de influência, classificação, mãe, MMGD, excedente). Pedida
+  // na abertura, como os dados da UF; o contrato cobre só a área piloto (RJ).
+  const areas = useApi(() => getAreasInfluencia(), [])
+  const rede: AreasInfluencia | null = areas.status === 'ok' ? areas.dado : null
+  const [selBdgd, setSelBdgd] = useState<string | null>(null)
+  const pBdgd = rede?.features.find((f) => f.properties.areaId === selBdgd)?.properties ?? null
 
   return (
     <Pagina>
-      <div id="mapa-perfis" style={{ marginBottom: 14, scrollMarginTop: 130 }}>
+      <div id="mapa-perfis" style={{ marginBottom: 14 }}>
         <MapaBrasil
           uf={uf}
-          setUf={setUf}
+          setUf={(u) => {
+            setUf(u)
+            setSelBdgd(null)
+          }}
           rows={rows}
           selId={selId}
           setSel={setSel}
           carregando={!!uf && estado.status === 'carregando'}
-          cena={cena}
-          podeAbrirCena={!!geo && !!dSub}
-          abrirCena={abrirCena}
+          rede={uf === UF_BDGD ? rede : null}
+          redeCarregando={uf === UF_BDGD && areas.status === 'carregando'}
+          selBdgd={selBdgd}
+          setSelBdgd={setSelBdgd}
         />
       </div>
+      {uf === UF_BDGD && (
+        <div style={{ marginBottom: 14 }}>
+          <OCard
+            title={pBdgd ? 'Subestação da BDGD · ' + pBdgd.nome : 'Rede de distribuição da BDGD · ' + (NOME_UF[uf] || uf)}
+            hint={pBdgd ? pBdgd.areaId : 'clique numa área ou num ícone no mapa'}
+            note={
+              'Dado real: BDGD 2025 (LIGHT e Enel RJ) × cadastro de MMGD da ANEEL, pela pipeline do RDX migrada para Backend/src/spatial (docs/metodo_espacial.md). ' +
+              (rede?.descricao ?? '')
+            }
+          >
+            <Conteudo estado={areas} texto="Carregando as áreas de influência da BDGD…">
+              {(a) => (pBdgd ? <PainelSubestacaoBdgd p={pBdgd} areas={a} onSel={setSelBdgd} /> : <ResumoBdgd areas={a} />)}
+            </Conteudo>
+          </OCard>
+        </div>
+      )}
       {uf ? (
         <Conteudo estado={estado} texto={'Carregando subestações do ONS em ' + (NOME_UF[uf] || uf) + ' e analisando as amostras…'}>
           {(body) => (
@@ -179,7 +150,7 @@ export default function Mapa() {
               setSel={setSel}
               detalhe={
                 <Conteudo estado={detalhe} texto="Analisando a amostra…">
-                  {() => (dSub ? <DetalheCorpo d={dSub} iDet={iDet} onDet={escolherDet} verCena={cenaAtiva} abrirCena={abrirCena} /> : null)}
+                  {() => (dSub ? <DetalheCorpo d={dSub} /> : null)}
                 </Conteudo>
               }
             />
@@ -187,21 +158,37 @@ export default function Mapa() {
         </Conteudo>
       ) : (
         <div className="note-strip">
-          Selecione um estado no mapa para ver as subestações de fronteira com a distribuição: composição por classe de consumo, nível de penetração de MMGD e a
-          amostra de satélite com os painéis detectados. Nesta versão, só o <strong>Rio de Janeiro</strong> está disponível; os demais estados entram em seguida.
+          Selecione um estado no mapa para ver a rede de distribuição da BDGD (áreas de influência, classificação das subestações e hierarquia de alimentação) e as
+          subestações de fronteira com o ONS. Nesta versão, só o <strong>Rio de Janeiro</strong> está disponível; os demais estados entram em seguida.
         </div>
       )}
     </Pagina>
   )
 }
 
-/** Terceiro nível do mapa: a cena de satélite da subestação selecionada, com as detecções. */
-interface CenaNoMapa {
-  nome: string
-  limites: Limites
-  hint: string
-  camada: ReactNode
-  rodape: ReactNode
+/** UF coberta pelo recurso areas_influencia (área piloto da espacialização). */
+const UF_BDGD = 'RJ'
+
+/** Totais da rede da BDGD na UF (quando nenhuma subestação está selecionada). */
+function ResumoBdgd({ areas }: { areas: AreasInfluencia }) {
+  const ps = areas.features.map((f) => f.properties)
+  const soma = (k: 'capacidadeMmgdMw' | 'capacidadeLagMw') => ps.reduce((a, p) => a + p[k], 0)
+  const porDist = new Map<string, number>()
+  ps.forEach((p) => porDist.set(p.distribuidora, (porDist.get(p.distribuidora) ?? 0) + 1))
+  const comExcedente = ps.filter((p) => (p.excedenteMw ?? 0) > 0)
+  return (
+    <div className="grid g4">
+      <Kpi label="Áreas de influência" value={num(ps.length)} foot={[...porDist].map(([d, n]) => d + ' ' + num(n)).join(' · ')} accent="teal" />
+      <Kpi label="MMGD na rede" value={num(soma('capacidadeMmgdMw'), 1)} unit="MW" foot="cadastro ANEEL localizado pela BDGD" accent="amber" />
+      <Kpi label="Lag de cadastro" value={num(soma('capacidadeLagMw'), 1)} unit="MW" foot="na ANEEL e ainda fora da BDGD" accent="navy" />
+      <Kpi
+        label="Com excedente previsto"
+        value={num(comExcedente.length)}
+        foot={'subestações de fronteira · ' + num(comExcedente.reduce((a, p) => a + (p.excedenteMw ?? 0), 0), 1) + ' MW nas próximas 24 h'}
+        accent="crimson"
+      />
+    </div>
+  )
 }
 
 function Corpo({ body, selId, setSel, detalhe }: { body: Envelope; selId: string | null; setSel: (s: string) => void; detalhe: ReactNode }) {
@@ -340,11 +327,12 @@ function Corpo({ body, selId, setSel, detalhe }: { body: Envelope; selId: string
 }
 
 /**
- * Mapa com três níveis de zoom, sempre o mesmo Leaflet (a transição é um voo, não uma troca de tela):
+ * Mapa em dois níveis, sempre o mesmo Leaflet (a transição é um voo, não uma troca de tela):
  * 1. Brasil, com as UFs do IBGE: clicar numa UF liberada voa até ela;
- * 2. UF: subestações de fronteira (cor pelo nível de MMGD, círculo do raio de análise);
- *    clicar numa subestação seleciona; clicar de novo na selecionada abre a cena;
- * 3. Cena da subestação: amostra de satélite com os painéis detectados (visão computacional).
+ * 2. UF: a rede de distribuição da BDGD no desenho do mapa do RDX (Backend/RDX/main.py) —
+ *    áreas de influência, subestações com ícone por classificação, linhas de alimentação
+ *    mãe → satélite, fundo OpenStreetMap ou satélite — e as subestações de fronteira do ONS
+ *    (cor pelo nível de MMGD do protótipo). Cada grupo liga e desliga, como o LayerControl do RDX.
  */
 function MapaBrasil({
   uf,
@@ -353,9 +341,10 @@ function MapaBrasil({
   selId,
   setSel,
   carregando,
-  cena,
-  podeAbrirCena,
-  abrirCena,
+  rede,
+  redeCarregando,
+  selBdgd,
+  setSelBdgd,
 }: {
   uf: string
   setUf: (u: string) => void
@@ -363,41 +352,53 @@ function MapaBrasil({
   selId: string | null
   setSel: (s: string) => void
   carregando: boolean
-  cena: CenaNoMapa | null
-  podeAbrirCena: boolean
-  abrirCena: () => void
+  rede: AreasInfluencia | null
+  redeCarregando: boolean
+  selBdgd: string | null
+  setSelBdgd: (id: string | null) => void
 }) {
-  const [raios, setRaios] = usePersistido('oraculo.mapaOsmRaios', true)
-  const limUf = useMemo(() => (uf ? limitesDaUf(uf) : null) || BRASIL, [uf])
-  const limites = cena ? cena.limites : limUf
-  // na cena os marcadores somem: o da selecionada ficaria em cima dos painéis detectados
-  const pts = cena ? [] : rows.filter((r) => Number.isFinite(r.lat) && Number.isFinite(r.lon))
+  const [raios, setRaios] = usePersistido('oraculo.mapaOsmRaios', false)
+  const [fundo, setFundo] = usePersistido<Fundo>('oraculo.mapaFundo', 'mapa')
+  const [verAreas, setVerAreas] = usePersistido('oraculo.mapaAreas', true)
+  const [verOns, setVerOns] = usePersistido('oraculo.mapaOns', true)
+  const [hierarquia, setHierarquia] = usePersistido('oraculo.mapaHierarquia', false)
+  const [classesLista, setClassesLista] = usePersistido<string[]>('oraculo.mapaClasses', ['Distribuição plena', 'Distribuição satélite', 'Transformadora pura'])
+  const classes = useMemo(() => new Set(classesLista), [classesLista])
+  const alternarClasse = (c: string) => setClassesLista(classes.has(c) ? classesLista.filter((x) => x !== c) : [...classesLista, c])
+  const contagem = useMemo(() => {
+    const m = new Map<string, number>()
+    rede?.features.forEach((f) => m.set(f.properties.classificacao, (m.get(f.properties.classificacao) ?? 0) + 1))
+    return m
+  }, [rede])
+
+  const limites = useMemo(() => (uf ? limitesDaUf(uf) : null) || BRASIL, [uf])
+  const pts = verOns ? rows.filter((r) => Number.isFinite(r.lat) && Number.isFinite(r.lon)) : []
   // a selecionada por último, para ficar por cima das demais
   const ordem = [...pts].sort((a, b) => (a.sub_id === selId ? 1 : 0) - (b.sub_id === selId ? 1 : 0))
   const nome = NOME_UF[uf] || uf
-  const selNome = rows.find((r) => r.sub_id === selId)?.name
 
-  const titulo = cena ? cena.nome + ' · amostra de satélite' : uf ? nome + ' · subestações de fronteira' : 'Brasil · selecione um estado'
-  const hint = cena
-    ? cena.hint
-    : uf
-      ? carregando
-        ? 'analisando as subestações…'
-        : num(pts.length) + ' subestações · clique para selecionar, de novo para ver a amostra de satélite'
-      : 'estados em destaque já têm a análise'
-  const nota = cena
-    ? 'Visão computacional: cena sintética georreferenciada sobre o OpenStreetMap, com os painéis que o detector encontrou. Roda do mouse dá zoom. © OpenStreetMap contributors.'
-    : uf
-      ? 'Cor pelo nível de penetração de MMGD' + (raios ? '; círculo claro = raio de análise da subestação' : '') + '. Divisas: IBGE. © OpenStreetMap contributors.'
-      : 'Divisas: IBGE. © OpenStreetMap contributors.'
+  const hint = uf
+    ? carregando || redeCarregando
+      ? 'carregando a rede e as subestações…'
+      : (rede ? num(rede.features.length) + ' subestações da BDGD · ' : '') + num(rows.length) + ' de fronteira do ONS'
+    : 'estados em destaque já têm a análise'
+  const nota = uf
+    ? 'Áreas de influência: violeta mais forte = mais MMGD; contorno laranja = subestação com excedente previsto (tracejado nas satélites dela). ' +
+      'Linhas âmbar = alimentação mãe → satélite. Círculos = subestações de fronteira do ONS, cor pelo nível de MMGD do protótipo. Divisas: IBGE.'
+    : 'Divisas: IBGE. © OpenStreetMap contributors.'
 
   return (
-    <OCard title={titulo} hint={hint} note={nota}>
-      <MapaOsm limites={limites} altura={540} maxZoom={cena ? 19 : uf ? 9 : 5} zoomMin={3} animar rolagem={!!cena} sobreposicao={cena ? <LegendaCena /> : undefined}>
+    <OCard title={uf ? nome + ' · rede de distribuição e fronteira com o ONS' : 'Brasil · selecione um estado'} hint={hint} note={nota}>
+      <MapaOsm limites={limites} altura={560} maxZoom={uf ? 9 : 5} zoomMin={3} animar rolagem={!!uf} fundo={fundo}>
         <Pane name="ufs" style={{ zIndex: 350 }}>
           <CamadaUfs uf={uf} onUf={setUf} />
         </Pane>
-        {cena?.camada}
+        {rede && verAreas && (
+          <Pane name="areas" style={{ zIndex: 360 }}>
+            <CamadaAreas areas={rede} selecionada={selBdgd} onClicar={(p) => setSelBdgd(p.areaId)} />
+          </Pane>
+        )}
+        {rede && <RedeBdgd areas={rede} classes={classes} hierarquia={hierarquia} sel={selBdgd} onSel={setSelBdgd} />}
         {raios &&
           ordem.map((r) =>
             Number.isFinite(r.radius_km) && r.radius_km > 0 ? (
@@ -419,47 +420,64 @@ function MapaBrasil({
               center={[r.lat, r.lon]}
               radius={on ? 10 : 7}
               pathOptions={{ color: on ? color('ink') : cor, weight: on ? 3 : 1.5, fillColor: cor, fillOpacity: 0.85 }}
-              eventHandlers={{ click: () => (on && podeAbrirCena ? abrirCena() : setSel(r.sub_id)) }}
+              eventHandlers={{ click: () => setSel(r.sub_id) }}
             >
               <Tooltip direction="top">
-                <strong>{r.name}</strong> ({r.uf}) · {r.sub_id}
+                Fronteira ONS: <strong>{r.name}</strong> ({r.uf}) · {r.sub_id}
                 <br />
                 classe: {r.class_label || r.class_dominant || '—'}
                 <br />
                 MMGD: {r.mmgd_level || '—'} · {num(r.mmgd_kwp_per_km2)} kWp/km²
-                <br />
-                <span className="faint">{on ? 'clique para ver a amostra de satélite' : 'clique para selecionar'}</span>
               </Tooltip>
             </CircleMarker>
           )
         })}
       </MapaOsm>
-      {cena ? (
-        cena.rodape
-      ) : (
-        <div className="chips" style={{ marginTop: 8 }}>
-          {uf ? (
-            <>
-              <Chip onClick={() => setUf('')}>← voltar ao Brasil</Chip>
-              {selNome && podeAbrirCena && (
-                <Chip cor="teal" onClick={abrirCena}>
-                  ver amostra de satélite · {selNome}
-                </Chip>
-              )}
-              {Object.keys(LEVEL_COLORS).map((lv) => (
+      {uf ? (
+        <>
+          <div className="chips" style={{ marginTop: 8 }}>
+            <Chip onClick={() => setUf('')}>← voltar ao Brasil</Chip>
+            <Chip on={fundo === 'mapa'} onClick={() => setFundo('mapa')}>
+              Mapa
+            </Chip>
+            <Chip on={fundo === 'satelite'} onClick={() => setFundo('satelite')}>
+              Satélite
+            </Chip>
+            {selBdgd && <Chip onClick={() => setSelBdgd(null)}>✕ limpar seleção</Chip>}
+          </div>
+          {rede && (
+            <div className="chips" style={{ marginTop: 6 }}>
+              <Chip on={verAreas} onClick={() => setVerAreas(!verAreas)}>
+                Áreas de influência (MMGD)
+              </Chip>
+              <Chip on={hierarquia} onClick={() => setHierarquia(!hierarquia)}>
+                🔗 Hierarquia de alimentação
+              </Chip>
+              <ChipsClasses classes={classes} alternar={alternarClasse} contagem={contagem} />
+            </div>
+          )}
+          <div className="chips" style={{ marginTop: 6 }}>
+            <Chip on={verOns} onClick={() => setVerOns(!verOns)}>
+              Fronteira ONS ({num(rows.length)})
+            </Chip>
+            {verOns &&
+              Object.keys(LEVEL_COLORS).map((lv) => (
                 <LevelChip key={lv} lv={lv} />
               ))}
+            {verOns && (
               <Chip on={raios} onClick={() => setRaios(!raios)}>
                 raio de análise
               </Chip>
-            </>
-          ) : (
-            UFS_ATIVAS.map((u) => (
-              <Chip key={u} cor="teal" onClick={() => setUf(u)}>
-                {NOME_UF[u] || u}
-              </Chip>
-            ))
-          )}
+            )}
+          </div>
+        </>
+      ) : (
+        <div className="chips" style={{ marginTop: 8 }}>
+          {UFS_ATIVAS.map((u) => (
+            <Chip key={u} cor="teal" onClick={() => setUf(u)}>
+              {NOME_UF[u] || u}
+            </Chip>
+          ))}
         </div>
       )}
     </OCard>
@@ -504,7 +522,8 @@ function nivelCor(lv: string | null | undefined): string {
   return color((lv && LEVEL_COLORS[lv]) || 'muted')
 }
 
-function DetalheCorpo({ d, iDet, onDet, verCena, abrirCena }: { d: Dado; iDet: number | null; onDet: (i: number) => void; verCena: boolean; abrirCena: () => void }) {
+function DetalheCorpo({ d }: { d: Dado }) {
+  const [iDet, setIDet] = useState<number | null>(null)
   const s = d.substation || {}
   const lc = d.load_class || {}
   const m = d.mmgd || {}
@@ -512,7 +531,6 @@ function DetalheCorpo({ d, iDet, onDet, verCena, abrirCena }: { d: Dado; iDet: n
   const ev = d.evaluation || {}
   const mt = ev.match || {}
   const vis = d.vision || {}
-  const temGeo = geoValida(vis.geo)
 
   return (
     <>
@@ -548,7 +566,7 @@ function DetalheCorpo({ d, iDet, onDet, verCena, abrirCena }: { d: Dado; iDet: n
             />
           </div>
           <div>
-            <div className="okpi-label">3 · Visão computacional na amostra de satélite</div>
+            <div className="okpi-label">3 · Visão computacional · amostra sintética (demonstração)</div>
             <div style={{ fontSize: 17, fontWeight: 650, margin: '4px 0 8px' }}>
               {num(vis.kept_count)} painéis <span className="small muted">· {num(vis.total_kwp, 1)} kWp</span>
             </div>
@@ -567,13 +585,10 @@ function DetalheCorpo({ d, iDet, onDet, verCena, abrirCena }: { d: Dado; iDet: n
                 ['F1 · IoU de máscara', num(mt.f1, 3) + ' · ' + num(ev.mask_iou, 3)],
               ]}
             />
-            {temGeo && (
-              <div className="chips" style={{ marginTop: 10 }}>
-                <Chip cor="teal" on={verCena} onClick={abrirCena}>
-                  {verCena ? 'amostra aberta no mapa ↑' : 'ver a amostra de satélite no mapa ↑'}
-                </Chip>
-              </div>
-            )}
+            <div className="small faint" style={{ marginTop: 8 }}>
+              A ortoimagem do protótipo é sintética: os números medem o detector, não painéis reais nesta subestação. A MMGD real da rede está nas áreas de
+              influência da BDGD, no mapa acima.
+            </div>
           </div>
         </div>
       </OCard>
@@ -630,10 +645,10 @@ function DetalheCorpo({ d, iDet, onDet, verCena, abrirCena }: { d: Dado; iDet: n
           num(vis.duplicates_removed) +
           ' duplicatas removidas na costura entre ' +
           num(vis.tiles) +
-          ' ladrilhos · clique para localizar no mapa'
+          ' ladrilhos · cena sintética'
         }
       >
-        <TabelaDeteccoes dets={vis.detections || []} sel={iDet} onSel={onDet} />
+        <TabelaDeteccoes dets={vis.detections || []} sel={iDet} onSel={setIDet} />
       </OCard>
     </>
   )

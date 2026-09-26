@@ -544,3 +544,13 @@ body.help-locked { overflow: hidden; }
   background: var(--o-panel); border: 1px solid var(--o-line-2); border-left: 3px solid var(--o-amber);
   border-radius: var(--o-radius-sm); padding: 6px 9px; font-size: 11px; color: var(--o-ink-2);
 }
+
+/* ---------------------------------------------------------------- rede da BDGD (mapa do RDX) */
+/* Linhas de alimentação mãe → satélite: tracejado andando no sentido do fluxo (o AntPath do RDX). */
+.fluxo-alimentacao { stroke: var(--o-amber); opacity: .75; animation: fluxo-andando 1.2s linear infinite; }
+.fluxo-alimentacao.sel { stroke: var(--o-ink); opacity: 1; }
+@keyframes fluxo-andando { to { stroke-dashoffset: -24; } }
+@media (prefers-reduced-motion: reduce) { .fluxo-alimentacao { animation: none; } }
+/* ícones das subestações: leve sombra para destacar sobre o satélite */
+.icone-se { filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.55)); }
+.icone-se.sel { filter: drop-shadow(0 0 3px var(--o-teal)) drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
