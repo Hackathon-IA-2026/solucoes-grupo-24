@@ -107,6 +107,20 @@ function Enquadrar({ limites, maxZoom, animar }: { limites: Limites | null; maxZ
   return null
 }
 
+/**
+ * Zoom pela roda do mouse. O MapContainer do react-leaflet só lê `scrollWheelZoom` ao criar o
+ * mapa; aqui o valor é reaplicado sempre que muda (senão um mapa nascido com a roda desligada
+ * ficava assim para sempre, mesmo depois de a tela pedir para ligar).
+ */
+function RodaDoMouse({ ligada }: { ligada: boolean }) {
+  const map = useMap()
+  useEffect(() => {
+    if (ligada) map.scrollWheelZoom.enable()
+    else map.scrollWheelZoom.disable()
+  }, [map, ligada])
+  return null
+}
+
 export function MapaOsm({
   limites,
   altura = 360,
@@ -150,6 +164,7 @@ export function MapaOsm({
           eventHandlers={eventos}
         />
         <Enquadrar limites={limites} maxZoom={maxZoom} animar={animar} />
+        <RodaDoMouse ligada={rolagem} />
         {children}
       </MapContainer>
       {sobreposicao}

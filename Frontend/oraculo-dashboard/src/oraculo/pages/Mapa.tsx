@@ -389,7 +389,7 @@ function MapaBrasil({
 
   return (
     <OCard title={uf ? nome + ' · rede de distribuição e fronteira com o ONS' : 'Brasil · selecione um estado'} hint={hint} note={nota}>
-      <MapaOsm limites={limites} altura={560} maxZoom={uf ? 9 : 5} zoomMin={3} animar rolagem={!!uf} fundo={fundo}>
+      <MapaOsm limites={limites} altura={560} maxZoom={uf ? 9 : 5} zoomMin={3} animar rolagem fundo={fundo}>
         <Pane name="ufs" style={{ zIndex: 350 }}>
           <CamadaUfs uf={uf} onUf={setUf} />
         </Pane>
