@@ -75,9 +75,12 @@ function Enquadrar({ limites, maxZoom, animar }: { limites: Limites | null; maxZ
   useEffect(() => {
     if (!limites) return
     const opcoes = { padding: [12, 12] as [number, number], maxZoom: maxZoom ?? 17 }
-    // o enquadramento inicial é seco; os seguintes voam até o destino quando `animar`
-    if (animar && !primeira.current) map.flyToBounds(limites, { ...opcoes, duration: 1.2 })
-    else map.fitBounds(limites, opcoes)
+    // o enquadramento inicial é seco; os seguintes voam até o destino quando `animar`. Com a
+    // página oculta o navegador pausa o requestAnimationFrame e o voo ficaria parado no meio.
+    const voar = animar && !primeira.current && document.visibilityState === 'visible'
+    if (voar) map.flyToBounds(limites, { ...opcoes, duration: 1.2 })
+    // animate: false: o fitBounds também anima o zoom (via requestAnimationFrame) por padrão
+    else map.fitBounds(limites, { ...opcoes, animate: false })
     primeira.current = false
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chave, map, maxZoom])
@@ -87,7 +90,7 @@ function Enquadrar({ limites, maxZoom, animar }: { limites: Limites | null; maxZ
     const t = setTimeout(() => {
       map.invalidateSize()
       const { limites: l, maxZoom: z } = atual.current
-      if (l) map.fitBounds(l, { padding: [12, 12], maxZoom: z ?? 17 })
+      if (l) map.fitBounds(l, { padding: [12, 12], maxZoom: z ?? 17, animate: false })
     }, 120)
     return () => clearTimeout(t)
   }, [map])
@@ -103,6 +106,7 @@ export function MapaOsm({
   rolagem = false,
   animar = false,
   zoomMin,
+  sobreposicao,
 }: {
   limites: Limites | null
   altura?: number
@@ -114,6 +118,8 @@ export function MapaOsm({
   /** trocar `limites` voa (flyToBounds) até o novo enquadramento em vez de saltar */
   animar?: boolean
   zoomMin?: number
+  /** conteúdo HTML por cima do mapa, fora do Leaflet (ex.: legenda) */
+  sobreposicao?: ReactNode
 }) {
   const { tema } = useOraculo()
   const [semTiles, setSemTiles] = useState(false)
@@ -126,6 +132,7 @@ export function MapaOsm({
         <Enquadrar limites={limites} maxZoom={maxZoom} animar={animar} />
         {children}
       </MapContainer>
+      {sobreposicao}
       {semTiles && <div className="osm-aviso">OpenStreetMap indisponível nesta rede: exibindo só as camadas georreferenciadas.</div>}
     </div>
   )

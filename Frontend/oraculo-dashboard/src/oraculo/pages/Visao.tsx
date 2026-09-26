@@ -4,13 +4,23 @@
  * banco de ensaio contra verdade fundamental, cena de referência e curva precisão × revocação.
  */
 import { useEffect, useState } from 'react'
-import { Polygon, Rectangle, Tooltip } from 'react-leaflet'
 import { Link } from 'react-router-dom'
 import { Api, type Envelope } from '../api'
-import { color, fmt, scatter } from '../charts'
+import { fmt, scatter } from '../charts'
 import { usePersistido } from '../estado'
 import { num, pct, signed } from '../format'
-import { ImagemGeo, MapaOsm, limitesDaCena, pixelParaLatLon } from '../MapaOsm'
+import {
+  CamadaCena,
+  ControlesCena,
+  DetalheDeteccao,
+  LegendaCena,
+  MODOS_IMAGEM,
+  TabelaDeteccoes,
+  geoValida,
+  limitesDoEntorno,
+  type GeoCena,
+} from '../CenaSatelite'
+import { MapaOsm, limitesDaCena } from '../MapaOsm'
 import { Chip, Conteudo, Grafico, Kpi, OCard, Pagina, Proveniencia, StatLines, useApi } from '../ui'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -18,18 +28,6 @@ type Dado = any
 
 /** Metros por grau de latitude, o mesmo de MapaOsm.limitesDaCena (para a geo estimada fechar). */
 const M_POR_GRAU = 111_320
-
-function geoValida(g: Dado): boolean {
-  return (
-    !!g &&
-    Number.isFinite(g.center_lat) &&
-    Number.isFinite(g.center_lon) &&
-    Array.isArray(g.extent_m) &&
-    g.extent_m.length === 2 &&
-    g.width_px > 0 &&
-    g.height_px > 0
-  )
-}
 
 /**
  * Georreferência da cena a partir das próprias detecções: cada uma traz a caixa em pixels e o
@@ -86,34 +84,9 @@ function useTamanhoImagem(url: string | undefined): [number, number] | null {
   return tam && tam.url === url ? tam.wh : null
 }
 
-/** Detecções como polígonos georreferenciados (cantos da caixa, em pixels da cena). */
-function DeteccoesGeo({ geo, dets }: { geo: Dado; dets: Dado[] }) {
-  const cor = color('teal')
-  return (
-    <>
-      {dets.map((x, i) => {
-        const b = x.box
-        if (!Array.isArray(b) || b.length < 4) return null
-        const [x0, y0, x1, y1] = b as number[]
-        const anel = [pixelParaLatLon(geo, x0, y0), pixelParaLatLon(geo, x1, y0), pixelParaLatLon(geo, x1, y1), pixelParaLatLon(geo, x0, y1)]
-        const sc = Math.max(0, Math.min(1, Number(x.score) || 0))
-        return (
-          <Polygon key={i} positions={anel} pathOptions={{ color: cor, weight: 2, opacity: 0.6 + 0.4 * sc, fillColor: cor, fillOpacity: 0.1 + 0.45 * sc }}>
-            <Tooltip direction="top">
-              #{i + 1} · {num(x.area_m2, 1)} m² · {num(x.kwp, 2)} kWp · score {num(x.score, 3)}
-            </Tooltip>
-          </Polygon>
-        )
-      })}
-    </>
-  )
-}
-
+/** Vistas do banco de ensaio: as da cena de subestação + luminância; a verdade traz os falsos negativos. */
 const BENCH_MODOS: [string, string][] = [
-  ['', 'detecções'],
-  ['?truth=1&tiles=1', 'verdade + ladrilhos + falsos negativos'],
-  ['?channel=azul', 'índice de azul'],
-  ['?channel=borda', 'densidade de borda'],
+  ...MODOS_IMAGEM.map(([q, rot]): [string, string] => [q, q === '?truth=1&tiles=1' ? 'verdade + ladrilhos + falsos negativos' : rot]),
   ['?channel=luminancia', 'luminância'],
 ]
 
@@ -126,13 +99,18 @@ export default function Visao() {
         <Link to="/auditoria-mmgd">Visão computacional › Auditoria MMGD · 3 camadas</Link>.
       </div>
       <Conteudo estado={estado} texto="Executando o banco de ensaio do detector…">
-        {(body) => <Corpo body={body} />}
+        {(body) => <PainelVisao body={body} />}
       </Conteudo>
     </Pagina>
   )
 }
 
-function Corpo({ body }: { body: Envelope }) {
+/**
+ * Resultado do banco de ensaio do detector (KPIs, backends, curva P×R, tabela por classe).
+ * Exportado para a tela Perfis por subestação, que mostra o mesmo painel sem a cena de
+ * referência (lá a cena é a de cada subestação, no mapa da própria tela).
+ */
+export function PainelVisao({ body, comCena = true }: { body: Envelope; comCena?: boolean }) {
   const d = body.data as Dado
   const ag = d.aggregate || {}
   const ref = d.reference || {}
@@ -199,8 +177,8 @@ function Corpo({ body }: { body: Envelope }) {
         </OCard>
       </div>
 
-      <div className="grid g-2-1" style={{ marginBottom: 14 }}>
-        <CenaReferencia refe={ref} />
+      <div className={'grid ' + (comCena ? 'g-2-1' : 'g2')} style={{ marginBottom: 14 }}>
+        {comCena && <CenaReferencia refe={ref} />}
         <OCard title="Curva precisão × revocação" note="Varredura do limiar de confiança na cena de referência.">
           <Grafico
             deps={[d]}
@@ -311,11 +289,18 @@ function Corpo({ body }: { body: Envelope }) {
   )
 }
 
-/** Cena de referência do banco de ensaio: imagem (5 vistas) ou sobre o OpenStreetMap. */
+/**
+ * Cena de referência do banco de ensaio: sobre o OpenStreetMap (padrão) ou só a imagem.
+ * No mapa: roda do mouse dá zoom, "cena"/"entorno" alterna o enquadramento, clicar numa detecção
+ * (ou na linha da tabela) mostra os atributos dela; a legenda fica por cima do mapa.
+ */
 function CenaReferencia({ refe }: { refe: Dado }) {
   const [bench, setBench] = useState('')
   const [osm, setOsm] = usePersistido('oraculo.visaoOsm', true)
   const [opac, setOpac] = usePersistido('oraculo.visaoOsmOpacidade', 0.85)
+  const [mostrarDets, setMostrarDets] = usePersistido('oraculo.visaoDets', true)
+  const [entorno, setEntorno] = useState(false)
+  const [selDet, setSelDet] = useState<number | null>(null)
   const url: string = bench ? '/api/mapa/bench.png' + bench : refe.image_url
 
   // 1) geo na própria referência; 2) detalhe da subestação de referência; 3) estimada das detecções
@@ -327,10 +312,11 @@ function CenaReferencia({ refe }: { refe: Dado }) {
   const tam = useTamanhoImagem(geoApi || geoSub ? undefined : refe.image_url)
   const detsRef: Dado[] = refe.detections || []
   const geoEst = geoApi || geoSub || !tam ? null : geoPorDeteccoes(detsRef, tam[0], tam[1])
-  const geo: Dado = geoApi || geoSub || geoEst
+  const geo: GeoCena | null = geoApi || geoSub || geoEst
   const dets: Dado[] = detsRef.length ? detsRef : visSub.detections || []
   const verOsm = osm && !!geo
-  const lim = geo ? limitesDaCena(geo) : null
+  const lim = geo ? (entorno ? limitesDoEntorno(geo) : limitesDaCena(geo)) : null
+  const det = selDet !== null ? dets[selDet] : null
 
   return (
     <OCard
@@ -338,53 +324,61 @@ function CenaReferencia({ refe }: { refe: Dado }) {
       hint={num(refe.truth) + ' painéis reais · ' + num(refe.pred) + ' detectados'}
       note={
         <>
-          Teal: detecção. Âmbar: verdade fundamental. Carmim: painel real não detectado. Os canais de característica mostram <em>por que</em> o detector marcou o que marcou.
-          {verOsm && (
+          Na vista &quot;verdade&quot;: âmbar = verdade fundamental, carmim = painel real não detectado. Os canais de característica mostram <em>por que</em> o detector
+          marcou o que marcou.
+          {verOsm && geo && (
             <>
               {' '}
               Cena sintética georreferenciada (GSD {num(geo.gsd_m, 2)} m) sobre o OpenStreetMap
-              {geoEst ? ', georreferência reconstruída a partir do lat/lon das detecções' : ''}; tracejado âmbar = extensão da cena; © OpenStreetMap contributors.
+              {geoEst ? ', georreferência reconstruída a partir do lat/lon das detecções' : ''}; © OpenStreetMap contributors.
             </>
           )}
         </>
       }
     >
-      {verOsm && lim ? (
-        <MapaOsm limites={lim} altura={420} maxZoom={19}>
-          <ImagemGeo key={url} url={url} limites={lim} opacidade={opac} />
-          <Rectangle bounds={lim} interactive={false} pathOptions={{ color: color('amber'), weight: 1.5, dashArray: '5 4', fill: false }} />
-          <DeteccoesGeo geo={geo} dets={dets} />
+      {verOsm && lim && geo ? (
+        <MapaOsm limites={lim} altura={460} maxZoom={19} rolagem animar sobreposicao={<LegendaCena />}>
+          <CamadaCena url={url} geo={geo} dets={dets} opacidade={opac} sel={selDet} onSel={setSelDet} mostrarDets={mostrarDets} />
         </MapaOsm>
       ) : (
         <img src={url} style={{ width: '100%', borderRadius: 6, border: '1px solid var(--o-line)' }} alt="cena de referência com detecções" />
       )}
-      <div className="chips" style={{ marginTop: 8 }}>
-        {BENCH_MODOS.map(([q, rot]) => (
-          <Chip key={q} on={bench === q} onClick={() => setBench(q)}>
-            {rot}
-          </Chip>
-        ))}
-      </div>
-      <div className="chips" style={{ marginTop: 6 }}>
-        <Chip on={osm} onClick={() => setOsm(true)}>
-          Sobre o OpenStreetMap
-        </Chip>
-        <Chip on={!osm} onClick={() => setOsm(false)}>
-          Imagem
-        </Chip>
-        {verOsm && (
-          <label className="chip" style={{ gap: 6 }}>
-            opacidade
-            <input type="range" min={0} max={1} step={0.05} value={opac} style={{ width: 90 }} onChange={(e) => setOpac(parseFloat(e.target.value))} />
-            <span>{pct(opac, 0)}</span>
-          </label>
-        )}
-      </div>
+      {verOsm && det && selDet !== null && <DetalheDeteccao det={det} i={selDet} />}
+      <ControlesCena
+        modos={BENCH_MODOS}
+        modo={bench}
+        setModo={setBench}
+        opacidade={opac}
+        setOpacidade={setOpac}
+        mostrarDets={mostrarDets}
+        setMostrarDets={setMostrarDets}
+        entorno={entorno}
+        setEntorno={setEntorno}
+        mapa={verOsm}
+        extra={
+          <>
+            <Chip on={osm} onClick={() => setOsm(true)}>
+              Sobre o OpenStreetMap
+            </Chip>
+            <Chip on={!osm} onClick={() => setOsm(false)}>
+              Imagem
+            </Chip>
+          </>
+        }
+      />
       {osm && !geo && (
         <div className="small faint">
           {(subId && detalhe.status === 'carregando') || (!geoApi && !subId && !tam && refe.image_url)
             ? 'Obtendo a georreferência da cena…'
             : 'A cena de referência não traz georreferência na API: exibindo só a imagem.'}
+        </div>
+      )}
+      {verOsm && (
+        <div style={{ marginTop: 10 }}>
+          <div className="okpi-label" style={{ marginBottom: 4 }}>
+            Detecções da cena · clique para localizar no mapa
+          </div>
+          <TabelaDeteccoes dets={dets} sel={selDet} onSel={setSelDet} />
         </div>
       )}
     </OCard>

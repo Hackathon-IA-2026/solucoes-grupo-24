@@ -581,3 +581,25 @@ estão intactos.
   com sessão de inferência; o detector clássico volta a ser usado. `/api/mapa/vision` devolve
   `reference.geo`.
 - Testes: protótipo 522 passaram (1 pulado); frontend 45 passaram; `tsc -b`, `oxlint` e build limpos.
+
+## 2026-09-26 — Perfis por subestação: Brasil → UF → subestação, com a visão computacional no mesmo mapa ✅
+
+- **Mapa em três níveis, um Leaflet só** (`src/oraculo/pages/Mapa.tsx`): abre no Brasil (UFs do
+  IBGE; só o RJ liberado, o resto "em breve"); clicar na UF voa até ela e mostra as subestações de
+  fronteira; clicar de novo na subestação selecionada (ou em "ver amostra de satélite") voa até a
+  cena de satélite dela, com os painéis detectados. Os dados da UF são pedidos na abertura (~18 s).
+- **Visão computacional na mesma aba**: detalhe da subestação com o bloco "Visão computacional na
+  amostra" (detector, ladrilhos, brutas → mantidas, duplicatas, área calibrada/bruta, P/R/F1/IoU);
+  tabela de detecções sincronizada com o mapa; no fim da tela, o banco de ensaio do detector
+  (`PainelVisao` exportado de `Visao.tsx`, sem a cena de referência).
+- **Mapa da tela Visão computacional melhorado**: zoom pela roda, "cena"/"entorno", clicar numa
+  detecção mostra os atributos, tabela das detecções sincronizada, legenda sobre o mapa, liga/desliga
+  dos contornos; nomes dos chips sem ambiguidade ("vista padrão" × "contornos das detecções").
+- **DRY**: `src/oraculo/CenaSatelite.tsx` reúne a cena (camada, controles, legenda, tabela, detalhe)
+  que antes existia copiada em `Mapa.tsx` e `Visao.tsx`.
+- **Correções no `MapaOsm`**: enquadramento inicial refeito depois do `invalidateSize`; `fitBounds`
+  sem animação e voo só com a página visível (com a aba oculta o `requestAnimationFrame` pausa e o
+  mapa ficava parado no meio); `.osm-mapa` com `isolation: isolate` (o Leaflet passava por cima do
+  header sticky ao rolar); slot `sobreposicao` para a legenda.
+- Testes: frontend 45 passaram; `tsc -b`, `oxlint` e build limpos. Conferido no navegador pelo DOM
+  (os três níveis, seleção mapa ↔ tabela, troca de subestação na cena, voltar, seção do detector).

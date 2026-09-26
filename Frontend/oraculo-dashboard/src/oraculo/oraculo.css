@@ -524,6 +524,21 @@ body.help-locked { overflow: hidden; }
   box-shadow: var(--o-shadow); font-size: 11.5px;
 }
 .osm-mapa .leaflet-tooltip-top::before { border-top-color: var(--o-line-2); }
+/* legenda por cima do mapa (canto inferior esquerdo, acima da atribuição do OSM) */
+.osm-legenda {
+  position: absolute; left: 8px; bottom: 22px; z-index: 500; display: flex; flex-direction: column; gap: 3px;
+  background: var(--o-panel); border: 1px solid var(--o-line-2); border-radius: var(--o-radius-sm);
+  padding: 6px 9px; font-size: 11px; color: var(--o-ink-2); pointer-events: none;
+}
+.osm-legenda span { display: flex; align-items: center; gap: 6px; }
+.osm-legenda i { display: inline-block; width: 12px; height: 9px; border-radius: 2px; flex: none; }
+/* atributos da detecção selecionada, logo abaixo do mapa da cena */
+.oraculo .det-detalhe {
+  display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; padding: 7px 10px; font-size: 12px;
+  background: var(--o-panel-2); border: 1px solid var(--o-line); border-left: 3px solid var(--o-amber);
+  border-radius: var(--o-radius-sm); color: var(--o-ink-2);
+}
+.oraculo .det-detalhe strong { color: var(--o-ink); }
 .osm-aviso {
   position: absolute; left: 8px; top: 8px; z-index: 500; max-width: 70%;
   background: var(--o-panel); border: 1px solid var(--o-line-2); border-left: 3px solid var(--o-amber);
