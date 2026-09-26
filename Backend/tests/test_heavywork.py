@@ -110,3 +110,21 @@ def test_etapas_reais_batem_com_o_config():
     from src.utils.config import carregar
     ligadas, _ = validar_config(carregar("heavywork"), montar())
     assert set(ligadas) == set(carregar("heavywork")["etapas"])
+
+
+@pytest.mark.parametrize("modulo", ["src.models.carga", "src.models.curtailment",
+                                    "src.models.relatorio_carga", "src.models.relatorio_curtailment"])
+def test_modelos_nao_dependem_do_codigo_que_constroi_as_tabelas(modulo):
+    """Treino e previsão só leem as tabelas: importam os CAMINHOS (saidas.py), nunca quem constrói.
+
+    codigo_de segue os imports para montar a impressão digital. Quando os modelos importavam
+    src/processing/tabelas.py por causa dos SAIDA_*, mexer no processamento (ex.: tabela nova
+    carga_area) retreinava carga e curtailment (~50 min) com as tabelas idênticas. Mudança
+    real nos dados já entra na impressão pelos próprios arquivos das tabelas.
+    """
+    from src.utils.impressao import codigo_de
+    from src.utils.paths import RAIZ
+    so_leitura = {"__init__.py", "saidas.py"}
+    construtores = [p.relative_to(RAIZ).as_posix() for p in codigo_de(modulo, RAIZ)
+                    if p.parent.name in ("processing", "spatial") and p.name not in so_leitura]
+    assert construtores == [], f"{modulo} puxa código de construção para a impressão: {construtores}"

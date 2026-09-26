@@ -13,10 +13,13 @@ Origem de cada recurso hoje:
 |            | `distribuidora` ainda sem definição (decisão do Luiz);      |       |
 |            | `lat`/`lon` = sede da UF (sem coordenada por usina)         |       |
 | alertas    | mesmo classificador + SHAP exato do LightGBM                | false |
-| excedentes | mock do dashboard (até a MMGD por mancha existir)           | true  |
+| excedentes | MMGD por área de influência (BDGD × ANEEL) × fator de geração e carga   | false |
+|            | da área RJ (ONS), persistência sazonal (src/spatial)        |       |
 | validacao  | backtest (src/models/metricas.py) + manifesto de download   | false |
 |            | + metadados do treino (src/models/carga.py)                 |       |
-| mmgd_densidade | mock do dashboard (até a MMGD por mancha existir)       | true  |
+| mmgd_densidade | capacidade de MMGD por área de influência (src/spatial/construir.py) | false |
+| areas_influencia | polígonos das áreas de influência (GeoJSON) + MMGD e excedente | false |
+|            | de cada uma (src/spatial/camada_mapa.py)                    |       |
 * Registro com qualquer parte mock é mock inteiro: a curva é real, mas os fatores climáticos
   não, então `mock: true` até existir fonte meteorológica (ou o contrato mudar); o risco é
   real, mas o campo `distribuidora` não, então `mock: true` até o Luiz definir o que ele
@@ -31,13 +34,14 @@ from __future__ import annotations
 import json
 from datetime import datetime
 
+import geopandas as gpd
 import pandas as pd
 
 from pipeline.explicabilidade import ExplicadorLightGBM, explicar_saida
 from pipeline.gerar_alertas_mock import para_contrato_dashboard
-from src.contrato.modelos import (AlertaDetalhado, CargaSnapshot, ErroDiario, FatoresClimaticos,
-                                  MetricasValidacao, ModeloInfo, Periodo, PontoPrevisao,
-                                  PrevisaoCurva, RiscoUsina, StatusFonte)
+from src.contrato.modelos import (AlertaDetalhado, AreasInfluencia, CargaSnapshot, DensidadeMmgd, ErroDiario,
+                                  ExcedenteTsoDso, FatoresClimaticos, MetricasValidacao, ModeloInfo,
+                                  Periodo, PontoPrevisao, PrevisaoCurva, RiscoUsina, StatusFonte)
 from src.db import migracoes, repositorio
 from src.db.sessao import nova_sessao
 from src.features.carga import SUBSISTEMAS
@@ -46,12 +50,18 @@ from src.features.curtailment import rotulo_explicacao
 from src.models import carga as mc
 from src.models import curtailment as mcur
 from src.models import metricas as mt
-from src.processing.tabelas import SAIDA_CALENDARIO, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA
+from src.processing.saidas import SAIDA_CALENDARIO, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA, SAIDA_CARGA_AREA
+from src.spatial import camada_mapa
+from src.spatial import excedentes as ex
+from src.spatial.saidas import (SAIDA_AREAS_INFLUENCIA_GEOJSON, SAIDA_CARGA_AREA_INFLUENCIA,
+                                SAIDA_MMGD_AREA_INFLUENCIA, SAIDA_MMGD_DIARIA)
 from src.utils.config import carregar
 from src.utils.paths import DASHBOARD_MOCK, RAIZ, ensure
 from src.utils.tempo import FUSO, PASSO, para_utc
 
-RECURSOS_MOCK = ("excedentes", "mmgd_densidade")
+# Recursos ainda servidos do mock do dashboard. Vazio desde a Fase 6 (excedentes e densidade de
+# MMGD passaram a sair de src/spatial); o mecanismo fica para o próximo recurso sem fonte real.
+RECURSOS_MOCK: tuple[str, ...] = ()
 # Sem fonte meteorológica, os fatores climáticos da curva vêm do mock -> curva inteira mock=True.
 # Vira True quando houver ERA5/previsão numérica (e a curva passa a mock=False sozinha).
 FATORES_CLIMATICOS_REAIS = False
@@ -281,6 +291,53 @@ def riscos_e_alertas(agora: pd.Timestamp) -> tuple[list[RiscoUsina], list[Alerta
     return riscos, alertas
 
 
+def pico_excedentes(agora: pd.Timestamp) -> pd.DataFrame:
+    """Pico de excedente de MMGD previsto nas próximas 24 h, por subestação de fronteira.
+
+    Método em src/spatial/excedentes.py e docs/metodo_espacial.md: capacidade da BDGD × ANEEL,
+    carga e MMGD do ONS; persistência sazonal, sem nenhum dado posterior ao agora. Calculado UMA
+    vez por publicação e usado pela tela Excedentes e pela camada de áreas do mapa (mesmos números).
+    """
+    c = carregar("espacial")
+    ce = c["excedentes"]
+    cap = ex.capacidade_no_agora(pd.read_csv(SAIDA_MMGD_DIARIA), agora)
+    fator = ex.fator_geracao(pd.read_csv(SAIDA_CARGA_AREA), pd.read_csv(SAIDA_CAPACIDADE_MMGD), c["uf"])
+    prev = ex.prever(fator, cap, pd.read_csv(SAIDA_CARGA_AREA_INFLUENCIA), agora,
+                     max(ce["horizontes"].values()), ce["defasagem_sazonal_passos"])
+    return ex.pico_por_area(prev, ce["horizontes"])
+
+
+def excedentes_tso_dso(pico: pd.DataFrame) -> list[ExcedenteTsoDso]:
+    """Tela Excedentes: subestações da área piloto com maior excedente previsto (dado real).
+
+    Posição = a subestação (a fronteira TSO–DSO). `pico` = pico_excedentes(agora).
+    """
+    areas = pd.read_csv(SAIDA_MMGD_AREA_INFLUENCIA, dtype={"cod_sub": str})
+    sel = ex.selecionar(pico, areas, carregar("espacial")["excedentes"])
+    return [ExcedenteTsoDso(mock=False, area_concessao=r.area, distribuidora=r.distribuidora,
+                            lat=r.lat_sub, lon=r.lon_sub, fonte=r.fonte,
+                            excedente_mw=round(float(r.excedente_mw), 1), prioridade=r.prioridade,
+                            horizonte=r.horizonte, acao_recomendada=r.acao)
+            for r in sel.itertuples()]
+
+
+def densidade_mmgd() -> DensidadeMmgd:
+    """Camada de calor do Mapa Híbrido: capacidade de MMGD por área de influência (dado real)."""
+    areas = pd.read_csv(SAIDA_MMGD_AREA_INFLUENCIA)
+    return DensidadeMmgd(mock=False, descricao=carregar("espacial")["densidade"]["descricao"],
+                         pontos=ex.pontos_densidade(areas))
+
+
+def areas_influencia(pico: pd.DataFrame) -> AreasInfluencia:
+    """Camada de polígonos do Mapa Híbrido: áreas de influência com MMGD e excedente (dado real)."""
+    c = carregar("espacial")
+    geo = gpd.read_file(SAIDA_AREAS_INFLUENCIA_GEOJSON)
+    feicoes = camada_mapa.feicoes(geo, pico, c["mapa"]["simplificacao_m"], c["geometria"]["crs_metrico"],
+                                  c["mapa"]["casas_decimais"])
+    return AreasInfluencia(mock=False, type="FeatureCollection", descricao=c["mapa"]["descricao"],
+                           features=feicoes)
+
+
 def ler_mock(recurso: str) -> list | dict:
     """Mock do dashboard para um recurso; recusa qualquer item sem "mock": true."""
     dados = json.loads((DASHBOARD_MOCK / f"{recurso}.json").read_text(encoding="utf-8"))
@@ -302,6 +359,7 @@ def montar_contrato() -> tuple[dict, datetime]:
     prev = mc.ler_previsoes()
     fatores = {c["horizonte"]: c["fatoresClimaticos"] for c in ler_mock("previsao")}
     riscos, alertas = riscos_e_alertas(agora)
+    pico = pico_excedentes(agora)
     recursos = {
         "riscos": [r.para_json() for r in riscos],
         "alertas": [a.para_json() for a in alertas],
@@ -309,6 +367,9 @@ def montar_contrato() -> tuple[dict, datetime]:
         "previsao": [c.para_json() for c in curvas_previsao(prev, agora, fatores)],
         "validacao": metricas_validacao(prev, agora, download.status_fontes(cfg["status_fontes"]),
                                         mc.metadados_treino()).para_json(),
+        "excedentes": [e.para_json() for e in excedentes_tso_dso(pico)],
+        "areas_influencia": areas_influencia(pico).para_json(),
+        "mmgd_densidade": densidade_mmgd().para_json(),
         **{r: ler_mock(r) for r in RECURSOS_MOCK},
     }
     return recursos, carga.timestamp_utc

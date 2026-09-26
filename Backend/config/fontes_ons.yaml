@@ -24,7 +24,8 @@ sanidade_razao_max: 2.0
 
 # particao:
 #   data     -> ano=YYYY/mes=MM a partir do nome do arquivo (bases tm e séries mensais)
-#   id_ons   -> baixa mensal em _landing/ e consolida em id_ons=<id>/ com DuckDB (bases detail)
+#   id_ons   -> baixa mensal em _landing/ e consolida em ano=<AAAA>/id_ons=<id>/ com DuckDB (bases detail;
+#               atualizar um mês só reescreve o ano dele)
 #   arquivo  -> guarda o arquivo como veio (séries pequenas / cadastros)
 conjuntos:
   - pacote: restricao_coff_eolica_usi
@@ -93,6 +94,31 @@ arquivos_diretos:
     url: https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?formato=application/vnd.geo+json&qualidade=minima&intrarregiao=municipio
     destino: data/raw/ibge/malha_municipios.geojson
     atualizar_apos_dias: 180
+
+  # BDGD (Base de Dados Geográfica da Distribuidora, ANEEL) da área piloto RJ (decisão do Tiago
+  # em 2026-09-26: RJ reaproveitando a pipeline do Backend/RDX). Uma File Geodatabase zipada por
+  # distribuidora, publicada uma vez por ano no portal ArcGIS da ANEEL (dono: aneel_aneel).
+  # Para trocar de ano: pegue o id do item em
+  #   https://www.arcgis.com/sharing/rest/search?q=title:Light_382&f=json
+  # e troque `url` E `destino` (o download percebe a URL nova e rebaixa; ver download.py).
+  # Sem `atualizar_apos_dias`: a base é anual, nunca expira sozinha.
+  # Lido direto do .zip pelo GDAL (/vsizip/), sem descompactar: o disco da máquina é apertado.
+  - apelido: bdgd_light
+    url: https://www.arcgis.com/sharing/rest/content/items/430f90486174407aabe3b07f50ca6150/data
+    destino: data/raw/aneel/bdgd/Light_382_2025-12-31_V11_20260824-0926.gdb.zip   # ~1,1 GB
+  - apelido: bdgd_enel_rj
+    url: https://www.arcgis.com/sharing/rest/content/items/32a52a0b29df4b82b9e63362bc927267/data
+    destino: data/raw/aneel/bdgd/Enel_RJ_383_2025-12-31_V11_20260827-0133.gdb.zip  # ~1,0 GB
+
+  # Malhas do IBGE (API de malhas v3): limite do estado do RJ (preenche os vazios entre as
+  # manchas, como o RDX fazia com o geobr) e municípios do RJ (rateio do cadastro da ANEEL por
+  # mancha). Substitui o pacote geobr: é a mesma malha oficial, sem dependência nova.
+  - apelido: ibge_malha_rj
+    url: https://servicodados.ibge.gov.br/api/v3/malhas/estados/33?formato=application/vnd.geo+json&qualidade=maxima
+    destino: data/raw/ibge/malha_uf_33.geojson
+  - apelido: ibge_malha_municipios_rj
+    url: https://servicodados.ibge.gov.br/api/v3/malhas/estados/33?formato=application/vnd.geo+json&qualidade=maxima&intrarregiao=municipio
+    destino: data/raw/ibge/malha_municipios_33.geojson
 
 # API REST de carga (fora do CKAN e fora do MCP). Limite: 3 meses por chamada.
 api_carga:

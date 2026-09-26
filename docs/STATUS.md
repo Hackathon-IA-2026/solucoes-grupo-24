@@ -603,3 +603,58 @@ estão intactos.
   header sticky ao rolar); slot `sobreposicao` para a legenda.
 - Testes: frontend 45 passaram; `tsc -b`, `oxlint` e build limpos. Conferido no navegador pelo DOM
   (os três níveis, seleção mapa ↔ tabela, troca de subestação na cena, voltar, seção do detector).
+
+## 2026-09-26 — Limpeza de branches + fontes da tela Validação conferidas antes do run_heavywork ✅
+
+- Branches `claude/eager-gauss-or90gs` e `claude/laughing-feynman-ntqc6y` apagadas (local e GitHub): o código delas já estava na main; o único resto era um commit com dados gerados (fora do git pelo `.gitignore`). `.claude/launch.json` entrou na main com caminhos relativos.
+- `run_heavywork.py` completo nesta máquina (ingestão ~24 min, treinos ~16 + ~15 min) falhou só na **publicação**: 4 fontes novas no manifesto (BDGD Light/Enel RJ, malhas do IBGE, da Fase 6) sem grupo em `status_fontes` (`config/publicacao.yaml`).
+- Classe de bug eliminada: `download.validar_grupos_fontes` confere `publicacao.yaml` × `fontes_ons.yaml` (fonte sem grupo **e** grupo citando fonte inexistente). Roda no **início** do `run_heavywork.py` (erro em segundos, não após ~70 min) e no teste `test_status_fontes_cobre_todas_as_fontes_declaradas`. Quem declarar fonte nova em `fontes_ons.yaml` precisa, no mesmo commit, dar grupo a ela.
+
+## 2026-09-26 — Fase 6: pipeline da BDGD do RDX migrada para o backend (área piloto RJ) ✅
+
+- **Área piloto: RJ (LIGHT + Enel RJ)**, reaproveitando o `Backend/RDX/` (`config/projeto.yaml`, não é mais provisória). Método em `docs/metodo_espacial.md`.
+- **Ingestão**: BDGD 2025 da LIGHT e da Enel RJ (~2,1 GB, portal ArcGIS da ANEEL) e malhas do IBGE (API v3) entram como `arquivos_diretos`. `download.py`: chave do manifesto pelo arquivo de destino (a das URLs `.../data` do ArcGIS não mudava entre edições) e novo download quando a URL muda na config (`precisa_baixar_direto`). `contar_linhas` não conta mais `\n` de binário. Nova opção `--diretos`.
+- **Processamento**: tabela `carga_area.csv` (área RJ do ONS). Um só leitor da carga verificada (`_ler_carga_verificada`) serve subsistemas e área. `arquivo_direto()` em `utils/config.py` é o único jeito de achar um arquivo direto.
+- **`src/spatial/`** (etapa nova `espacializacao` no `run_heavywork`, ~1 min): `bdgd.py` lê o .gdb dentro do .zip; `areas_influencia.py` monta as 448 áreas de influência das subestações (fecho de trafos, sobreposições, Voronoi nos vazios, classificação e hierarquia do RDX); `mmgd.py` faz o desempate por CEG com o cadastro da ANEEL (1.908,7 MW, dos quais 293,5 MW de lag de sistema rateado por município); `excedentes.py` calcula carga bruta e excedente por subestação de fronteira; `saidas.py` guarda os caminhos.
+- **Bugs do RDX que viraram impossíveis**: MMGD só com CEG `GD.` (o RDX somava 2,2 GW de UHE/UTE da UGAT); semente engolida por fecho vizinho; área de influência descartada em silêncio pelo recorte; id com código vazio ("LIGHT:") vira NA; `fillna(0)` que transformava SUB vazio na área "0"; carga e MMGD na mesma subestação de fronteira (antes, Brisamar e Centenário ficavam com geração e sem carga).
+- **Publicação**: `excedentes` e `mmgd_densidade` saem reais (`mock: false`) sem mudar o schema. `RECURSOS_MOCK` ficou vazio.
+- **Conferência**: os 3 maiores excedentes previstos (Centenário, Influência, Brisamar) estão entre as 9 subestações com fluxo reverso **medido** na BDGD (`docs/reports/alimentadores_fluxo_reverso.csv`).
+- **Arquitetura**: `tests/test_estrutura.py` também pega leitura do bruto via `arquivo_direto(` e libera só os 3 módulos espaciais que leem a BDGD.
+- Testes: 11 novos em `tests/test_espacial.py` + 1 em `test_download.py`; 137 passam (1 pulado). Ponta a ponta: publicação (execução 6) servida pela API e vista nas telas Excedentes e Mapa Híbrido.
+- ⚠️ `src/models/*` importam `src/processing/tabelas.py` só pelas constantes `SAIDA_*`, então este commit força o retreino no próximo `run_heavywork` (~50 min).
+- Pendências: fator de correção do satélite (Luiz); contrato das áreas de influência em GeoJSON (Luiz); rótulo "sintético" fixo no Mapa Híbrido (Luiz); fator de geração por área de influência e perfil intradiário.
+- Segunda classe de bug (apontada pela sessão da Fase 6): os modelos importavam `src/processing/tabelas.py` só pelos caminhos `SAIDA_*`, e o `codigo_de` puxava o código do processamento para a impressão digital do treino. Qualquer mudança no processamento retreinava carga e curtailment (~50 min), mesmo com tabelas idênticas. Os caminhos foram para `src/processing/saidas.py`, sem lógica e no mesmo padrão de `src/spatial/saidas.py`. Modelos, publicação, etapas e testes leem de lá. O teste `test_modelos_nao_dependem_do_codigo_que_constroi_as_tabelas` impede a volta.
+
+## 2026-09-26 — Fase 6: "manchas" renomeadas para "áreas de influência da subestação" ✅
+
+- Pedido do Tiago: os polígonos por subestação são **áreas de influência da subestação**, não "manchas". A troca vale em código, config, testes e docs da Fase 6.
+- Código: `src/spatial/manchas.py` → `areas_influencia.py`, `construir_manchas` → `construir_areas`, `mancha_id` → `area_id`, `mancha_fronteira` → `area_fronteira`, `mancha_mae` → `area_mae`, `top_manchas`/`min_manchas` → `top_areas`/`min_areas` (`config/espacial.yaml`).
+- Saídas: `output/areas_influencia_rj.geojson`, `data/processed/mmgd_area_influencia.csv`, `carga_area_influencia_mensal.csv`. "Área de influência" vai por extenso nos nomes para não confundir com `carga_area.csv` (área de carga do ONS).
+- Contrato inalterado: nenhum campo dele tinha "mancha". O rótulo e os textos do dashboard são do Luiz (`limitacoes.ts`, mock da densidade).
+- `mmgd.py` não importa mais nada de `src/processing/tabelas.py`: o apelido do cadastro da ANEEL vem de `src/processing/saidas.py`, então a espacialização não depende do código do processamento.
+
+- Terceira classe de bug: a ingestão levava ~25 min em **toda** execução. O ONS republica os 2 últimos meses do `coff_*_detail`, e o consolidado (só `id_ons=`, um arquivo por usina com todos os anos) era reescrito inteiro (~80 M linhas) a cada mês rebaixado. `consolidar_id_ons` agora grava em `ano=<AAAA>/id_ons=<id>/` e só refaz os anos dos meses novos; os anos fechados ficam intocados. A troca de pastas é recuperável (`_recuperar_troca`): antes, o `rmtree` + `rename` podia perder o consolidado se o processo morresse no meio. O layout antigo é migrado inteiro uma vez, na próxima execução (~25 min, só dessa vez). Testes: incremental não toca o ano fechado, migração do layout antigo e troca interrompida.
+- `run_heavywork.py` completo na main, com a Fase 6: execução 7 publicada e as 8 telas do dashboard respondendo 200 (riscos e previsão seguem mock, conforme `docs/real_vs_mock.md`).
+
+## 2026-09-26 — Mapa das áreas de influência no dashboard + correções achadas na conferência ✅
+
+- Pedido do Tiago: validar a Fase 6 vendo no mapa. **Contrato v4 (aditivo)**: recurso `areas_influencia`, `GET /api/areas-influencia`, GeoJSON das 447 áreas com MMGD e excedente (`docs/schema_changelog.md`). Backend: `src/spatial/camada_mapa.py`. O pico de excedente é calculado uma vez por publicação (`montar.pico_excedentes`) e alimenta a tela Excedentes e o mapa (mesmos números).
+- Dashboard: camada "Áreas de influência (MMGD)" (`CamadaAreas.tsx`) com tooltip (nome, subestação mãe, MMGD, lag, excedente), botões "Área piloto"/"Brasil" e contorno laranja nas fronteiras com excedente e tracejado nas satélites delas. O rótulo "(sintético)" da densidade só aparece quando o dado é mock. Mock de 3 áreas reais congeladas.
+- **Bugs achados olhando o mapa e tornados impossíveis**:
+  - polígono vazio (semente de 10 m apagada pela simplificação para a web) passava no Backend e derrubava a tela: o contrato do Backend agora exige o mesmo do Zod (anel ≥ 4 pontos), e a simplificação nunca apaga uma área;
+  - 5 subestações perdiam o próprio ponto para a vizinha (regra do RDX "a primeira da fila leva a sobreposição"): a sobreposição passa a ir para a subestação mais próxima;
+  - `buffer(+e).buffer(−e)` zerava áreas de até 482 km²: a limpeza não pode mais encolher uma área;
+  - 47 geometrias inválidas na saída: `so_validas` corrige e confere.
+- Verificação: pytest 151 ok (1 pulado); dashboard 23 testes, tsc, oxlint e build limpos. O JSON real da API passa no Zod. Conferência numérica e visual no navegador em `docs/metodo_espacial.md` ("Conferência no mapa").
+- Para ver: a API em :8000 precisa ser reiniciada (`python main.py`) para ter a rota nova; depois é só abrir o Mapa Híbrido.
+
+## 2026-09-26 — Backend do HackaIA_Oraculo trazido para a branch `feat/backend-sync-oraculo` ✅ (Tiago)
+
+- **Origem**: o `Backend/` deste repositório tinha sido importado do HackaIA_Oraculo no commit `ada0d22` (diff vazio). Os 8 commits posteriores do HackaIA_Oraculo (`ffbfb86..d1edc99`: BDGD em `src/spatial`, áreas de influência, `saidas.py`, ingestão consolidada por ano, relatórios da execução 7, contrato v4) entraram por `git cherry-pick -x`, com autoria e mensagens preservadas, sobre a `feat/merge-prototipo-inicial` (protótipo `oraculo/`, auditoria por visão computacional, e2e).
+- **Conflitos resolvidos pela união dos dois lados**: `fontes_ons.yaml` e `publicacao.yaml` (SIGA + malha municipal BR **e** BDGD + malhas do RJ, cada apelido em um grupo), `test_estrutura.py` (módulos espaciais **e** de visão podem ler o bruto), README (tecnologias), FASES (itens da auditoria do Luiz dentro da Fase 6). Relatórios de `docs/reports/`: versão da origem (execução 7), que é a que bate com os dados copiados.
+- **Frontend (mínimo do contrato v4)**: `CamadaAreas.tsx`, `types.ts`, `dataSource.ts` e o mock entraram; a camada foi encaixada à mão no `MapaHibrido.tsx` novo do Luiz (toggle "Áreas de influência (MMGD)", botão "Área piloto" junto de Enquadrar/Brasil, legenda). `tsc -b` limpo, vitest 44/44.
+- **DRY**: havia dois leitores da carga verificada (`carga_bruta.ler_carga_verificada` e `tabelas._ler_carga_verificada`). Ficou um só, em `carga_bruta.py`, já com a regra carga ≤ 0 → NaN + `carga_global_invalida`. `cadastro.py` lia `mapeamento_subsistema_area.csv` direto (quebrava `test_joins`): agora pede a lista a `joins.codigos_areacarga("area")`.
+- **Dados copiados** (não rebaixados) do HackaIA_Oraculo: `data/raw` (4,2 GB, layout novo `ano=/id_ons=`), `data/processed`, `data/modelos`, `_estado_heavywork.json`, `oraculo.db` e `output/contrato.json`. Tudo fora do git (conferido com `git status --ignored`).
+- ⚠️ Um `run_heavywork.py --help` rodou o pipeline de verdade (o script não lê argumentos) e foi parado antes do treino: ingestão incremental (SIGA, malha municipal BR, janelas novas da API de carga) e processamento concluíram e ficaram registrados no estado. Os relatórios dessa execução parcial foram descartados. Pelas impressões digitais, o próximo `run_heavywork.py` refaz espacialização, treinos (~50 min), previsões e publicação, porque a carga processada ganhou dados novos.
+- Verificação: `pytest tests` 173 ok (8 pulados); API com o banco copiado: rotas do contrato, `/api/areas-influencia` (447 áreas, `mock: false`), `/api/health` do protótipo e `/api-docs` respondem 200. `tests_oraculo`: 670 ok; 22 falham só por `import torch` (WinError 1114 no venv do HackaIA_Oraculo usado aqui), não pelo código.
+- Pendências: `cadastro.py` (SIGA, MMGD por município, carga por área) ainda não está ligado em `tabelas.construir`; unificar a ingestão e as subestações do protótipo (`oraculo/ons`, `oraculo/substations`) com `src/ingestion` e `src/spatial`; `run_heavywork.py` sem `--help`/`--dry-run`.

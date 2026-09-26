@@ -9,9 +9,9 @@
 ## Tecnologias utilizadas
 
 - Linguagem: Python 3.11+ (dados e modelos), TypeScript (dashboard)
-- Framework(s): pandas, DuckDB, LightGBM 4.6 (previsão de carga quantílica e classificador de curtailment, com SHAP exato), scikit-learn (métricas e API sklearn do LightGBM), pytorch-forecasting, geopandas, pyproj + shapely (geometria da auditoria), holidays, FastAPI + Uvicorn (API), SQLAlchemy 2 + Alembic (banco); visão computacional opcional: Ultralytics YOLOv8-seg (painéis solares) e Google Earth Engine
+- Framework(s): pandas, DuckDB, LightGBM 4.6 (previsão de carga quantílica e classificador de curtailment, com SHAP exato), scikit-learn (métricas e API sklearn do LightGBM), pytorch-forecasting, geopandas + pyogrio/GDAL (BDGD lida direto do .zip) + shapely 2.1, pyproj (geometria da auditoria), holidays, FastAPI + Uvicorn (API), SQLAlchemy 2 + Alembic (banco); visão computacional opcional: Ultralytics YOLOv8-seg (painéis solares) e Google Earth Engine
 - Banco de dados: Parquet particionado + DuckDB (dados de trabalho); SQLite via SQLAlchemy no Backend (compatível com PostgreSQL)
-- APIs / Serviços externos: dados.ons.org.br (CKAN), API de carga do ONS (apicarga.ons.org.br), MCP oficial do ONS, ANEEL (MMGD e BDGD), ERA5 (Copernicus CDS, opcional), Google Earth Engine (imagem de satélite, opcional), IBGE (malha das UFs do mapa, baixada uma vez), Open Buildings, OSM
+- APIs / Serviços externos: dados.ons.org.br (CKAN), API de carga do ONS (apicarga.ons.org.br), MCP oficial do ONS, ANEEL (cadastro de MMGD, SIGA e BDGD LIGHT/Enel RJ via portal ArcGIS), IBGE (API de malhas v3), ERA5 (Copernicus CDS, opcional), Google Earth Engine (imagem de satélite, opcional), Open Buildings, OSM
 - Dashboard: React 19 + Vite + TypeScript + Tailwind CSS v4 + React Router + Recharts + react-leaflet + Zod + Vitest, fontes IBM Plex Sans e JetBrains Mono empacotadas (`Frontend/oraculo-dashboard`); o mapa funciona offline (sem tiles externos)
 
 ## Como rodar o projeto
@@ -27,10 +27,10 @@ python -m venv .venv
 pip install -e ".[dev]"
 
 # 1. Trabalho pesado: baixa das fontes só o que falta ou foi republicado, processa as tabelas,
-#    treina os modelos (carga e curtailment), gera as previsões fora da amostra e o backtest
-#    (docs/reports/) e publica no banco. Sem argumentos: a config fica em config/heavywork.yaml.
-#    Pode rodar a qualquer momento: pula o que está em dia.
-#    Primeira vez: ~1,6 GB e ~30 min de download + ~25 min de treino e previsão.
+#    monta as áreas de influência das subestações e a MMGD de cada uma (BDGD, área piloto RJ), treina os modelos (carga e curtailment),
+#    gera as previsões fora da amostra e o backtest (docs/reports/) e publica no banco.
+#    Sem argumentos: a config fica em config/heavywork.yaml. Pode rodar a qualquer momento:
+#    pula o que está em dia. Primeira vez: ~3,7 GB e ~35 min de download + ~25 min de treino.
 python run_heavywork.py
 
 # 2. Serviço web: API só de leitura sobre o banco publicado no passo 1
@@ -90,7 +90,7 @@ Visão computacional com as duas soluções: **Detector por subestação** (prot
 
 - Python 3.11 ou 3.12
 - Node.js 20.19+ ou 22.12+ e npm (dashboard)
-- ~5 GB livres em disco para `Backend/data/raw` e ~8 GB de RAM (limites do DuckDB em `Backend/config/fontes_ons.yaml`)
+- ~7 GB livres em disco para `Backend/data/raw` (a BDGD fica zipada, ~2,1 GB) e ~8 GB de RAM (limites do DuckDB em `Backend/config/fontes_ons.yaml`)
 - Opcional: credencial do Copernicus CDS (`~/.cdsapirc`) para o ERA5 (`era5_disponivel` em `Backend/config/projeto.yaml`)
 - Opcional (visão computacional): extra `pip install -e ".[visao]"` (~300 MB com o torch CPU), pesos do YOLO (`modelo.caminho` em `Backend/config/visao.yaml`, fora do git) e, para baixar imagem, `earthengine authenticate` + `satelite.gee_projeto`
 - Documentação detalhada — comece pela visão geral do sistema (de onde vêm os dados, como são usados, modelos, API e telas) e siga para catálogo de séries, inventário do portal ONS, MCP, schema do contrato, real vs. mock e status: [`docs/visao_geral_sistema.md`](./docs/visao_geral_sistema.md)

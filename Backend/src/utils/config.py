@@ -8,7 +8,9 @@ from typing import Any
 
 import yaml
 
-from src.utils.paths import CONFIG
+from pathlib import Path
+
+from src.utils.paths import CONFIG, RAIZ
 
 # Chaves obrigatórias de config/projeto.yaml (definidas em docs/contexto dos prompts.txt).
 # Validar aqui transforma "chave esquecida" em erro imediato e explícito, e não em
@@ -49,3 +51,15 @@ def projeto() -> dict[str, Any]:
 def razoes_curtailment() -> list[str]:
     """Razões de corte modeladas. REL só entra se incluir_rel=true (DRY: um só lugar)."""
     return ["ENE", "CNF", "REL"] if projeto()["incluir_rel"] else ["ENE", "CNF"]
+
+
+def arquivo_direto(apelido: str) -> Path:
+    """Caminho local de um arquivo direto de config/fontes_ons.yaml (ANEEL, IBGE...).
+
+    Um lugar só para achar o destino do download: quem lê o arquivo nunca monta o caminho de
+    novo, então trocar o destino na config não deixa leitor apontando para o arquivo velho.
+    """
+    for a in carregar("fontes_ons").get("arquivos_diretos", []):
+        if a["apelido"] == apelido:
+            return RAIZ / a["destino"]
+    raise KeyError(f"config/fontes_ons.yaml sem o arquivo direto '{apelido}'")

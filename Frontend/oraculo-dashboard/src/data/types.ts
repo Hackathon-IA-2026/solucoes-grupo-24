@@ -253,6 +253,58 @@ export const DensidadeMmgdSchema = z.object({
 export type DensidadeMmgd = z.infer<typeof DensidadeMmgdSchema>
 
 // ---------------------------------------------------------------------------
+// 8. AreasInfluencia — polígonos das áreas de influência das subestações (Mapa Híbrido)
+// ---------------------------------------------------------------------------
+// GeoJSON (RFC 7946) comum, que o Leaflet desenha direto; `mock` é membro extra do objeto.
+// Espelha AreasInfluencia em Backend/src/contrato/modelos.py.
+
+/** Par [lon, lat] do GeoJSON (ordem INVERSA de lat/lon do resto do contrato), dentro do Brasil. */
+const lonLat = z.tuple([posicao.lon, posicao.lat])
+const anel = z.array(lonLat).min(4) // anel fechado: pelo menos 4 pontos
+
+export const GeometriaAreaSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('Polygon'), coordinates: z.array(anel).min(1) }),
+  z.object({ type: z.literal('MultiPolygon'), coordinates: z.array(z.array(anel).min(1)).min(1) }),
+])
+
+export const PropriedadesAreaSchema = z.object({
+  /** "<distribuidora>:<código da subestação>" */
+  areaId: z.string().min(1),
+  nome: z.string().min(1),
+  distribuidora: z.string().min(1),
+  /** plena, satélite, transformadora pura, transporte/manobra */
+  classificacao: z.string().min(1),
+  /** subestação que alimenta esta (satélites) */
+  areaMae: z.string().nullable(),
+  latSub: posicao.lat,
+  lonSub: posicao.lon,
+  areaKm2: z.number().min(0),
+  /** MMGD cadastrada na ANEEL e localizada pela BDGD (já com o fator do satélite, se houver) */
+  capacidadeMmgdMw: mw.min(0),
+  /** parte da capacidade que ainda não está na BDGD (lag de sistema) */
+  capacidadeLagMw: mw.min(0),
+  /** fator de correção por imagem de satélite; null = sem correção */
+  fatorCorrecao: z.number().positive().nullable(),
+  /** pico de excedente previsto em 24 h; null = não é subestação de fronteira */
+  excedenteMw: mw.min(0).nullable(),
+  horizonteExcedente: HorizonteExcedenteSchema.nullable(),
+})
+export type PropriedadesArea = z.infer<typeof PropriedadesAreaSchema>
+
+export const AreasInfluenciaSchema = z.object({
+  ...registro,
+  type: z.literal('FeatureCollection'),
+  descricao: z.string().min(1),
+  features: z
+    .array(z.object({ type: z.literal('Feature'), geometry: GeometriaAreaSchema, properties: PropriedadesAreaSchema }))
+    .min(1)
+    .refine((fs) => new Set(fs.map((f) => f.properties.areaId)).size === fs.length, {
+      message: 'areaId repetido nas áreas de influência',
+    }),
+})
+export type AreasInfluencia = z.infer<typeof AreasInfluenciaSchema>
+
+// ---------------------------------------------------------------------------
 // Fora do contrato: estado da API (rota /saude)
 // ---------------------------------------------------------------------------
 // Não é um dos 6 recursos publicados (não entra em docs/schema_contrato.json): descreve QUAL

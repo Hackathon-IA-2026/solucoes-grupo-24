@@ -232,6 +232,77 @@ class DensidadeMmgd(Registro):
     pontos: list[PontoCalor] = Field(min_length=1)
 
 
+# --------------------------------------------------------------------------- 8. AreasInfluencia
+# GeoJSON (RFC 7946) das áreas de influência das subestações da área piloto: camada de polígonos
+# do Mapa Híbrido. É um FeatureCollection comum (o Leaflet desenha direto), com o `mock` do
+# contrato como membro extra do objeto (permitido pela RFC 7946 §6.1).
+def _dentro_do_brasil(coords) -> None:
+    """Percorre as coordenadas [lon, lat] (qualquer aninhamento) e exige a caixa do Brasil."""
+    if coords and isinstance(coords[0], (int, float)):
+        lon, lat = coords[0], coords[1]
+        if not (-74 <= lon <= -28 and -34 <= lat <= 6):
+            raise ValueError(f"coordenada fora do Brasil (lon, lat) = ({lon}, {lat}): ordem trocada?")
+        return
+    for c in coords:
+        _dentro_do_brasil(c)
+
+
+class GeometriaArea(Modelo):
+    type: Literal["Polygon", "MultiPolygon"]
+    coordinates: list
+
+    @model_validator(mode="after")
+    def _coordenadas(self):
+        # GeoJSON é [lon, lat] (ao contrário de lat/lon do resto do contrato): trocar a ordem
+        # jogaria o RJ no oceano Índico; aqui isso falha na publicação.
+        _dentro_do_brasil(self.coordinates)
+        # Mesma regra do GeometriaAreaSchema (types.ts): polígono com pelo menos um anel e anel
+        # fechado com pelo menos 4 pontos. Sem isto, um polígono vazio (semente de 10 m que a
+        # simplificação para a web apagou) passou pelo Backend e derrubou o Mapa Híbrido.
+        poligonos = [self.coordinates] if self.type == "Polygon" else self.coordinates
+        if not poligonos or any(not aneis or any(len(a) < 4 for a in aneis) for aneis in poligonos):
+            raise ValueError(f"{self.type} vazio ou com anel de menos de 4 pontos")
+        return self
+
+
+class PropriedadesArea(Modelo):
+    area_id: str = Field(min_length=1)          # "<distribuidora>:<código da subestação>"
+    nome: str = Field(min_length=1)             # nome da subestação
+    distribuidora: str = Field(min_length=1)
+    classificacao: str = Field(min_length=1)    # plena, satélite, transformadora pura, transporte
+    area_mae: str | None                        # subestação que alimenta esta (satélites)
+    lat_sub: Latitude                           # posição da subestação
+    lon_sub: Longitude
+    area_km2: float = Field(ge=0)
+    capacidade_mmgd_mw: Mw = Field(ge=0)        # cadastrada (ANEEL), localizada pela BDGD
+    capacidade_lag_mw: Mw = Field(ge=0)         # parte que ainda não está na BDGD (lag de sistema)
+    fator_correcao: float | None = Field(default=None, gt=0)  # satélite (Luiz); null = sem correção
+    # Excedente previsto nas próximas 24 h, só para subestação de FRONTEIRA (origem de
+    # alimentadores); null nas que não conectam alimentadores próprios (ex.: satélites).
+    excedente_mw: Mw | None = Field(default=None, ge=0)
+    horizonte_excedente: HorizonteExcedente | None = None
+
+
+class FeatureArea(Modelo):
+    type: Literal["Feature"]
+    geometry: GeometriaArea
+    properties: PropriedadesArea
+
+
+class AreasInfluencia(Registro):
+    """Camada de polígonos do Mapa Híbrido: uma área de influência por subestação."""
+    type: Literal["FeatureCollection"]
+    descricao: str = Field(min_length=1)
+    features: list[FeatureArea] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _ids_unicos(self):
+        ids = [f.properties.area_id for f in self.features]
+        if len(ids) != len(set(ids)):
+            raise ValueError("areaId repetido nas áreas de influência")
+        return self
+
+
 # --------------------------------------------------------------------------- recursos
 class DefRecurso(NamedTuple):
     modelo: type[Registro]
@@ -252,4 +323,5 @@ RECURSOS: dict[str, DefRecurso] = {
     "excedentes": DefRecurso(ExcedenteTsoDso, True, "/excedentes"),
     "validacao": DefRecurso(MetricasValidacao, False, "/validacao"),
     "mmgd_densidade": DefRecurso(DensidadeMmgd, False, "/mmgd/densidade"),
+    "areas_influencia": DefRecurso(AreasInfluencia, False, "/areas-influencia"),
 }

@@ -30,6 +30,18 @@ def _mapeamento() -> pd.DataFrame:
     return m.explode("uf").reset_index(drop=True)
 
 
+def codigos_areacarga(tipo: str) -> list[str]:
+    """Códigos de área de carga de um tipo do mapeamento ('subsistema' | 'area' | 'perdas').
+
+    Quem só precisa da LISTA de áreas (ex.: carga por área de carga em processing/cadastro.py)
+    pede aqui, em vez de abrir o CSV: o mapeamento continua sendo lido num lugar só.
+    """
+    m = _mapeamento()
+    if tipo not in set(m["tipo"]):
+        raise ValueError(f"tipo '{tipo}' fora do mapeamento: {sorted(set(m['tipo']))}")
+    return sorted(m.loc[m["tipo"] == tipo, "cod_areacarga"].unique())
+
+
 def cruzar_subsistema_area(df: pd.DataFrame, coluna: str, de: str, para: str,
                            ambiguos: str = "erro") -> pd.DataFrame:
     """Acrescenta a coluna `para` a `df`, traduzindo a partir de `df[coluna]` (que é do tipo `de`).

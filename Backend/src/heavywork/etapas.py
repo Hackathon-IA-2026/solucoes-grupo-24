@@ -15,7 +15,11 @@ from src.models import carga as modelos_carga
 from src.models import curtailment as modelos_curtailment
 from src.models import relatorio_carga, relatorio_curtailment
 from src.processing import mapeamento, tabelas
+from src.processing import saidas as processamento_saidas
 from src.publicacao import montar as publicacao
+from src.spatial import bdgd as espacial_bdgd
+from src.spatial import construir as espacial
+from src.spatial import saidas as espacial_saidas
 from src.utils.config import carregar
 from src.utils.impressao import codigo_de, de_arquivos, de_objeto
 from src.utils.joins import ARQUIVO_MAPEAMENTO
@@ -67,6 +71,24 @@ def _processar() -> str:
     return "; ".join(f"{tab}: {n:,} linhas" for tab, n in total.items())
 
 
+# --------------------------------------------------------------------------- 2b. espacialização
+# Fase 6: BDGD -> áreas de influência -> MMGD por área de influência -> pesos de carga (src/spatial/construir.py).
+# Entradas: só os downloads de que ela depende (BDGD, cadastro da ANEEL, malha do IBGE), o
+# código (construir e tudo que ele importa), a config espacial, a do projeto (caminho do fator de
+# correção do satélite) e o próprio arquivo do fator, se houver.
+def _conjuntos_espaciais() -> set[str]:
+    return ({d.apelido_bdgd for d in espacial_bdgd.distribuidoras()}
+            | {espacial.APELIDO_MALHA_UF, processamento_saidas.APELIDO_ANEEL_MMGD})
+
+
+def _entradas_espacializacao() -> str:
+    arquivos = [*codigo_de("src.spatial.construir", RAIZ), CONFIG / "espacial.yaml", CONFIG / "projeto.yaml"]
+    fator = carregar("projeto")["caminho_fator_correcao"]
+    if fator:
+        arquivos.append(RAIZ / fator)
+    return de_objeto([download.impressao_digital(_conjuntos_espaciais()), de_arquivos(arquivos, RAIZ)])
+
+
 # --------------------------------------------------------------------------- 3. treino
 # Uma etapa por modelo (carga, curtailment), cada uma com a própria impressão digital: mexer
 # no classificador de curtailment não retreina a carga, e vice-versa.
@@ -74,14 +96,16 @@ def _processar() -> str:
 # importa do projeto, via codigo_de: nunca uma lista escrita à mão) + as configs. Mudou o split,
 # um hiperparâmetro ou uma feature? A etapa refaz sozinha. Mexeu só em outro modelo? Não refaz.
 def _entradas_treino_carga() -> str:
-    arquivos = [tabelas.SAIDA_CARGA, tabelas.SAIDA_CALENDARIO, *codigo_de("src.models.carga", RAIZ),
+    arquivos = [processamento_saidas.SAIDA_CARGA, processamento_saidas.SAIDA_CALENDARIO,
+                *codigo_de("src.models.carga", RAIZ),
                 CONFIG / "modelos_carga.yaml", CONFIG / "processamento.yaml"]
     return de_arquivos(arquivos, RAIZ)
 
 
 def _entradas_treino_curtailment() -> str:
     # config da carga entra: os horizontes do curtailment são os da carga
-    arquivos = [tabelas.SAIDA_ROTULOS, tabelas.SAIDA_CARGA, tabelas.SAIDA_CALENDARIO,
+    arquivos = [processamento_saidas.SAIDA_ROTULOS, processamento_saidas.SAIDA_CARGA,
+                processamento_saidas.SAIDA_CALENDARIO,
                 *codigo_de("src.models.curtailment", RAIZ), CONFIG / "modelos_curtailment.yaml",
                 CONFIG / "modelos_carga.yaml", CONFIG / "processamento.yaml"]
     return de_arquivos(arquivos, RAIZ)
@@ -115,7 +139,11 @@ def _prever_curtailment() -> str:
 # sem saída real), o código de contrato/banco/publicação, as migrations, a config e o PRÓPRIO
 # endereço do banco (trocar DATABASE_URL publica de novo no banco novo).
 def _entradas_publicacao() -> str:
-    arquivos = [tabelas.SAIDA_CARGA, tabelas.SAIDA_CAPACIDADE_MMGD, tabelas.SAIDA_CALENDARIO,
+    arquivos = [processamento_saidas.SAIDA_CARGA, processamento_saidas.SAIDA_CAPACIDADE_MMGD,
+                processamento_saidas.SAIDA_CALENDARIO, processamento_saidas.SAIDA_CARGA_AREA,
+                espacial_saidas.SAIDA_MMGD_AREA_INFLUENCIA, espacial_saidas.SAIDA_MMGD_DIARIA,
+                espacial_saidas.SAIDA_CARGA_AREA_INFLUENCIA, espacial_saidas.SAIDA_AREAS_INFLUENCIA_GEOJSON,
+                CONFIG / "espacial.yaml",
                 modelos_carga.ARQ_PREVISOES, modelos_curtailment.ARQ_PREVISOES,
                 modelos_curtailment.ARQ_MODELOS, modelos_curtailment.ARQ_USINAS,
                 *sorted(DASHBOARD_MOCK.glob("*.json")), CONFIG / "publicacao.yaml",
@@ -143,8 +171,12 @@ def montar() -> list[Etapa]:
         Etapa("processamento",
               "mapeamento subsistema x área + calendário, carga supervisionada e rótulos de curtailment",
               executar=_processar, entradas=_entradas_processamento,
-              saidas=(ARQUIVO_MAPEAMENTO, *tabelas.SAIDAS),
+              saidas=(ARQUIVO_MAPEAMENTO, *processamento_saidas.SAIDAS),
               estimativa=lambda: est["processamento"]),
+        Etapa("espacializacao",
+              "BDGD (LIGHT + Enel RJ) -> áreas de influência por subestação, MMGD por área de influência (desempate com a ANEEL) e pesos de carga",
+              executar=espacial.construir, entradas=_entradas_espacializacao, saidas=espacial_saidas.SAIDAS,
+              estimativa=lambda: est["espacializacao"]),
         # 3. Treino (um por modelo) e 4. previsão (modo replay). O TFT (Fatia 3) entra como
         # mais um par treino/previsão.
         Etapa("treino_carga",

@@ -8,6 +8,7 @@ Uso:
     python -m src.ingestion.download --so-ckan       # só conjuntos do portal
     python -m src.ingestion.download --so-api        # só API de carga
     python -m src.ingestion.download --conjuntos coff_eolica_tm coff_solar_tm
+    python -m src.ingestion.download --diretos bdgd_light bdgd_enel_rj   # só arquivos diretos
     python -m src.ingestion.download --so-ckan --conjuntos coff_solar_detail --recompactar coff_solar_detail
 
 Decisões:
@@ -98,6 +99,13 @@ class Manifesto:
             tmp.write_text(json.dumps(self.dados, ensure_ascii=False, indent=1), encoding="utf-8")
             tmp.replace(self.caminho)
 
+    def remover(self, chave: str) -> None:
+        with self._lock:
+            if self.dados.pop(chave, None) is not None:
+                tmp = self.caminho.with_suffix(".tmp")
+                tmp.write_text(json.dumps(self.dados, ensure_ascii=False, indent=1), encoding="utf-8")
+                tmp.replace(self.caminho)
+
     def itens(self) -> list[tuple[str, dict]]:
         with self._lock:
             return list(self.dados.items())
@@ -179,10 +187,16 @@ def migrar_csvs(man: Manifesto) -> None:
             log.info("convertido para Parquet: %s", novo.name)
 
 
-def contar_linhas(arquivo: Path) -> int:
-    """Linhas de dados. Parquet: lê só o rodapé. CSV: conta quebras de linha - cabeçalho."""
+def contar_linhas(arquivo: Path) -> int | None:
+    """Linhas de dados. Parquet: lê só o rodapé. CSV: conta quebras de linha - cabeçalho.
+
+    Outros formatos (a BDGD zipada, GeoJSON do IBGE) não têm "linhas": devolve None em vez de
+    contar quebras de linha de um binário e registrar um número sem sentido no manifesto.
+    """
     if arquivo.suffix.lower() == ".parquet":
         return pq.ParquetFile(arquivo).metadata.num_rows
+    if arquivo.suffix.lower() != ".csv":
+        return None
     with arquivo.open("rb") as f:
         n = sum(bloco.count(b"\n") for bloco in iter(lambda: f.read(1 << 20), b""))
     return max(n - 1, 0)
@@ -305,45 +319,58 @@ def processar_conjunto(c: dict, man: Manifesto) -> None:
 
 
 def consolidar_id_ons(apelido: str, man: Manifesto, recompactar: bool = False) -> None:
-    """Reescreve landing mensal + consolidado anterior em <apelido>/id_ons=<id>/.
+    """Junta o landing mensal ao consolidado em <apelido>/ano=<AAAA>/id_ons=<id>/.
 
-    Estratégia em GRUPOS ORDENADOS: os id_ons são divididos em N grupos (hash % N); cada
-    grupo é lido, ordenado por (id_ons, din_instante) e escrito de uma vez. Com a entrada
-    ordenada só uma partição fica aberta por vez, então:
-      - a memória é limitada pelo tamanho do grupo (não pelo total de 80M linhas);
-      - sai ~1 arquivo por usina. A 1ª versão (um COPY único com buffers pequenos para
-        caber na RAM) gerou 316 mil arquivos minúsculos para a eólica — trocar memória
-        por fragmentação não resolve; ordenar resolve as duas coisas.
-    Grava num diretório temporário e só troca no fim: se falhar, o consolidado anterior
-    continua intacto. `recompactar` refaz o consolidado mesmo sem arquivos novos.
+    Layout por ANO e depois por usina. O ONS republica os 2 últimos meses a cada poucos dias.
+    No layout antigo (só id_ons=), cada usina tinha um arquivo com todos os anos, e rebaixar
+    2 meses reescrevia os ~80 M linhas da eólica: 25 min de ingestão em toda execução
+    (medido em 2026-09-26). Agora só as pastas ano= dos meses novos são refeitas; os anos
+    fechados ficam intocados. Os leitores usam `**/*.parquet` com hive_partitioning=false,
+    então o nível ano= não muda nada para eles.
+
+    Escrita em GRUPOS ORDENADOS: os id_ons são divididos em N grupos (hash % N); cada grupo é
+    lido, ordenado por (id_ons, din_instante) e escrito de uma vez. Com a entrada ordenada só
+    uma partição fica aberta por vez, então:
+      - a memória é limitada pelo tamanho do grupo (não pelo total de linhas);
+      - sai ~1 arquivo por usina e ano. A 1ª versão (um COPY único com buffers pequenos para
+        caber na RAM) gerou 316 mil arquivos minúsculos para a eólica — trocar memória por
+        fragmentação não resolve; ordenar resolve as duas coisas.
+
+    Refaz TUDO (uma vez) quando o consolidado não existe, ainda está no layout antigo ou
+    `recompactar` foi pedido. Grava num diretório temporário e só troca no fim, e a troca é
+    recuperável (`_recuperar_troca`): se o processo morrer no meio, o consolidado anterior
+    volta, e os arquivos do landing só são apagados depois da troca.
     """
+    final = DESTINO / apelido
+    _recuperar_troca(final)
     pendentes = [(k, v) for k, v in man.itens()
                  if v.get("conjunto") == apelido and v.get("status") == "ok"
                  and not v.get("consolidado")]
-    final = DESTINO / apelido
     if not pendentes and not (recompactar and final.exists()):
         return
     arquivos = [str((RAIZ / v["caminho"]).as_posix()) for _, v in pendentes]
-    tmp = DESTINO / f"{apelido}.__tmp"
+    tmp = final.with_name(final.name + ".__tmp")
     if tmp.exists():
         shutil.rmtree(tmp)
 
-    fonte = sql_consolidacao(final if final.exists() else None, arquivos)
+    con = conectar()  # limites de memória/disco centralizados (src/utils/banco_analitico.py)
+    completo = recompactar or not layout_por_ano(final)
+    anos = None if completo else sorted(r[0] for r in con.execute(
+        f"SELECT DISTINCT year(din_instante) FROM read_parquet({arquivos!r}, union_by_name=true)").fetchall())
+    fonte = sql_consolidacao(final if final.exists() else None, arquivos, anos)
 
     n = CFG["duckdb"]["grupos_consolidacao"]
-    log.info("%s: consolidando (%d arquivos novos) por id_ons em %d grupos...", apelido, len(arquivos), n)
+    log.info("%s: consolidando (%d arquivos novos) %s, %d grupos por id_ons...", apelido, len(arquivos),
+             "TUDO" if completo else f"só os anos {anos}", n)
     t0 = time.time()
-    con = conectar()  # limites de memória/disco centralizados (src/utils/banco_analitico.py)
     for g in range(n):
-        con.execute(f"""COPY (SELECT * FROM ({fonte}) WHERE hash(id_ons) % {n} = {g}
-                              ORDER BY id_ons, din_instante)
+        con.execute(f"""COPY (SELECT *, year(din_instante) AS ano FROM ({fonte})
+                              WHERE hash(id_ons) % {n} = {g} ORDER BY id_ons, din_instante)
                         TO '{tmp.as_posix()}'
-                        (FORMAT parquet, PARTITION_BY (id_ons), COMPRESSION zstd,
+                        (FORMAT parquet, PARTITION_BY (ano, id_ons), COMPRESSION zstd,
                          OVERWRITE_OR_IGNORE, FILENAME_PATTERN 'g{g}_{{i}}')""")
     con.close()
-    if final.exists():
-        shutil.rmtree(final)
-    tmp.rename(final)
+    _trocar(final, tmp, completo)
     for chave, v in pendentes:
         (RAIZ / v["caminho"]).unlink(missing_ok=True)
         man.registrar(chave, {**v, "consolidado": True,
@@ -351,22 +378,82 @@ def consolidar_id_ons(apelido: str, man: Manifesto, recompactar: bool = False) -
     log.info("%s: consolidado em %.0fs", apelido, time.time() - t0)
 
 
-def sql_consolidacao(final: Path | None, arquivos: list[str]) -> str:
+def layout_por_ano(final: Path) -> bool:
+    """O consolidado já está no layout ano=/id_ons= (e não vazio)?"""
+    pastas = [p.name for p in final.iterdir()] if final.exists() else []
+    return bool(pastas) and all(p.startswith("ano=") for p in pastas)
+
+
+def _trocar(final: Path, tmp: Path, completo: bool) -> None:
+    """Põe o conteúdo de `tmp` no lugar, guardando o que sai em <final>.__velho até o fim.
+
+    completo: o diretório inteiro é trocado. Senão, só as pastas ano= que estão em `tmp`.
+    Cada passo é um rename de diretório (atômico); a qualquer momento, `_recuperar_troca`
+    consegue voltar a um estado consistente.
+    """
+    velho = final.with_name(final.name + ".__velho")
+    velho.mkdir()
+    if completo:
+        if final.exists():
+            final.rename(velho / "_completo")
+        tmp.rename(final)
+    else:
+        for ano in sorted(tmp.iterdir()):
+            alvo = final / ano.name
+            if alvo.exists():
+                alvo.rename(velho / ano.name)
+            ano.rename(alvo)
+        tmp.rmdir()
+    shutil.rmtree(velho)
+
+
+def _recuperar_troca(final: Path) -> None:
+    """Termina ou desfaz uma troca interrompida (ver `_trocar`).
+
+    O que está em <final>.__velho só volta se a versão nova não chegou ao lugar. Se chegou,
+    a troca já tinha acontecido e o velho é descartado.
+    """
+    velho = final.with_name(final.name + ".__velho")
+    if not velho.exists():
+        return
+    if (velho / "_completo").exists():
+        if not final.exists():
+            (velho / "_completo").rename(final)
+    else:
+        for ano in velho.iterdir():
+            if not (final / ano.name).exists():
+                ano.rename(final / ano.name)
+    shutil.rmtree(velho)
+    log.warning("%s: troca interrompida do consolidado recuperada", final.name)
+
+
+def sql_consolidacao(final: Path | None, arquivos: list[str], anos: list[int] | None = None) -> str:
     """SELECT que une o consolidado anterior com os arquivos novos do landing.
 
     Regra: os meses cobertos pelos arquivos novos SUBSTITUEM os mesmos meses do consolidado.
     Assim um mês republicado pelo ONS e rebaixado entra no lugar da versão antiga, em vez de
     se somar a ela: linha duplicada por rebaixar um mês não tem como acontecer.
+    `anos`: lê do consolidado só essas pastas ano= (atualização incremental); None = tudo.
+    O `ano` que vem do caminho (hive) é descartado: quem grava recalcula a partir de din_instante.
     union_by_name: o ONS muda colunas/tipos entre meses; unimos pelo nome.
     """
+    antigo = None
+    if final is not None:
+        por_ano = layout_por_ano(final)
+        if anos is None:
+            globs = [f"{final.as_posix()}/**/*.parquet"]
+        else:
+            globs = [f"{(final / f'ano={a}').as_posix()}/**/*.parquet" for a in anos
+                     if (final / f"ano={a}").exists()]
+        if globs:
+            antigo = (f"SELECT *{' EXCLUDE (ano)' if por_ano else ''} FROM read_parquet({globs!r}, "
+                      f"hive_partitioning=true, union_by_name=true)")
     if not arquivos:  # recompactar sem arquivo novo: só o consolidado
-        return (f"SELECT * FROM read_parquet('{final.as_posix()}/**/*.parquet', "
-                f"hive_partitioning=true, union_by_name=true)")
+        return antigo
     novos = f"read_parquet({arquivos!r}, union_by_name=true)"
-    if final is None:
+    if antigo is None:
         return f"SELECT * FROM {novos}"
-    return (f"SELECT * FROM read_parquet('{final.as_posix()}/**/*.parquet', "
-            f"hive_partitioning=true, union_by_name=true) "
+    return (f"SELECT * FROM ({antigo}) "
             f"WHERE date_trunc('month', din_instante) NOT IN "
             f"(SELECT DISTINCT date_trunc('month', din_instante) FROM {novos}) "
             f"UNION ALL BY NAME SELECT * FROM {novos}")
@@ -483,16 +570,52 @@ def vencido(baixado_em: str | None, dias: int | None, agora: datetime | None = N
     return agora - datetime.fromisoformat(baixado_em) > timedelta(days=dias)
 
 
-def processar_arquivos_diretos(man: Manifesto) -> None:
-    """Fontes de arquivo único fora do portal ONS (ex.: MMGD da ANEEL)."""
+def chave_direta(a: dict) -> str:
+    """Chave do manifesto de um arquivo direto: apelido + nome do arquivo de DESTINO.
+
+    Antes era o fim da URL, e várias URLs terminam igual (".../items/<id>/data" da BDGD):
+    trocar de ano deixaria a chave igual e o arquivo velho seria dado como em dia. O destino
+    é único por arquivo e é o que está no disco.
+    """
+    return f"{a['apelido']}/{Path(a['destino']).name}"
+
+
+def precisa_baixar_direto(a: dict, info: dict | None, agora: datetime | None = None) -> str | None:
+    """Motivo para (re)baixar um arquivo direto, ou None se o que está no disco vale.
+
+    Rebaixa se: nunca baixou/falhou, o arquivo sumiu, a URL da config mudou (nova edição da
+    BDGD, por exemplo) ou o download venceu (`atualizar_apos_dias`).
+    """
+    if not info or info.get("status") != "ok":
+        return "ausente"
+    if not (RAIZ / info.get("caminho", "")).exists():
+        return "arquivo sumiu do disco"
+    if info.get("url") != a["url"]:
+        return "URL mudou na config"
+    if vencido(info.get("baixado_em"), a.get("atualizar_apos_dias"), agora):
+        return f"download com mais de {a['atualizar_apos_dias']} dias"
+    return None
+
+
+def processar_arquivos_diretos(man: Manifesto, apelidos: list[str] | None = None) -> None:
+    """Fontes de arquivo único fora do portal ONS (MMGD e BDGD da ANEEL, malhas do IBGE)."""
     for a in CFG.get("arquivos_diretos", []):
-        chave = f"{a['apelido']}/{a['url'].rsplit('/', 1)[-1]}"
-        info = man.get(chave)
-        if (info and info.get("status") == "ok" and (RAIZ / info["caminho"]).exists()
-                and not vencido(info.get("baixado_em"), a.get("atualizar_apos_dias"))):
+        if apelidos and a["apelido"] not in apelidos:
             continue
-        if info and info.get("status") == "ok":
-            log.info("%s: download com mais de %s dias, rebaixando", a["apelido"], a["atualizar_apos_dias"])
+        chave = chave_direta(a)
+        # Entradas antigas do mesmo apelido com outra chave (formato anterior ou edição anterior
+        # da BDGD) saem do manifesto: senão continuariam na impressão digital e na tela Validação.
+        # Se a entrada antiga aponta para o MESMO arquivo de destino, só muda de chave (não rebaixa).
+        for velha, v in man.itens():
+            if velha.startswith(f"{a['apelido']}/") and velha != chave:
+                if Path(v.get("caminho", "")).as_posix() == a["destino"] and man.get(chave) is None:
+                    man.registrar(chave, v)
+                man.remover(velha)
+        info = man.get(chave)
+        motivo = precisa_baixar_direto(a, info)
+        if motivo is None:
+            continue
+        log.info("%s: baixando (%s)", a["apelido"], motivo)
         dest = RAIZ / a["destino"]
         try:
             nbytes, conteudo = baixar_arquivo(a["url"], dest)
@@ -534,7 +657,7 @@ def gravar_relatorios(man: Manifesto) -> pd.DataFrame:
 
 
 def executar(conjuntos: list[str] | None = None, so_ckan: bool = False, so_api: bool = False,
-             recompactar: list[str] | tuple = ()) -> pd.DataFrame:
+             recompactar: list[str] | tuple = (), diretos: list[str] | None = None) -> pd.DataFrame:
     """Baixa o que falta ou está desatualizado. Devolve a sanidade por conjunto.
 
     Sem argumentos = tudo (é o que o run_heavywork.py chama). Os filtros existem para a
@@ -547,7 +670,7 @@ def executar(conjuntos: list[str] | None = None, so_ckan: bool = False, so_api: 
         t0 = time.time()
         limpar_parquets_vazios(man)
         migrar_csvs(man)
-        if not so_api:
+        if not so_api and diretos is None:
             for c in CFG["conjuntos"]:
                 if conjuntos and c["apelido"] not in conjuntos:
                     continue
@@ -555,9 +678,11 @@ def executar(conjuntos: list[str] | None = None, so_ckan: bool = False, so_api: 
                     processar_conjunto(c, man)
                 except Exception as e:  # um conjunto com problema não derruba os outros
                     log.exception("conjunto %s falhou: %s", c["apelido"], e)
-        if not so_ckan and not conjuntos:
+        if not so_ckan and not conjuntos and diretos is None:
             processar_api_carga(man)
-        if not so_api and not so_ckan and not conjuntos:
+        if diretos is not None:  # --diretos: só os arquivos diretos (lista vazia = todos)
+            processar_arquivos_diretos(man, diretos or None)
+        elif not so_api and not so_ckan and not conjuntos:
             processar_arquivos_diretos(man)
         for apelido in recompactar:
             consolidar_id_ons(apelido, man, recompactar=True)
@@ -566,14 +691,17 @@ def executar(conjuntos: list[str] | None = None, so_ckan: bool = False, so_api: 
     return san
 
 
-def impressao_digital() -> str:
+def impressao_digital(conjuntos: set[str] | None = None) -> str:
     """Resumo do que está baixado: muda sempre que um arquivo entra, sai ou é rebaixado.
 
     É a "entrada" da etapa de processamento no run_heavywork.py: se nada mudou aqui (nem no
-    código/config do processamento), as tabelas processadas continuam válidas.
+    código/config do processamento), as tabelas processadas continuam válidas. `conjuntos`
+    restringe aos apelidos pedidos (a espacialização só depende da BDGD, do cadastro da ANEEL
+    e das malhas do IBGE: um download novo de carga não a refaz).
     """
     man = Manifesto(MANIFESTO_PATH)
-    return de_objeto(sorted((k, _versao(v)) for k, v in man.itens() if v.get("status") == "ok"))
+    return de_objeto(sorted((k, _versao(v)) for k, v in man.itens()
+                            if v.get("status") == "ok" and (conjuntos is None or v.get("conjunto") in conjuntos)))
 
 
 def _versao(info: dict):
@@ -594,6 +722,37 @@ def erros_de_download() -> list[str]:
     """Chaves do manifesto cuja última tentativa falhou (a próxima execução tenta de novo)."""
     return sorted(k for k, v in Manifesto(MANIFESTO_PATH).itens()
                   if str(v.get("status", "")).startswith("erro"))
+
+
+def conjuntos_declarados() -> set[str]:
+    """Todos os apelidos que a ingestão baixa, lidos de config/fontes_ons.yaml.
+
+    Três blocos declaram fontes: `conjuntos` (CKAN do ONS), `arquivos_diretos` (ANEEL, IBGE)
+    e `api_carga.endpoints` (API de carga). Fonte nova em qualquer um deles aparece aqui.
+    """
+    return ({c["apelido"] for c in CFG["conjuntos"]}
+            | {a["apelido"] for a in CFG.get("arquivos_diretos", [])}
+            | {e["apelido"] for e in CFG["api_carga"]["endpoints"]})
+
+
+def validar_grupos_fontes(grupos: dict[str, list[str]]) -> None:
+    """Confere `status_fontes` (config/publicacao.yaml) contra as fontes de config/fontes_ons.yaml.
+
+    Decisão: a checagem é entre os DOIS ARQUIVOS DE CONFIG, sem olhar o manifesto. Assim ela
+    roda em milissegundos no início do run_heavywork.py e nos testes. Antes, fonte nova sem
+    grupo só estourava na publicação, a última etapa, depois de ~70 min de ingestão e treino
+    (aconteceu em 2026-09-26 com BDGD e malhas do IBGE). Também recusa grupo citando apelido
+    que não existe (erro de digitação sumiria da tela em silêncio).
+    """
+    declarados = conjuntos_declarados()
+    agrupados = {c for cs in grupos.values() for c in cs}
+    problemas = []
+    if sem_grupo := sorted(declarados - agrupados):
+        problemas.append(f"conjuntos sem grupo em publicacao.yaml (status_fontes): {sem_grupo}")
+    if desconhecidos := sorted(agrupados - declarados):
+        problemas.append(f"status_fontes cita conjuntos que não existem em fontes_ons.yaml: {desconhecidos}")
+    if problemas:
+        raise ValueError("; ".join(problemas))
 
 
 def status_fontes(grupos: dict[str, list[str]]) -> list[dict]:
@@ -628,8 +787,10 @@ def main() -> None:
     ap.add_argument("--conjuntos", nargs="*", help="apelidos de config/fontes_ons.yaml")
     ap.add_argument("--recompactar", nargs="*", default=[],
                     help="apelidos id_ons para reconsolidar mesmo sem arquivos novos")
+    ap.add_argument("--diretos", nargs="*", default=None,
+                    help="só os arquivos diretos (ANEEL, IBGE); apelidos opcionais")
     args = ap.parse_args()
-    san = executar(args.conjuntos, args.so_ckan, args.so_api, args.recompactar)
+    san = executar(args.conjuntos, args.so_ckan, args.so_api, args.recompactar, args.diretos)
     log.info("\n%s", san.to_string(index=False))
 
 

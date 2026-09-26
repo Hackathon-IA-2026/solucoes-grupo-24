@@ -1,5 +1,15 @@
 # Changelog do schema do contrato (Tiago → Luiz)
 
+## v4 — áreas de influência das subestações no Mapa Híbrido (2026-09-26) ✅
+
+Pedido do Tiago (validar a Fase 6 vendo o mapa). **Aditiva**: nenhum recurso existente mudou.
+
+| Recurso | Mudança |
+|---|---|
+| `AreasInfluencia` (novo) | recurso `areas_influencia`, rota `GET /api/areas-influencia`: GeoJSON `FeatureCollection` (RFC 7946, coordenadas `[lon, lat]`) com `mock` e `descricao`. Cada `Feature` tem `geometry` (`Polygon`/`MultiPolygon`, dentro do Brasil, anel ≥ 4 pontos) e `properties`: `areaId`, `nome`, `distribuidora`, `classificacao`, `areaMae`, `latSub`, `lonSub`, `areaKm2`, `capacidadeMmgdMw`, `capacidadeLagMw`, `fatorCorrecao` (null = sem satélite), `excedenteMw` e `horizonteExcedente` (null = não é subestação de fronteira) |
+
+Dashboard: camada "Áreas de influência (MMGD)" no Mapa Híbrido (`src/components/mapa/CamadaAreas.tsx`), botões "Área piloto"/"Brasil". Luiz: revise a camada e os textos quando puder.
+
 ## v3 — telas Excedentes, Validação e Mapa Híbrido (2026-09-26) ✅
 
 Aprovado pelo Tiago (as três telas do Luiz vieram da branch `claude/eager-gauss-or90gs`).

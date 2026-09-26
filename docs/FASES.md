@@ -14,7 +14,7 @@ Ordem: cada fase libera telas do dashboard (coluna "Libera"). A ordem segue o qu
 | 3 | Baseline de carga | 2 | Despacho Preditivo, Validação | ✅ falta só fonte meteorológica (fatores climáticos) |
 | 4 | Classificador de curtailment ENE | 5 | Lista de Riscos, Detalhe do Alerta | 🟡 código e testes prontos; falta a 1ª execução com dado real, `distribuidora` (Luiz) e lead time |
 | 5 | TFT com perda assimétrica | 3 | Despacho Preditivo (melhor modelo) | ⬜ 🔒 torch |
-| 6 | Espacialização: MMGD por mancha e excedentes | 4 e 5 | Excedentes, Mapa Híbrido | ⬜ 👤 área piloto |
+| 6 | Espacialização: MMGD por área de influência da subestação e excedentes | 4 e 5 | Excedentes, Mapa Híbrido | 🟡 RJ pronto; falta fator do satélite (Luiz) e contrato das áreas de influência |
 | 7 | Entrega: pitch, prova documental, README | 1 e 6 | — | ⬜ |
 
 ---
@@ -109,19 +109,22 @@ Integração
 - [ ] Comparação contra os baselines da Fase 3, por horizonte e patamar
 - [ ] Publicar a previsão do melhor modelo (a tela não muda)
 
-## Fase 6 — Espacialização: MMGD por mancha e excedentes (Fatias 4 e 5) ⬜ 👤
+## Fase 6 — Espacialização: MMGD por área de influência da subestação e excedentes (Fatias 4 e 5) 🟡
 
-- [ ] 👤 **Escolher a área piloto** (CEMIG / Norte de Minas × RJ reaproveitando o RDX) e avisar o Luiz
-- [ ] Ingestão da BDGD da área piloto (etapa 1)
-- [ ] Migrar o necessário de `Backend/RDX/` para `src/spatial/`
-- [ ] Manchas (polígonos por subestação/alimentador) → GeoJSON em `output/`
-- [ ] Capacidade de MMGD por mancha (BDGD) + desempate com o cadastro diário da ANEEL (Lag de Sistema × não homologada)
-- [x] Pipeline da auditoria em 3 camadas pronto e testado em modo mock (Luiz, 2026-09-26): `pipeline/auditoria_camada1.py` (YOLO → GeoJSON), `auditoria_camadas_2_3.py` (desempate + fator por mancha, não homologadas fora do fator), `validar_modelo.py`, `download_satelite.py`; parâmetros em `config/visao.yaml`
-- [ ] 👤 Fator de correção por imagem de satélite (Luiz): falta rodar com dado real — depende da área piloto, da BDGD (item acima) e de imagem **submétrica** (Sentinel-2, 10 m, não enxerga painel residencial)
+Método completo em `docs/metodo_espacial.md`.
+
+- [x] 👤 **Área piloto: RJ (LIGHT + Enel RJ)**, reaproveitando o RDX (Tiago, 2026-09-26) — 👤 avisar o Luiz (imagens de satélite)
+- [x] Ingestão da BDGD da área piloto (etapa 1): BDGD 2025 LIGHT e Enel RJ + malhas do IBGE como arquivos diretos
+- [x] Migrar a pipeline de `Backend/RDX/` para `src/spatial/` (áreas de influência, classificação e hierarquia, MMGD da BDGD)
+- [x] Áreas de influência das subestações (um polígono por subestação) → `output/areas_influencia_rj.geojson`
+- [x] Capacidade de MMGD por área de influência + desempate com o cadastro diário da ANEEL (Lag de Sistema × não homologada)
+- [x] Pipeline da auditoria em 3 camadas pronto e testado em modo mock (Luiz, 2026-09-26): `pipeline/auditoria_camada1.py` (YOLO → GeoJSON), `auditoria_camadas_2_3.py` (desempate + fator por área de influência, não homologadas fora do fator), `validar_modelo.py`, `download_satelite.py`; parâmetros em `config/visao.yaml`
+- [ ] 👤 Fator de correção por imagem de satélite (Luiz) — o gancho já existe (`caminho_fator_correcao`); falta rodar com imagem **submétrica** da área piloto (Sentinel-2, 10 m, não enxerga painel residencial)
 - [ ] 👤 Gabarito para o YOLO (`gabarito.csv` com imagens da área): o modelo em uso (`best.pt`, versão antiga do treinamento do time, checkpoint de 2023) marcou "solar-panel" em fotos sem painel
-- [ ] Excedentes por área de concessão e fronteira
-- [ ] Publicar `excedentes` real
-- [ ] 👤 Contrato do Mapa Híbrido (manchas em GeoJSON): combinar com o Luiz antes de mudar o schema
+- [x] Excedentes por subestação de fronteira (MMGD − carga, persistência sazonal), conferidos contra o fluxo reverso medido na BDGD
+- [x] Publicar `excedentes` e `mmgd_densidade` reais (`mock: false`, schema inalterado)
+- [x] Contrato do Mapa Híbrido: recurso `areas_influencia` (GeoJSON, contrato v4 aditivo, pedido do Tiago) + camada no dashboard — 👤 Luiz revisar
+- [ ] Melhorar o excedente: fator de geração por área de influência (irradiância) e perfil de carga intradiário por classe
 
 ## Fase 7 — Entrega ⬜
 
@@ -139,7 +142,7 @@ Integração
 
 | Decisão | Fase | Quem |
 |---|---|---|
-| Área piloto | 6 | Tiago → avisar Luiz |
+| Área piloto | 6 | ✅ Tiago (2026-09-26: RJ) → avisar Luiz |
 | Meteorologia (ERA5) agora ou depois | 3 | ✅ Tiago (2026-09-25: depois) |
 | `fatoresClimaticos` sem fonte meteorológica: manter mock ou aceitar vazio no contrato | 3 | Tiago + Luiz |
 | Campo `distribuidora` do risco | 4 | Luiz |

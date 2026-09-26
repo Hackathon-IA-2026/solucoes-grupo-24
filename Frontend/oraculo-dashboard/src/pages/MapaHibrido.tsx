@@ -1,6 +1,8 @@
 /**
  * Mapa Híbrido: usinas em risco (círculos por severidade) e excedentes TSO-DSO (losangos por
- * prioridade) sobre o Brasil, com camada opcional de densidade de MMGD e painel lateral.
+ * prioridade) sobre o Brasil, com as áreas de influência das subestações da área piloto
+ * (polígonos coloridos pela MMGD, contorno laranja onde há excedente previsto), camada opcional
+ * de densidade de MMGD e painel lateral.
  *
  * Interação (revisão de 2026-09-26: o mapa é o lugar de explorar, não um atalho para outra tela):
  * - clicar num marcador ou num item do painel SELECIONA: zoom no item e card de detalhe no painel
@@ -9,7 +11,8 @@
  *   focado, e o link pode ser compartilhado;
  * - passar o mouse numa UF mostra o resumo dela; clicar dá zoom e filtra o painel pela UF;
  * - filtros de razão e horizonte (usinas) e os de severidade da topbar valem para mapa e painel;
- * - "Enquadrar" ajusta o zoom a tudo que está visível; "Brasil" volta à vista inicial;
+ * - "Enquadrar" ajusta o zoom a tudo que está visível; "Área piloto" enquadra as áreas de
+ *   influência; "Brasil" volta à vista inicial;
  * - usinas com a MESMA coordenada aparecem em anel, ligadas ao ponto real.
  *
  * Fundo 100% local: contorno do Brasil (Natural Earth, npm run geo:brasil) + divisas das UFs
@@ -20,10 +23,11 @@
  */
 import 'leaflet/dist/leaflet.css'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronRight, Crosshair, Maximize2, X } from 'lucide-react'
+import { ChevronRight, Crosshair, MapPinned, Maximize2, X } from 'lucide-react'
 import L from 'leaflet'
 import { AttributionControl, GeoJSON, MapContainer } from 'react-leaflet'
 import { useSearchParams } from 'react-router-dom'
+import { CamadaAreas } from '../components/mapa/CamadaAreas'
 import { CamadaCalor } from '../components/mapa/CamadaCalor'
 import { CamadaUfs, type ResumoUf } from '../components/mapa/CamadaUfs'
 import { MarcadoresExcedente, MarcadoresRisco } from '../components/mapa/Marcadores'
@@ -36,11 +40,11 @@ import { MockTag } from '../components/ui/MockTag'
 import { RazaoBadge } from '../components/ui/RazaoBadge'
 import { SeverityBadge } from '../components/ui/SeverityBadge'
 import { ToggleChip } from '../components/ui/ToggleChip'
-import { getDensidadeMmgd, getExcedentes, getRiscos } from '../data/dataSource'
+import { getAreasInfluencia, getDensidadeMmgd, getExcedentes, getRiscos } from '../data/dataSource'
 import { ordenarExcedentes, ordenarPorSeveridade } from '../data/derivados'
 import brasil from '../data/geo/brasil.geo.json'
 import ufsGeo from '../data/geo/ufs.geo.json'
-import { HorizonteSchema, RazaoSchema, type DensidadeMmgd, type ExcedenteTsoDso, type Horizonte, type Razao, type RiscoUsina } from '../data/types'
+import { HorizonteSchema, RazaoSchema, type AreasInfluencia, type DensidadeMmgd, type ExcedenteTsoDso, type Horizonte, type Razao, type RiscoUsina } from '../data/types'
 import { useDados } from '../data/useDados'
 import { idExcedente, lerSelecaoMapa, MODULES, PARAM_SELECAO_MAPA, rotaDetalheAlerta, type SelecaoMapa } from '../modules'
 import { useFiltradosPorSeveridade } from '../state/useSeverityFilter'
@@ -60,26 +64,48 @@ const EXCEDENTES = MODULES.find((m) => m.label === 'Excedentes TSO-DSO')!
 const LISTA = MODULES.find((m) => m.label === 'Lista de Riscos')!
 const UFS = ufsGeo as unknown as ColecaoUfs
 
-/** Camadas ligáveis (a de MMGD começa desligada: é sintética). */
-type Camada = 'riscos' | 'excedentes' | 'mmgd'
+/** Camadas ligáveis. O calor de MMGD começa desligado: as áreas de influência já mostram a mesma grandeza. */
+type Camada = 'riscos' | 'excedentes' | 'areas' | 'mmgd'
 const ROTULO_CAMADA: Record<Camada, string> = {
   riscos: 'Usinas em risco',
   excedentes: 'Excedentes TSO-DSO',
-  mmgd: 'Densidade MMGD (sintético)',
+  areas: 'Áreas de influência (MMGD)',
+  mmgd: 'Densidade MMGD',
 }
+/** Camadas da família MMGD (violeta); as outras usam o acento. */
+const CAMADA_MMGD: ReadonlySet<Camada> = new Set(['areas', 'mmgd'])
 
 export default function MapaHibrido() {
   const riscos = useDados(getRiscos)
   const excedentes = useDados(getExcedentes)
   const mmgd = useDados(getDensidadeMmgd)
+  const areas = useDados(getAreasInfluencia)
 
-  for (const d of [riscos, excedentes, mmgd]) if (d.status === 'erro') return <ErroDados erro={d.erro} />
-  if (riscos.status !== 'ok' || excedentes.status !== 'ok' || mmgd.status !== 'ok') return <Carregando altura="h-[32rem]" />
+  for (const d of [riscos, excedentes, mmgd, areas]) if (d.status === 'erro') return <ErroDados erro={d.erro} />
+  if (riscos.status !== 'ok' || excedentes.status !== 'ok' || mmgd.status !== 'ok' || areas.status !== 'ok')
+    return <Carregando altura="h-[32rem]" />
 
-  return <Mapa riscos={ordenarPorSeveridade(riscos.data)} excedentes={ordenarExcedentes(excedentes.data)} mmgd={mmgd.data} />
+  return (
+    <Mapa
+      riscos={ordenarPorSeveridade(riscos.data)}
+      excedentes={ordenarExcedentes(excedentes.data)}
+      mmgd={mmgd.data}
+      areas={areas.data}
+    />
+  )
 }
 
-function Mapa({ riscos: todosRiscos, excedentes: todosExcedentes, mmgd }: { riscos: RiscoUsina[]; excedentes: ExcedenteTsoDso[]; mmgd: DensidadeMmgd }) {
+function Mapa({
+  riscos: todosRiscos,
+  excedentes: todosExcedentes,
+  mmgd,
+  areas,
+}: {
+  riscos: RiscoUsina[]
+  excedentes: ExcedenteTsoDso[]
+  mmgd: DensidadeMmgd
+  areas: AreasInfluencia
+}) {
   const mapaRef = useRef<L.Map | null>(null)
 
   // --- seleção (na URL) e destaque (hover, compartilhado entre mapa e painel)
@@ -101,7 +127,7 @@ function Mapa({ riscos: todosRiscos, excedentes: todosExcedentes, mmgd }: { risc
   const [destaque, setDestaque] = useState<string | null>(null)
 
   // --- filtros
-  const [camadas, setCamadas] = useState<Record<Camada, boolean>>({ riscos: true, excedentes: true, mmgd: false })
+  const [camadas, setCamadas] = useState<Record<Camada, boolean>>({ riscos: true, excedentes: true, areas: true, mmgd: false })
   const [razoes, setRazoes] = useState<Set<Razao>>(() => new Set(RazaoSchema.options))
   const [horizontes, setHorizontes] = useState<Set<Horizonte>>(() => new Set(HorizonteSchema.options))
   const [uf, setUf] = useState<string | null>(null)
@@ -167,6 +193,8 @@ function Mapa({ riscos: todosRiscos, excedentes: todosExcedentes, mmgd }: { risc
     else if (pts.length === 1 || L.latLngBounds(pts).getNorthEast().equals(L.latLngBounds(pts).getSouthWest())) mapa.flyTo(pts[0], ZOOM_ITEM)
     else mapa.fitBounds(L.latLngBounds(pts), { padding: [40, 40], maxZoom: 9 })
   }
+  // Enquadramento da área piloto: caixa de todas as áreas de influência (calculada do dado).
+  const limitesPiloto = useMemo(() => L.geoJSON(areas as GeoJSON.FeatureCollection).getBounds(), [areas])
   const clicarUf = (u: string, limites: L.LatLngBounds) => {
     if (u === uf) return setUf(null) // clicar de novo na mesma UF tira o filtro
     setUf(u)
@@ -188,11 +216,11 @@ function Mapa({ riscos: todosRiscos, excedentes: todosExcedentes, mmgd }: { risc
               label={ROTULO_CAMADA[c]}
               ativo={camadas[c]}
               onToggle={() => setCamadas((v) => ({ ...v, [c]: !v[c] }))}
-              classeAtivo={c === 'mmgd' ? 'border-chart-2/60 bg-chart-2/10 text-ink' : 'border-accent/50 bg-accent/10 text-accent'}
-              classePonto={c === 'mmgd' ? 'bg-chart-2' : 'bg-accent'}
+              classeAtivo={CAMADA_MMGD.has(c) ? 'border-chart-2/60 bg-chart-2/10 text-ink' : 'border-accent/50 bg-accent/10 text-accent'}
+              classePonto={CAMADA_MMGD.has(c) ? 'bg-chart-2' : 'bg-accent'}
             />
           ))}
-          {camadas.mmgd && <MockTag mock={mmgd.mock} />}
+          {(camadas.mmgd || camadas.areas) && <MockTag mock={(camadas.mmgd && mmgd.mock) || (camadas.areas && areas.mock)} />}
         </div>
         <FiltroChips rotulo="Razão" opcoes={RazaoSchema.options} ativos={razoes} onChange={setRazoes} pontoOpcao={(r) => RAZAO_INFO[r].dot} />
         <FiltroChips rotulo="Horizonte" opcoes={HorizonteSchema.options} ativos={horizontes} onChange={setHorizontes} />
@@ -218,6 +246,7 @@ function Mapa({ riscos: todosRiscos, excedentes: todosExcedentes, mmgd }: { risc
               <CamadaUfs selecionada={uf} resumo={resumoUf} onClicar={clicarUf} />
               <GeoJSON data={brasil as GeoJSON.Feature} style={{ color: cores.contorno, weight: 1.2, fill: false }} interactive={false} />
 
+              {camadas.areas && <CamadaAreas areas={areas} />}
               {camadas.mmgd && <CamadaCalor pontos={mmgd.pontos} />}
               {camadas.excedentes && (
                 <MarcadoresExcedente
@@ -244,11 +273,14 @@ function Mapa({ riscos: todosRiscos, excedentes: todosExcedentes, mmgd }: { risc
               <Botao onClick={enquadrar} title="Ajustar o zoom a tudo que está visível" className="bg-fundo/90">
                 <Crosshair className="size-3.5" aria-hidden /> Enquadrar
               </Botao>
+              <Botao onClick={() => mapaRef.current?.fitBounds(limitesPiloto, { padding: [16, 16] })} title="Enquadrar as áreas de influência da área piloto" className="bg-fundo/90">
+                <MapPinned className="size-3.5" aria-hidden /> Área piloto
+              </Botao>
               <Botao onClick={() => mapaRef.current?.fitBounds(LIMITES_BR)} title="Voltar à vista do Brasil" className="bg-fundo/90">
                 <Maximize2 className="size-3.5" aria-hidden /> Brasil
               </Botao>
             </div>
-            <Legenda mmgd={camadas.mmgd} sobrepostos={haSobrepostos} />
+            <Legenda mmgd={camadas.mmgd} mmgdMock={mmgd.mock} areas={camadas.areas} sobrepostos={haSobrepostos} />
           </div>
         </Card>
 
@@ -432,7 +464,7 @@ function PainelItens({ aba, onAba, riscos, excedentes, selecionado, destaque, on
 }
 
 /** Legenda sobre o mapa (canto inferior esquerdo). */
-function Legenda({ mmgd, sobrepostos }: { mmgd: boolean; sobrepostos: boolean }) {
+function Legenda({ mmgd, mmgdMock, areas, sobrepostos }: { mmgd: boolean; mmgdMock: boolean; areas: boolean; sobrepostos: boolean }) {
   const niveis = ['critical', 'high', 'medium', 'low'] as const
   return (
     <div className="pointer-events-none absolute bottom-6 left-3 z-[1000] space-y-2 rounded border border-line bg-fundo/90 px-3 py-2 text-[11px] text-ink-muted">
@@ -457,10 +489,18 @@ function Legenda({ mmgd, sobrepostos }: { mmgd: boolean; sobrepostos: boolean })
           anel = usinas com a mesma coordenada, ligadas ao ponto real
         </p>
       )}
+      {areas && (
+        <p className="flex items-center gap-2">
+          <span className="h-2 w-16 rounded-sm bg-gradient-to-r from-chart-2/10 to-chart-2" aria-hidden />
+          área de influência: MMGD instalada
+          <span className="ml-1 size-2.5 border-2 border-risk-high" aria-hidden /> excedente previsto
+          <span className="size-2.5 border border-dashed border-risk-high" aria-hidden /> satélite dela
+        </p>
+      )}
       {mmgd && (
         <p className="flex items-center gap-2">
           <span className="h-2 w-16 rounded-full bg-gradient-to-r from-chart-2/20 via-chart-2 to-mmgd-pico" aria-hidden />
-          densidade MMGD (sintética)
+          densidade MMGD{mmgdMock ? ' (sintética)' : ''}
         </p>
       )}
     </div>

@@ -5,6 +5,7 @@
 etapas:
   ingestao: true
   processamento: true
+  espacializacao: true
   treino_carga: true
   treino_curtailment: true
   previsao_carga: true
@@ -20,6 +21,7 @@ forcar: []
 estimativas:
   ingestao_completa: "download completo: ~1,6 GB, ~30 min (medido no Prompt 1)"
   processamento: "~2 min (medido em 2026-09-25: 1,6 min para mapeamento + 3 tabelas; rótulos = 16 M linhas)"
+  espacializacao: "~1 min (medido em 2026-09-26: 55 s; BDGD lida direto do .zip)"
   treino_carga: "~9 min (medido em 2026-09-26: 4,4 min com um ajuste por quantil; o reajuste pós-calibração dobra)"
   treino_curtailment: "~8 min (estimado: 3 horizontes × 290 usinas de features + 12 LightGBM em 1,5 M linhas)"
   previsao_carga: "~30 s (medido em 2026-09-26: 22 s)"

@@ -13,6 +13,10 @@ dependencies = [
     "pyarrow",
     "duckdb",
     "geopandas",
+    # leitor da BDGD: o .gdb é lido dentro do .zip (GDAL /vsizip/); fiona não é usado
+    "pyogrio",
+    # voronoi_polygons(ordered=True) em src/spatial/manchas.py
+    "shapely>=2.1",
     "matplotlib",
     "seaborn",
     # 4.7.0 dá "access violation" dentro da DLL no Windows já no primeiro fit (2026-09-26);

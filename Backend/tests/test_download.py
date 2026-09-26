@@ -141,9 +141,125 @@ def test_status_fontes_agrupa_e_usa_o_download_mais_recente(tmp_path, monkeypatc
     assert not st["B"]["online"]
 
 
+def test_status_fontes_cobre_todas_as_fontes_declaradas():
+    """As configs REAIS batem: toda fonte de fontes_ons.yaml tem grupo em publicacao.yaml.
+
+    Sem este teste, fonte nova (ex.: BDGD, malhas do IBGE) só falhava na publicação, no fim
+    de ~70 min de run_heavywork.
+    """
+    from src.ingestion import download
+    from src.utils.config import carregar
+    download.validar_grupos_fontes(carregar("publicacao")["status_fontes"])
+
+
+def test_validar_grupos_fontes_recusa_sem_grupo_e_desconhecido(monkeypatch):
+    from src.ingestion import download
+    monkeypatch.setattr(download, "conjuntos_declarados", lambda: {"a", "b"})
+    download.validar_grupos_fontes({"A": ["a"], "B": ["b"]})
+    with pytest.raises(ValueError, match="sem grupo.*'b'"):
+        download.validar_grupos_fontes({"A": ["a"]})
+    with pytest.raises(ValueError, match="não existem.*'x'"):
+        download.validar_grupos_fontes({"A": ["a", "b", "x"]})
+
+
 def test_status_fontes_recusa_conjunto_sem_grupo(tmp_path, monkeypatch):
     from src.ingestion import download
     monkeypatch.setattr(download, "MANIFESTO_PATH", _manifesto(tmp_path, {
         "novo/1": {"conjunto": "novo", "status": "ok", "baixado_em": "2026-09-25T10:00:00+00:00"}}))
     with pytest.raises(ValueError, match="sem grupo"):
         download.status_fontes({"A": ["a"]})
+
+
+def test_arquivo_direto_rebaixa_quando_a_url_muda(tmp_path, monkeypatch):
+    """Nova edição da BDGD: mesma chave de destino não pode esconder a URL nova (o fim da URL
+    do ArcGIS é sempre ".../data", e a chave antiga derivada dela não mudava)."""
+    from src.ingestion import download
+    monkeypatch.setattr(download, "RAIZ", tmp_path)
+    (tmp_path / "x.zip").write_bytes(b"1")
+    a = {"apelido": "bdgd_x", "url": "https://h/items/NOVO/data", "destino": "x.zip"}
+    info = {"status": "ok", "caminho": "x.zip", "url": "https://h/items/VELHO/data", "baixado_em": None}
+    assert download.chave_direta(a) == "bdgd_x/x.zip"
+    assert download.precisa_baixar_direto(a, info) == "URL mudou na config"
+    assert download.precisa_baixar_direto(a, {**info, "url": a["url"]}) is None  # sem validade: não expira
+    assert download.precisa_baixar_direto(a, None) == "ausente"
+    (tmp_path / "x.zip").unlink()
+    assert download.precisa_baixar_direto(a, {**info, "url": a["url"]}) == "arquivo sumiu do disco"
+
+
+# --------------------------------------------------------------------------- consolidação por ano
+def _landing(con, caminho, linhas):
+    """Arquivo mensal do landing: linhas (id_ons, 'AAAA-MM-DD HH:MM', val)."""
+    valores = ", ".join(f"('{u}', TIMESTAMP '{t}', {v})" for u, t, v in linhas)
+    con.execute(f"COPY (SELECT * FROM (VALUES {valores}) t(id_ons, din_instante, val)) "
+                f"TO '{caminho.as_posix()}' (FORMAT parquet)")
+
+
+def _ambiente(tmp_path, monkeypatch):
+    from src.ingestion import download
+    monkeypatch.setattr(download, "RAIZ", tmp_path)
+    monkeypatch.setattr(download, "DESTINO", tmp_path / "ons")
+    (tmp_path / "ons" / "_landing").mkdir(parents=True)
+    man = download.Manifesto(tmp_path / "ons" / "_manifesto.json")
+    return download, man
+
+
+def _chega(download, man, con, tmp_path, nome, linhas):
+    arq = tmp_path / "ons" / "_landing" / nome
+    _landing(con, arq, linhas)
+    man.registrar(nome, {"conjunto": "x", "status": "ok", "caminho": str(arq.relative_to(tmp_path))})
+
+
+def _consolidado(con, final):
+    return con.sql(f"SELECT id_ons, din_instante, val FROM read_parquet('{final.as_posix()}/**/*.parquet', "
+                   f"hive_partitioning=true) ORDER BY id_ons, din_instante").fetchall()
+
+
+def test_consolidacao_incremental_so_reescreve_o_ano_do_mes_novo(tmp_path, monkeypatch):
+    """Rebaixar um mês de 2026 não pode tocar em 2025 (era isso que custava 25 min por execução)."""
+    download, man = _ambiente(tmp_path, monkeypatch)
+    con = duckdb.connect()
+    _chega(download, man, con, tmp_path, "m2025_12.parquet",
+           [("U1", "2025-12-01 00:00", 1), ("U2", "2025-12-01 00:00", 2)])
+    _chega(download, man, con, tmp_path, "m2026_01.parquet",
+           [("U1", "2026-01-01 00:00", 3), ("U2", "2026-01-01 00:00", 4)])
+    download.consolidar_id_ons("x", man)
+    final = tmp_path / "ons" / "x"
+    assert sorted(p.name for p in final.iterdir()) == ["ano=2025", "ano=2026"]
+    arquivos_2025 = {p: p.stat().st_mtime_ns for p in (final / "ano=2025").rglob("*.parquet")}
+
+    # janeiro/2026 republicado com valores novos e uma linha a mais
+    _chega(download, man, con, tmp_path, "m2026_01_v2.parquet",
+           [("U1", "2026-01-01 00:00", 30), ("U2", "2026-01-01 00:00", 40), ("U2", "2026-01-01 00:30", 41)])
+    download.consolidar_id_ons("x", man)
+    assert {p: p.stat().st_mtime_ns for p in (final / "ano=2025").rglob("*.parquet")} == arquivos_2025
+    vals = [r[2] for r in _consolidado(con, final)]
+    assert vals == [1, 30, 2, 40, 41]                # jan/2026 todo da versão nova, sem duplicar
+    assert not list((tmp_path / "ons").glob("x.__*"))  # nada de tmp/velho sobrando
+    assert all(v["consolidado"] for _, v in man.itens())
+
+
+def test_consolidado_no_layout_antigo_e_migrado_inteiro(tmp_path, monkeypatch):
+    download, man = _ambiente(tmp_path, monkeypatch)
+    con = duckdb.connect()
+    antigo = tmp_path / "ons" / "x" / "id_ons=U1"
+    antigo.mkdir(parents=True)
+    con.execute(f"COPY (SELECT TIMESTAMP '2024-05-01 00:00' AS din_instante, 7 AS val) "
+                f"TO '{(antigo / 'g0_0.parquet').as_posix()}' (FORMAT parquet)")
+    _chega(download, man, con, tmp_path, "m2026_01.parquet", [("U1", "2026-01-01 00:00", 3)])
+    download.consolidar_id_ons("x", man)
+    final = tmp_path / "ons" / "x"
+    assert download.layout_por_ano(final)
+    assert [r[2] for r in _consolidado(con, final)] == [7, 3]
+
+
+def test_troca_interrompida_devolve_o_ano_antigo(tmp_path, monkeypatch):
+    """Processo morreu depois de tirar ano=2025 do lugar e antes de pôr o novo: o antigo volta."""
+    download, _ = _ambiente(tmp_path, monkeypatch)
+    final = tmp_path / "ons" / "x"
+    (final / "ano=2026").mkdir(parents=True)
+    (final.with_name("x.__velho") / "ano=2025" / "id_ons=U1").mkdir(parents=True)
+    (final.with_name("x.__velho") / "ano=2026").mkdir(parents=True)  # este já foi substituído
+    download._recuperar_troca(final)
+    assert sorted(p.name for p in final.iterdir()) == ["ano=2025", "ano=2026"]
+    assert (final / "ano=2025" / "id_ons=U1").exists()
+    assert not final.with_name("x.__velho").exists()
