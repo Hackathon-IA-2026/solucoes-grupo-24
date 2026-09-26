@@ -20,13 +20,16 @@ import argparse
 import pandas as pd
 
 from src.features.calendario import montar_calendario
+# Leitor ÚNICO da carga verificada (DRY): subsistema, área piloto e áreas de carga (cadastro.py)
+# saem da mesma função, com o mesmo fuso, a mesma regra de duplicata e de carga <= 0.
+from src.processing.carga_bruta import ler_carga_verificada
 from src.utils.banco_analitico import conectar
 from src.utils.config import arquivo_direto, carregar, razoes_curtailment
 from src.utils.joins import cruzar_subsistema_area
 from src.processing.saidas import (APELIDO_ANEEL_MMGD, SAIDA_CALENDARIO, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA, SAIDA_CARGA_AREA,
                                    SAIDA_ROTULOS)
 from src.utils.paths import DATA_PROCESSED, DOCS_REPORTS, RAW_ONS, ensure
-from src.utils.tempo import de_local_ons, de_utc, fim_para_inicio
+from src.utils.tempo import de_local_ons
 
 CFG = carregar("processamento")
 # Caminhos das saídas (SAIDA_*, SAIDAS) ficam em src/processing/saidas.py: quem só lê as
@@ -45,32 +48,6 @@ def construir_calendario() -> pd.DataFrame:
 
 
 # --------------------------------------------------------------------------- carga
-def _ler_carga_verificada(areas: list[str]) -> pd.DataFrame:
-    """Carga verificada bruta das áreas pedidas, sem duplicatas e com `timestamp` no padrão.
-
-    Único leitor da API de carga verificada (DRY): a tabela por subsistema e a da área piloto
-    saem daqui, então as duas têm o mesmo fuso, a mesma convenção de intervalo e a mesma regra
-    de duplicata. Carga global <= 0 vira NaN com flag `carga_global_invalida` (falha de medição,
-    ex.: N em 2024-02-08 10:00 = -187,6 MW; o ONS publica 8.019 MW na versão consistida).
-    """
-    lista = ", ".join(f"'{s}'" for s in areas)
-    fonte = (RAW_ONS / "carga_verificada").as_posix()
-    df = conectar().sql(f"""
-        SELECT cod_areacarga, din_referenciautc, din_atualizacao, val_cargaglobal,
-               val_cargaglobalcons, val_cargammgd, val_cargaglobalsmmgd
-        FROM read_parquet('{fonte}/**/*.parquet', hive_partitioning=false, union_by_name=true)
-        WHERE cod_areacarga IN ({lista})
-    """).df()
-    # Janelas rebaixadas podem repetir um instante: fica a publicação mais recente.
-    df = (df.sort_values("din_atualizacao")
-            .drop_duplicates(["cod_areacarga", "din_referenciautc"], keep="last")
-            .reset_index(drop=True))
-    df["timestamp"] = fim_para_inicio(de_utc(df["din_referenciautc"]))
-    df["carga_global_invalida"] = df["val_cargaglobal"] <= 0
-    df.loc[df["carga_global_invalida"], "val_cargaglobal"] = float("nan")
-    return df
-
-
 def construir_carga_area() -> pd.DataFrame:
     """Carga global e MMGD estimada (ONS) da área de carga da área piloto, 30 min.
 
@@ -80,7 +57,7 @@ def construir_carga_area() -> pd.DataFrame:
     (carga.area_piloto_ons).
     """
     area = CFG["carga"]["area_piloto_ons"]
-    df = _ler_carga_verificada([area])
+    df = ler_carga_verificada([area])
     if df.empty:
         raise LookupError(f"carga verificada sem a área '{area}': rode a ingestão")
     out = pd.DataFrame({"area": df["cod_areacarga"], "timestamp": df["timestamp"],
@@ -107,7 +84,7 @@ def construir_carga() -> pd.DataFrame:
       não assumimos zero. A coluna mmgd_disponivel marca isso.
     - Checagem: carga_global − mmgd deve bater com val_cargaglobalsmmgd publicado pelo ONS.
     """
-    df = _ler_carga_verificada(CFG["carga"]["subsistemas_api"])
+    df = ler_carga_verificada(CFG["carga"]["subsistemas_api"])
     df = cruzar_subsistema_area(df, "cod_areacarga", de="cod_areacarga", para="id_subsistema")
 
     out = pd.DataFrame({
@@ -116,7 +93,7 @@ def construir_carga() -> pd.DataFrame:
         "carga_global": df["val_cargaglobal"],
         "mmgd_estimada": df["val_cargammgd"],
     })
-    # Carga global <= 0 já veio NaN de _ler_carga_verificada, com flag, em vez de entrar como
+    # Carga global <= 0 já veio NaN de carga_bruta.ler_carga_verificada, com flag, em vez de entrar como
     # verdade no treino. A versão consistida continua em outra coluna.
     out["carga_global_invalida"] = df["carga_global_invalida"].to_numpy()
     out["carga_supervisionada"] = out["carga_global"] - out["mmgd_estimada"]

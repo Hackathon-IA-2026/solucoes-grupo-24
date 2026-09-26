@@ -28,6 +28,7 @@ import pandas as pd
 from src.processing.carga_bruta import ler_carga_verificada
 from src.utils.banco_analitico import conectar
 from src.utils.config import carregar
+from src.utils.joins import codigos_areacarga
 from src.utils.paths import DATA_PROCESSED, RAIZ, RAW_ONS
 
 SAIDA_USINAS = DATA_PROCESSED / "usinas_cadastro.csv"
@@ -159,13 +160,13 @@ def construir_mmgd_municipio() -> pd.DataFrame:
 # --------------------------------------------------------------------------- carga por área
 def construir_carga_areas() -> pd.DataFrame:
     """Carga global e MMGD por área de carga do ONS (tipo 'area' no mapeamento), 30 min."""
-    mapa = pd.read_csv(DATA_PROCESSED / "mapeamento_subsistema_area.csv")
-    areas = mapa.loc[mapa["tipo"] == "area", "cod_areacarga"].tolist()
+    # lista das áreas vem de joins.py (única leitura autorizada do mapeamento subsistema × área)
+    areas = codigos_areacarga("area")
     df = ler_carga_verificada(areas)
     out = pd.DataFrame({
         "cod_areacarga": df["cod_areacarga"],
         "timestamp": df["timestamp"],
-        "carga_global": df["val_cargaglobal"].where(df["val_cargaglobal"] > 0),  # ≤ 0 = falha de medição
+        "carga_global": df["val_cargaglobal"],  # ≤ 0 (falha de medição) já vem NaN de ler_carga_verificada
         "mmgd_estimada": df["val_cargammgd"],
     }).sort_values(["cod_areacarga", "timestamp"]).reset_index(drop=True)
     print(f"carga_areas: {out['cod_areacarga'].nunique()} áreas, {len(out)} linhas, "
