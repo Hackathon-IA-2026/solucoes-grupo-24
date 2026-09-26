@@ -53,3 +53,24 @@ ou mudar de razão.
 |---|---|---|---|
 | `Backend/pipeline/mock/saidas_modelo.json` | "Saídas de modelo" por risco: motivos, contribuições SHAP, horário previsto, dataset, hora da previsão | Inventados (migrados do antigo `alertas.json`); `mock: true` | saídas reais dos classificadores ENE/CNF |
 | `explicabilidade.ExplicadorPrecomputado` | Stub: usa as contribuições prontas da entrada em vez de calcular SHAP | — | `ExplicadorShap(modelo, dados_referencia, nomes_features)` |
+
+## Auditoria da MMGD em 3 camadas (`Backend/pipeline`, Luiz) — 2026-09-26
+
+Todos os mocks abaixo têm `"mock": true` no arquivo e `is_mock: true` em cada saída; a auditoria
+recusa gravar a saída real (`output/auditoria/`) se qualquer entrada for mock. As saídas mock vão
+para `Backend/output/auditoria/mock/` (fora do git, regeneráveis).
+
+| Arquivo | Conteúdo | Origem dos valores | Substituir por |
+|---|---|---|---|
+| `Backend/pipeline/mock/camada1_paineis_mock.json` | 12 painéis (centro, largura, altura, confiança) | **Sintético**, desenhado à mão em torno de Janaúba (MG), a área piloto provisória | `python -m pipeline.auditoria_camada1` com o YOLO sobre imagens georreferenciadas da área piloto |
+| `Backend/pipeline/mock/bdgd_mock.json` | 10 unidades com GD, transformador, alimentador, potência e `data_referencia` | **Sintético**, coordenadas casadas com os painéis mock para cobrir todos os casos do desempate | BDGD da distribuidora da área piloto (Fase 6) |
+| `Backend/pipeline/mock/aneel_cadastro_diario_mock.json` | 10 empreendimentos com data de homologação | **Sintético** (3 depois da data da BDGD, 1 antes, 2 sem painel detectado) | planilha diária de empreendimentos de GD da ANEEL da área piloto |
+
+Premissa (não é dado): `auditoria.kwp_por_m2 = 0.18` em `Backend/config/visao.yaml` converte área
+detectada em capacidade (módulos c-Si de ~19–22% de eficiência, descontando bordas da máscara).
+
+## Dado real acrescentado ao dashboard — 2026-09-26
+
+| Arquivo | Conteúdo | Origem |
+|---|---|---|
+| `Frontend/oraculo-dashboard/src/data/geo/ufs.geo.json` | divisas das 27 UFs (fundo do Mapa Híbrido) | API de malhas do IBGE, qualidade mínima (`npm run geo:ufs`) |

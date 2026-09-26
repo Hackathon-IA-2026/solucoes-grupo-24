@@ -459,3 +459,73 @@ externos bloqueados pela rede deste ambiente.
 Pendente: rodar `python run_heavywork.py` na máquina com os dados para republicar no contrato v3
 (até lá a API responde 503 nos recursos que mudaram). Coordenada real por usina (SIGA/ANEEL)
 tiraria o `mock` de posição dos riscos.
+
+## 2026-09-26 — Passada geral nos prompts do frontend (1–12), design Figma e alinhamento com os PDFs ✅ (Luiz)
+
+Referências: protótipo Figma "SCADA Dashboard Design" (zip), `Equipe24_LINKFY_ORACULO_pitch_Vfinal` e
+`ORACULO_Planejamento_v2` (PDFs). Nenhuma mudança de schema: `src/data/types.ts` e o contrato do Backend
+estão intactos.
+
+### Auditoria prompt a prompt
+
+| Prompt | Como estava | O que mudou |
+|---|---|---|
+| 1 · scaffold + design system | feito, mas os filtros NORMAL/LOADING/CRITICAL/NO-RISK **não agiam em nenhuma tela**; topbar estourava a 1440px | filtros ligados às telas; casca refeita no arranjo do Figma |
+| 2 · contrato mockado | feito (o `types.ts` é o contrato oficial) | nada |
+| 3 · Visão Geral | feito (3 KPIs + composição) | 4 KPIs, curva D+1 com patamares, coluna "Alertas ativos" com montante por razão |
+| 4 · Despacho Preditivo | feito | equação carga global − MMGD = carga supervisionada (pitch, slide 9), faixas de mínima diurna/ponta noturna, painel "o erro que custa mais" |
+| 5 · Lista de Riscos | feito | filtros + faixa de severidade na linha |
+| 6 · Detalhe do Alerta + explicabilidade | feito (Backend + tela) | card "Ação recomendada" (o campo já vinha no contrato e não aparecia; slide 10) |
+| 7 · Excedentes TSO-DSO | feito; tabela cortava o botão a 1440px | faixa "payload da interface ONS–DSO" (slide 7), barras por área, tabela na largura toda |
+| 8 · Validação | feito | tipografia; lista de limitações virou componente comum |
+| 9 · Mapa Híbrido | feito, mas os tiles da CARTO passaram a responder **"API KEY REQUIRED"** por cima do mapa | fundo 100% local (contorno Natural Earth + divisas das UFs do IBGE) |
+| Metodologia | **vazia** | tela nova com o método dos PDFs (fontes → evidências → produtos, os dois desafios, auditoria em 3 camadas, validação, limites, fontes técnicas) |
+| 10 · visão computacional | **não existia** | `pipeline/visao_comum.py`, `validar_modelo.py`, `auditoria_camada1.py`, `download_satelite.py` + `config/visao.yaml` |
+| 11 · auditoria camadas 2 e 3 | **não existia** | `pipeline/auditoria_camadas_2_3.py` + mocks BDGD/ANEEL/painéis |
+| 12 · harness e2e | **não existia** | `pipeline/teste_e2e.py` + `config/e2e.yaml` + cenário `dia_dos_pais_2024` |
+
+### Feito
+
+- **Design (Figma como base, com crítica):** IBM Plex Sans + JetBrains Mono empacotadas (offline), escala de texto por papel (`text-label` 11px, `text-body` 13px, `text-kpi` 30px), cantos retos, topbar de largura total com marca, sidebar de 13rem que vira coluna de ícones abaixo de `lg`, cabeçalho de módulo compacto, KPIs com borda superior de identidade, conteúdo com rolagem própria. Conferido no Chromium a 1440, 1024 e 390 px (sem estouro horizontal, zero erro de console).
+- **Patamares e faixas de curtailment LIDOS de `Backend/config/processamento.yaml`** no build (`vite.config.ts` → `__CALENDARIO__` → `src/content/calendario.ts`, validado com Zod). Teste confere que o dashboard usa exatamente os horários do Backend.
+- **Filtros de severidade** agem em Visão Geral, Mapa, Lista de Riscos e Excedentes; cada tela mostra quantos itens ficaram ocultos. KPIs de sistema continuam sobre todos os itens.
+- **Visão computacional:** o `best.pt` disponível carrega (ultralytics 8.4, torch 2.14 CPU): YOLOv8s-seg, classe `solar-panel`, imgsz 640, treinado em 2023-07-10 por terceiros (`pkrawiec/projects/solar-panels`) — **modelo público, sem o fine-tuning local do planejamento**. Validação rodada à mão com as imagens de exemplo do ultralytics (não são de satélite, só para exercitar o código): o modelo marcou "solar-panel" em placas e letreiros de um ônibus (confiança 0,26–0,51).
+- **Auditoria 1 → 2/3 em modo mock:** 12 painéis sintéticos → 5 Cadastrada, 3 Lag de Sistema, 1 Divergência cadastral, 3 Não homologada (fora do fator, escaladas como exceção); fator por alimentador 1,35 e 1,03 (valores de mock).
+- **Teste e2e:** `docs/reports/teste_e2e.md` (nesta máquina: bases e modelos ausentes → contrato vem dos mocks, valida no contrato, alertas coerentes com os riscos).
+- Testes: dashboard 34 (antes 23), Backend 145 passam e 8 pulados (33 novos em `test_visao_auditoria.py` e `test_teste_e2e.py`). Build, lint e typecheck limpos.
+
+### Bugs transformados em regra
+
+- **`text-base` ambíguo** (tamanho de fonte padrão do Tailwind **e** a cor `base`): texto quase preto sobre o fundo (valores da Metodologia sumiam; o logo também). Token renomeado para `fundo`; `src/theme/tokens.test.ts` falha se alguma cor tiver nome de tamanho de fonte.
+- **Mapa dependente de serviço externo** (CARTO passou a exigir chave): fundo local; `src/pages/semServicoExterno.test.ts` falha se voltar `TileLayer`, URL `{z}/{x}/{y}` ou fonte/CSS de CDN.
+- **Controle que não faz nada** (filtros): `SEVERIDADE_STATUS` é `Record` exaustivo sobre a severidade do contrato (severidade nova sem filtro não compila) + testes de filtragem e de ocultos.
+- **"Adequado" sem gabarito** na validação do YOLO: o veredito agora é `ajustar` | `sanidade_ok_sem_gabarito` | `adequado`, e só dá `adequado` com `gabarito.csv`; imagens anotadas saem em `<imagens>/_anotadas/`.
+- **Mock contaminando saída real:** a auditoria recusa gravar em `output/auditoria/` se qualquer entrada for mock; saídas mock vão para `output/auditoria/mock/` (fora do git).
+- **Testes com APIs do Node no tsconfig do navegador:** `tsconfig.test.json` próprio (o código da tela continua sem tipos do Node).
+
+### Decisões
+
+- **Do Figma NÃO entrou:** frequência do SIN, ciclo DESSEM, "margem até o mínimo técnico" (30,4 GW), "modelo XGBoost+LSTM", botões "→ Gerdin", "Extrapolação de tendências" com fatores de crescimento sem fonte — nada disso existe em fonte do projeto. Também não entrou a semântica errada das razões (o Figma chama CNF de "intercâmbio/congestionamento" e REL de "rede N-1"; no dicionário do ONS CNF é confiabilidade e REL indisponibilidade externa), nem a paleta de cinzas de contraste ~2,6:1 e rótulos de 9px. Cores do Prompt 1 mantidas.
+- **Prompt 12 sem chave manual mock/real:** o pedido previa um `data_sources_config.json` com "mock"/"real" por etapa; ficou `config/e2e.yaml` só com caminhos (regra do CLAUDE.md) e o status é lido dos dados — uma chave manual poderia dizer "real" com o dado em mock:true. O "trocar sem mexer no dashboard" já é garantido pela API + contrato.
+- **Camada 1 `--mock` não roda o YOLO:** painéis sintéticos declarados em JSON passam pela mesma geometria do modo real (rodar o modelo em imagem placeholder não testaria nada).
+- **"Recente" no desempate** = homologado depois da `data_referencia` da BDGD. Homologado antes e fora da BDGD vira "Divergência cadastral" (entra no fator, homologada; vai para revisão).
+- **Premissa** `kwp_por_m2 = 0,18` (área → capacidade) em `config/visao.yaml`, registrada em `docs/real_vs_mock.md`.
+- **Trava de resolução no download:** escala > `modelo.gsd_maximo_m` (0,5 m) é recusada sem `--forcar` — com Sentinel-2 (10 m) o modelo devolveria "zero painéis", um falso negativo que pareceria resultado.
+- Módulos de visão (download, validação, Camada 1) entraram na lista de quem pode ler `data/raw` em `tests/test_estrutura.py`: são ingestão/processamento de imagem.
+
+### Bloqueado
+
+- Rodar a auditoria real: sem imagem submétrica da área piloto, sem BDGD real e sem bbox (área piloto ainda provisória).
+- Cenário Dia dos Pais com dado real: as bases do ONS não estão nesta máquina (o cenário extrai do dado quando elas existem; testado com fixture sintética).
+
+### Pendências humanas
+
+- **Tiago:** confirmar a área piloto e preencher `satelite.bbox` (`config/visao.yaml`); ingerir a BDGD; rodar `python -m pipeline.teste_e2e` na máquina com as bases (gera o caso Dia dos Pais real). Lembrar: 2024-08-11 está no treino do classificador (in-sample).
+- **Luiz:** projeto do Earth Engine (`satelite.gee_projeto`) e, principalmente, fonte de imagem **submétrica**; montar um `gabarito.csv` com imagens da área e revisar a confiança mínima (0,25 deixou passar falsos positivos); decidir onde os pesos `.pt` ficam para o time (estão fora do git).
+- **Time:** este trabalho foi feito na cópia `solucoes-grupo-24` (repositório da competição), que está idêntica ao `HackaIA_Oraculo` + estas mudanças; decidir em qual repositório publicar.
+
+### Enviar ao Tiago
+
+- O dashboard agora lê `calendario.patamares` e `calendario.faixas_curtailment` de `Backend/config/processamento.yaml` no build: mudar os horários lá muda a tela.
+- `src/utils/log.py::console_utf8()` (acentos legíveis no console do Windows) e extra `[visao]` no `pyproject.toml`.
+- `tests/test_estrutura.py`: allowlist do dado bruto ampliada para os 4 módulos de visão.

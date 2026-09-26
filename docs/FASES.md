@@ -116,7 +116,9 @@ Integração
 - [ ] Migrar o necessário de `Backend/RDX/` para `src/spatial/`
 - [ ] Manchas (polígonos por subestação/alimentador) → GeoJSON em `output/`
 - [ ] Capacidade de MMGD por mancha (BDGD) + desempate com o cadastro diário da ANEEL (Lag de Sistema × não homologada)
-- [ ] 👤 Fator de correção por imagem de satélite (Luiz)
+- [x] Pipeline da auditoria em 3 camadas pronto e testado em modo mock (Luiz, 2026-09-26): `pipeline/auditoria_camada1.py` (YOLO → GeoJSON), `auditoria_camadas_2_3.py` (desempate + fator por mancha, não homologadas fora do fator), `validar_modelo.py`, `download_satelite.py`; parâmetros em `config/visao.yaml`
+- [ ] 👤 Fator de correção por imagem de satélite (Luiz): falta rodar com dado real — depende da área piloto, da BDGD (item acima) e de imagem **submétrica** (Sentinel-2, 10 m, não enxerga painel residencial)
+- [ ] 👤 Gabarito para o YOLO (`gabarito.csv` com imagens da área): o modelo disponível é público (treinado em 2023 por terceiros) e marcou "solar-panel" em fotos sem painel
 - [ ] Excedentes por área de concessão e fronteira
 - [ ] Publicar `excedentes` real
 - [ ] 👤 Contrato do Mapa Híbrido (manchas em GeoJSON): combinar com o Luiz antes de mudar o schema
@@ -124,7 +126,9 @@ Integração
 ## Fase 7 — Entrega ⬜
 
 - [ ] Figura 1 (vinda da Peça B da Fase 1)
-- [ ] Caso real de constrained-off com o diagnóstico que o sistema teria dado (Peça C + Fase 4)
+- [ ] Caso real de constrained-off com o diagnóstico que o sistema teria dado (Peça C + Fase 4) — cenário `dia_dos_pais_2024` pronto em `python -m pipeline.teste_e2e` (extrai do dado real a carga mínima e a fração de usinas cortadas); falta rodar na máquina com as bases. Atenção: 2024-08-11 está no treino do classificador (in-sample)
+- [x] Harness ponta a ponta `pipeline/teste_e2e.py` (status real/mock lido dos dados, relatório em `docs/reports/teste_e2e.md`) (2026-09-26)
+- [x] Dashboard: revisão de design com o protótipo Figma, tela Metodologia, filtros de severidade ligados às telas, mapa sem tiles externos (2026-09-26)
 - [ ] Definir a janela da demo (o "agora" do replay) em `config/publicacao.yaml`
 - [ ] README: link da demo e dashboard (👤 Luiz)
 - [ ] *Tool de previsão publicada no MCP do ONS (cortável)*
