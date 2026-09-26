@@ -49,7 +49,7 @@ Stack: Python, pandas, pyarrow, duckdb, geopandas, matplotlib, seaborn, lightgbm
 - Após fazer commit faça imediatamente push para enviar logo as alterações para o time.
 - Respeite os principios DRY! evite ao máximo ter mais de uma cópia do mesmo código!
 - faça comentários dentro do código que explique cada parte do código inclusive inserindo decisões...
-- Após terminar a tarefa faça commit no repositório descrevendo tudo que foi alterado e tudo que foi feito! e após terminar o commit faça push origin para subir as alterações para o GitHub imediatamente. (A menos que você esteja trabalhando para ligia).
+- Após terminar a tarefa faça commit no repositório descrevendo tudo que foi alterado e tudo que foi feito! e após terminar o commit faça pull para subir as alterações para o GitHub imediatamente. (A menos que você esteja trabalhando para ligia).
 
 ## README (modelo da competição)
 
