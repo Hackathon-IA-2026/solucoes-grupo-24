@@ -38,6 +38,10 @@ dev = ["pytest", "httpx"]  # httpx: TestClient do FastAPI nos testes da API
 era5 = ["cdsapi", "xarray", "netcdf4"]
 # explicabilidade com modelo real (pipeline/explicabilidade.py::ExplicadorShap)
 explicabilidade = ["shap", "numpy"]
+# visão computacional (pipeline/validar_modelo.py, auditoria_camada1.py, download_satelite.py):
+# YOLO (ultralytics puxa o torch CPU, ~300 MB) e o Google Earth Engine. rasterio é opcional
+# (GeoTIFF sem world file). O modo --mock e a auditoria das camadas 2/3 rodam sem este extra.
+visao = ["ultralytics>=8.1", "earthengine-api"]
 
 [tool.setuptools.packages.find]
 include = ["src*", "pipeline*", "migrations*"]

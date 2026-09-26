@@ -20,6 +20,9 @@ Backend/data/modelos/
 # cópia do contrato publicado (regravada a cada run_heavywork.py)
 Backend/output/contrato.json
 
+# saídas MOCK da auditoria da MMGD (regeneradas por `python -m pipeline.auditoria_camadas_2_3 --mock`)
+Backend/output/auditoria/mock/
+
 # banco SQLite do Backend (recriado pelo carregador)
 Backend/**/*.db
 Backend/**/*.sqlite

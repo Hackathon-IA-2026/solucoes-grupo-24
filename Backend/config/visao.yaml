@@ -1,0 +1,64 @@
+# Visão computacional e auditoria da MMGD em 3 camadas (Pilar 2 do planejamento v2). Dono: Luiz.
+# Código: pipeline/visao_comum.py, validar_modelo.py, auditoria_camada1.py, download_satelite.py,
+# auditoria_camadas_2_3.py. Caminhos relativos a Backend/.
+
+modelo:
+  # Pesos do YOLO. Vazio = passar --modelo na linha de comando. Pesos NÃO vão para o git
+  # (*.pt no .gitignore): combinar com o time onde fica a cópia (sugestão: data/modelos/visao/).
+  # Em 2026-09-26 o arquivo disponível é um YOLOv8s-seg público (classe "solar-panel", treinado
+  # em 2023-07-10 por terceiros, imgsz 640), ainda SEM o fine-tuning local do planejamento.
+  caminho: ""
+  confianca_minima: 0.25
+  # Resolução mais grossa (metros por pixel) em que um painel residencial (~1,7 m × 1 m, arranjos
+  # de 10–40 m²) ainda ocupa pixels suficientes para o modelo. Imagem acima disso é recusada
+  # pelo download e sinalizada na validação: rodar o modelo nela daria "zero painéis" falso.
+  gsd_maximo_m: 0.5
+
+imagens:
+  amostra: data/raw/satelite/amostra
+  area_piloto: data/raw/satelite/area_piloto
+  extensoes: [".tif", ".tiff", ".png", ".jpg", ".jpeg"]
+  # CRS das imagens georreferenciadas por world file (.pgw/.jgw/.tfw), que não carregam CRS.
+  # GeoTIFF traz o próprio CRS (lido com rasterio, se instalado).
+  crs_world_file: "EPSG:4326"
+
+camada1:
+  saida: output/auditoria/camada1_deteccoes.geojson
+  # modo --mock: detecções SINTÉTICAS (is_mock=true) só para exercitar as camadas 2 e 3
+  # enquanto não há imagem da área piloto. Nunca vão para a saída real.
+  mock_paineis: pipeline/mock/camada1_paineis_mock.json
+  saida_mock: output/auditoria/mock/camada1_deteccoes_mock.geojson
+
+auditoria:
+  # Distância máxima entre o painel detectado e o ponto cadastrado (BDGD/ANEEL) para considerar
+  # que são a mesma instalação. Coordenada cadastral costuma ser a do endereço/medidor, não a
+  # do telhado: 25 m cobre um lote urbano típico sem casar vizinhos.
+  raio_casamento_m: 25
+  # PREMISSA (não é dado): potência por área de módulo. Módulos c-Si comerciais têm ~19–22% de
+  # eficiência em STC, i.e. ~0,19–0,22 kWp/m²; 0,18 desconta bordas/espaçamento que a máscara
+  # inclui. Usada para converter área detectada em capacidade. Sensibilidade vai no relatório.
+  kwp_por_m2: 0.18
+  # Nível da "mancha" de rede em que o fator de correção é calculado (campo do registro BDGD).
+  nivel_mancha: alimentador
+  saida: output/auditoria/auditoria_camadas_2_3.json
+  mock:
+    bdgd: pipeline/mock/bdgd_mock.json
+    aneel: pipeline/mock/aneel_cadastro_diario_mock.json
+    saida: output/auditoria/mock/auditoria_camadas_2_3_mock.json
+
+satelite:
+  # Download parametrizado por bounding box via Google Earth Engine (download_satelite.py).
+  # TODO (Tiago): preencher `bbox` quando a área piloto for confirmada (config/projeto.yaml ainda
+  # marca a área como provisória). Formato: [lon_min, lat_min, lon_max, lat_max] em graus.
+  bbox: null
+  gee_projeto: ""            # id do projeto Cloud habilitado no Earth Engine (credencial do Luiz)
+  # ATENÇÃO: Sentinel-2 tem 10 m/pixel — grosso demais para painel residencial (ver
+  # modelo.gsd_maximo_m). Serve para testar o encanamento; para a auditoria de verdade é preciso
+  # imagem submétrica (ortofoto estadual/municipal ou provedor comercial) com a coleção trocada aqui.
+  colecao: "COPERNICUS/S2_SR_HARMONIZED"
+  escala_m: 10
+  bandas: ["B4", "B3", "B2"]
+  data_inicio: "2026-01-01"
+  data_fim: "2026-09-01"
+  max_nuvens_pct: 10
+  saida: data/raw/satelite/area_piloto

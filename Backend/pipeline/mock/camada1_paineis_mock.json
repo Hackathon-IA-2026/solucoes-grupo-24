@@ -1,0 +1,18 @@
+{
+ "mock": true,
+ "descricao": "Painéis SINTÉTICOS da Camada 1 (auditoria_camada1.py --mock). Não vieram de imagem nem de modelo: existem só para exercitar as camadas 2 e 3 (auditoria_camadas_2_3.py) enquanto não há imagem da área piloto. Coordenadas em torno de Janaúba (MG), a área piloto PROVISÓRIA de config/projeto.yaml. Registrado em docs/real_vs_mock.md.",
+ "paineis": [
+  {"id": "D01", "imagem": "mock_tile_01", "lat": -15.802, "lon": -43.309, "largura_m": 7, "altura_m": 4, "confianca": 0.91},
+  {"id": "D02", "imagem": "mock_tile_01", "lat": -15.802, "lon": -43.3082, "largura_m": 5.5, "altura_m": 4, "confianca": 0.88},
+  {"id": "D03", "imagem": "mock_tile_01", "lat": -15.802, "lon": -43.3074, "largura_m": 7, "altura_m": 6, "confianca": 0.93},
+  {"id": "D04", "imagem": "mock_tile_01", "lat": -15.8028, "lon": -43.309, "largura_m": 4, "altura_m": 4, "confianca": 0.79},
+  {"id": "D05", "imagem": "mock_tile_02", "lat": -15.8028, "lon": -43.3082, "largura_m": 6, "altura_m": 5, "confianca": 0.86},
+  {"id": "D06", "imagem": "mock_tile_02", "lat": -15.8028, "lon": -43.3074, "largura_m": 6, "altura_m": 5, "confianca": 0.82},
+  {"id": "D07", "imagem": "mock_tile_02", "lat": -15.8036, "lon": -43.309, "largura_m": 7, "altura_m": 4, "confianca": 0.9},
+  {"id": "D08", "imagem": "mock_tile_02", "lat": -15.8036, "lon": -43.3082, "largura_m": 4, "altura_m": 3, "confianca": 0.71},
+  {"id": "D09", "imagem": "mock_tile_03", "lat": -15.8036, "lon": -43.3074, "largura_m": 6, "altura_m": 4, "confianca": 0.84},
+  {"id": "D10", "imagem": "mock_tile_03", "lat": -15.8044, "lon": -43.309, "largura_m": 5, "altura_m": 4, "confianca": 0.77},
+  {"id": "D11", "imagem": "mock_tile_03", "lat": -15.8044, "lon": -43.3082, "largura_m": 9, "altura_m": 6, "confianca": 0.92},
+  {"id": "D12", "imagem": "mock_tile_03", "lat": -15.8044, "lon": -43.3074, "largura_m": 4, "altura_m": 3, "confianca": 0.66}
+ ]
+}

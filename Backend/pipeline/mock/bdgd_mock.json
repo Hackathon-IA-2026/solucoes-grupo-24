@@ -1,0 +1,17 @@
+{
+ "mock": true,
+ "descricao": "BDGD SINTÉTICA (auditoria_camadas_2_3.py --mock): 10 unidades consumidoras com GD cadastrada, com transformador e alimentador. Coordenadas desenhadas junto com camada1_paineis_mock.json para cobrir os casos do desempate. Não é dado da distribuidora. Registrado em docs/real_vs_mock.md.",
+ "data_referencia": "2025-12-31",
+ "unidades": [
+  {"id": "B01", "lat": -15.80195, "lon": -43.3090, "potencia_kw": 5.0, "transformador": "TR-0101", "alimentador": "AL-JAN-01"},
+  {"id": "B02", "lat": -15.80195, "lon": -43.3082, "potencia_kw": 4.0, "transformador": "TR-0102", "alimentador": "AL-JAN-01"},
+  {"id": "B03", "lat": -15.80195, "lon": -43.3074, "potencia_kw": 7.5, "transformador": "TR-0103", "alimentador": "AL-JAN-01"},
+  {"id": "B04", "lat": -15.80275, "lon": -43.3090, "potencia_kw": 3.0, "transformador": "TR-0201", "alimentador": "AL-JAN-02"},
+  {"id": "B05", "lat": -15.80275, "lon": -43.3082, "potencia_kw": 5.5, "transformador": "TR-0202", "alimentador": "AL-JAN-02"},
+  {"id": "B06", "lat": -15.80520, "lon": -43.3090, "potencia_kw": 2.0, "transformador": "TR-0203", "alimentador": "AL-JAN-02"},
+  {"id": "B07", "lat": -15.80520, "lon": -43.3082, "potencia_kw": 2.5, "transformador": "TR-0203", "alimentador": "AL-JAN-02"},
+  {"id": "B08", "lat": -15.80280, "lon": -43.3068, "potencia_kw": 1.5, "transformador": "TR-0103", "alimentador": "AL-JAN-01"},
+  {"id": "B09", "lat": -15.80520, "lon": -43.3074, "potencia_kw": 2.0, "transformador": "TR-0204", "alimentador": "AL-JAN-02"},
+  {"id": "B10", "lat": -15.80120, "lon": -43.3098, "potencia_kw": 1.5, "transformador": "TR-0101", "alimentador": "AL-JAN-01"}
+ ]
+}

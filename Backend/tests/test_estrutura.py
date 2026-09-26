@@ -30,8 +30,13 @@ def test_raiz_do_backend_e_a_raiz_de_import():
 # os dois utilitários de infraestrutura que definem o caminho e a pasta temporária do DuckDB.
 # Todo o resto (modelos, previsão, publicação, API, orquestrador) usa data/processed e os
 # modelos treinados. Ver docs/Oraculo_planejamento.md §13.1.
+# A visão computacional (Luiz) também é ingestão + processamento, só que de IMAGEM: o download de
+# satélite grava em data/raw/satelite e a validação/Camada 1 leem essas imagens brutas. A
+# auditoria das camadas 2/3 e o teste e2e NÃO entram aqui: consomem só o GeoJSON da Camada 1.
 PODEM_LER_BRUTO = ("src/ingestion/", "src/processing/", "src/utils/paths.py",
-                   "src/utils/banco_analitico.py")
+                   "src/utils/banco_analitico.py",
+                   "pipeline/download_satelite.py", "pipeline/validar_modelo.py",
+                   "pipeline/auditoria_camada1.py", "pipeline/visao_comum.py")
 MARCAS_DO_BRUTO = ("RAW_ONS", "DATA_RAW", "data/raw", "data\\\\raw", "data\\raw")
 
 

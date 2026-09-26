@@ -1,0 +1,17 @@
+{
+ "mock": true,
+ "descricao": "Planilha de empreendimentos de GD da ANEEL — versão SINTÉTICA (auditoria_camadas_2_3.py --mock): 10 empreendimentos com data de homologação, alguns depois da data da BDGD (lag de sistema), um antes (divergência) e dois sem painel detectado. Não é dado da ANEEL. Registrado em docs/real_vs_mock.md.",
+ "data_extracao": "2026-09-25",
+ "empreendimentos": [
+  {"codigo": "GD.MG.MOCK.0001", "lat": -15.8020, "lon": -43.30895, "potencia_kw": 5.0, "data_homologacao": "2023-03-14"},
+  {"codigo": "GD.MG.MOCK.0002", "lat": -15.8020, "lon": -43.30815, "potencia_kw": 4.0, "data_homologacao": "2022-11-02"},
+  {"codigo": "GD.MG.MOCK.0003", "lat": -15.8020, "lon": -43.30735, "potencia_kw": 7.5, "data_homologacao": "2024-06-20"},
+  {"codigo": "GD.MG.MOCK.0004", "lat": -15.8028, "lon": -43.30895, "potencia_kw": 3.0, "data_homologacao": "2021-08-09"},
+  {"codigo": "GD.MG.MOCK.0005", "lat": -15.8028, "lon": -43.30735, "potencia_kw": 5.5, "data_homologacao": "2026-02-17"},
+  {"codigo": "GD.MG.MOCK.0006", "lat": -15.8036, "lon": -43.30895, "potencia_kw": 5.0, "data_homologacao": "2026-05-04"},
+  {"codigo": "GD.MG.MOCK.0007", "lat": -15.8036, "lon": -43.30815, "potencia_kw": 2.2, "data_homologacao": "2026-07-22"},
+  {"codigo": "GD.MG.MOCK.0008", "lat": -15.8036, "lon": -43.30735, "potencia_kw": 4.3, "data_homologacao": "2024-10-01"},
+  {"codigo": "GD.MG.MOCK.0009", "lat": -15.8012, "lon": -43.3058, "potencia_kw": 3.0, "data_homologacao": "2026-09-10"},
+  {"codigo": "GD.MG.MOCK.0010", "lat": -15.8060, "lon": -43.3100, "potencia_kw": 6.0, "data_homologacao": "2026-08-30"}
+ ]
+}
