@@ -9,6 +9,8 @@
  * - Campo com `;`, aspas ou quebra de linha vai entre aspas, com aspas dobradas (RFC 4180).
  * - Exporta exatamente o que está na tela (já filtrado/ordenado): quem exporta vê o que baixou.
  */
+import { baixarArquivo, hojeIso } from './download'
+
 export interface ColunaCsv<T> {
   rotulo: string
   valor: (linha: T) => string | number | boolean | null | undefined
@@ -32,11 +34,5 @@ export function paraCsv<T>(colunas: readonly ColunaCsv<T>[], linhas: readonly T[
 
 /** Dispara o download no navegador. Nome sem extensão; ganha a data de hoje e ".csv". */
 export function baixarCsv<T>(nome: string, colunas: readonly ColunaCsv<T>[], linhas: readonly T[]): void {
-  const blob = new Blob(['﻿' + paraCsv(colunas, linhas)], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${nome}_${new Date().toISOString().slice(0, 10)}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+  baixarArquivo(`${nome}_${hojeIso()}.csv`, '﻿' + paraCsv(colunas, linhas), 'text/csv;charset=utf-8')
 }

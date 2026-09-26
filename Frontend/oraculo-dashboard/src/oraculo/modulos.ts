@@ -1,7 +1,7 @@
 /**
  * Telas do protótipo O.R.A.C.U.L.O. no registro de módulos (src/modules.ts), na ordem e nos
- * grupos do menu original (02-PROTOTIPO/web/js/app.js, NAV). `ajuda` é o id do painel na
- * documentação Sphinx (tecla F1); o mapeamento id -> página vem do Backend (/api/docs/status).
+ * grupos do menu original (02-PROTOTIPO/web/js/app.js, NAV). `ajuda` é o id da página da
+ * documentação embutida (tecla F1, ./documentacao/indice.ts).
  *
  * Visão computacional tem as DUAS soluções do time lado a lado:
  * - "Visão computacional" (protótipo: detector clássico + adaptador YOLO, /api/mapa/vision);
@@ -127,7 +127,7 @@ export const MODULOS_ORACULO: readonly ModuleDef[] = [
   {
     path: '/auditoria-mmgd',
     grupo: 'Mapa Inteligente',
-    ajuda: 'visao',
+    ajuda: 'auditoria',
     label: 'Visão · auditoria 3 camadas',
     titulo: 'Auditoria da MMGD em 3 camadas: satélite × BDGD × ANEEL',
     icone: 'eye',

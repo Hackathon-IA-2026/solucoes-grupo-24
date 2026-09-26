@@ -2,6 +2,12 @@
 
 Documentação da aplicação, gerada com **Sphinx**.
 
+> **Atenção (2026-09-26):** a ajuda F1 do dashboard React **não usa mais** esta documentação. O texto
+> das telas agora é escrito no próprio frontend, em
+> `Frontend/oraculo-dashboard/src/oraculo/documentacao/`, e pode ser exportado (Markdown, HTML,
+> PDF) pelo quadro F1. Esta árvore Sphinx continua servindo só a interface legada (`/legado`) e a
+> referência de código Python; para mudar o texto de uma tela, edite o frontend.
+
 **Equipe 24 — LINKFY** · Hackathon IA COPPE/UFRJ 2026
 
 ---

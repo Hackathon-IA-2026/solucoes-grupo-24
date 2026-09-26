@@ -40,7 +40,7 @@ export interface ModuleDef {
   Page: ComponentType
   /** título do grupo no menu lateral (ver ./oraculo/modulos.ts) */
   grupo?: string
-  /** id do painel na documentação Sphinx do protótipo (ajuda F1, /api/docs/status) */
+  /** id da página da documentação embutida (ajuda F1, src/oraculo/documentacao/): toda tela tem uma */
   ajuda?: string
   /** título da tela na topbar, quando difere do rótulo do menu (títulos do protótipo) */
   titulo?: string
@@ -52,6 +52,7 @@ export interface ModuleDef {
 const MODULOS_CONTRATO: readonly ModuleDef[] = ([
   {
     path: '/visao-geral',
+    ajuda: 'visao-geral',
     label: 'Visão Geral',
     description: 'Panorama do SIN: KPIs de carga, risco de curtailment e alertas ativos.',
     icon: LayoutDashboard,
@@ -59,6 +60,7 @@ const MODULOS_CONTRATO: readonly ModuleDef[] = ([
   },
   {
     path: MAPA_PATH,
+    ajuda: 'mapa-hibrido',
     label: 'Mapa Híbrido',
     description: 'Usinas em risco, excedentes TSO-DSO e densidade de MMGD sobre o mapa do Brasil.',
     icon: MapIcon,
@@ -66,6 +68,7 @@ const MODULOS_CONTRATO: readonly ModuleDef[] = ([
   },
   {
     path: '/despacho-preditivo',
+    ajuda: 'despacho-preditivo',
     label: 'Despacho Preditivo',
     description: 'Previsão de carga supervisionada (P10/P50/P90) nos horizontes 30 min, 3h e D+1.',
     icon: Activity,
@@ -73,6 +76,7 @@ const MODULOS_CONTRATO: readonly ModuleDef[] = ([
   },
   {
     path: '/lista-riscos',
+    ajuda: 'lista-riscos',
     label: 'Lista de Riscos',
     description: 'Usinas e áreas ordenadas por risco e montante previsto de corte.',
     icon: ListOrdered,
@@ -80,6 +84,7 @@ const MODULOS_CONTRATO: readonly ModuleDef[] = ([
   },
   {
     path: DETALHE_ALERTA_PATH,
+    ajuda: 'detalhe-alerta',
     // :alertId opcional: a rota abre vazia pelo menu ou já focada num alerta vindo da lista.
     routePattern: `${DETALHE_ALERTA_PATH}/:alertId?`,
     label: 'Detalhe do Alerta',
@@ -89,6 +94,7 @@ const MODULOS_CONTRATO: readonly ModuleDef[] = ([
   },
   {
     path: '/excedentes-tso-dso',
+    ajuda: 'excedentes',
     label: 'Excedentes TSO-DSO',
     description: 'Excedentes da geração distribuída vistos pela distribuidora e pelo ONS.',
     icon: SendToBack,
@@ -96,6 +102,7 @@ const MODULOS_CONTRATO: readonly ModuleDef[] = ([
   },
   {
     path: '/validacao',
+    ajuda: 'validacao-contrato',
     label: 'Validação',
     description: 'Métricas fora da amostra, com split cronológico, contra os baselines.',
     icon: CircleCheckBig,
@@ -103,6 +110,7 @@ const MODULOS_CONTRATO: readonly ModuleDef[] = ([
   },
   {
     path: '/metodologia',
+    ajuda: 'metodologia',
     label: 'Metodologia',
     description: 'Fontes de dados, modelos e premissas da solução.',
     icon: BookOpen,
@@ -116,6 +124,11 @@ const MODULOS_CONTRATO: readonly ModuleDef[] = ([
  * dashboard do contrato. "/" abre o primeiro módulo (Despacho preditivo do protótipo).
  */
 export const MODULES: readonly ModuleDef[] = [...MODULOS_ORACULO, ...MODULOS_CONTRATO]
+
+/** Módulo da rota corrente (inclui subrotas, como /detalhe-alerta/:id). Usado pela casca e pela ajuda F1. */
+export function moduloDaRota(pathname: string): ModuleDef | undefined {
+  return MODULES.find((m) => pathname === m.path || pathname.startsWith(m.path + '/'))
+}
 
 /** URL do Detalhe do Alerta de um risco (Lista de Riscos e demais links usam só isto). */
 export function rotaDetalheAlerta(riscoUsinaId: string): string {

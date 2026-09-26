@@ -726,3 +726,38 @@ estão intactos.
   `python deploy/deploy_ecs.py` (idempotente). O `Backend/deploy/Dockerfile` (testado local) serve para contas sem essas
   restrições (ECR + ECS/App Runner).
 - **Segredos:** credenciais só em variáveis de ambiente, nunca em arquivo do repositório.
+
+## 2026-09-26 — Ajuda F1: documentação escrita no frontend, com exportação ✅
+
+- **Pedido do Tiago**: a documentação do F1 era fraca e dependia de script Python (Sphinx gerado por
+  `build_docs.py` e servido pelo backend em `/docs`, via `/api/docs/status`); sem o build ou sem o
+  backend, o quadro ficava vazio. Deve ser escrita no frontend e poder ser exportada.
+- **Conteúdo** (`Frontend/oraculo-dashboard/src/oraculo/documentacao/`): 31 páginas em blocos
+  TypeScript (`modelo.ts`: parágrafo, lista, tabela, aviso por tom, fórmula, código, com marcação
+  inline e links `[[id]]` entre páginas). 5 gerais (o que é, como ler, proveniência, limitações,
+  glossário) + uma por tela. Texto revisado do Sphinx e **atualizado** para o estado atual: rede
+  real da BDGD no RJ no Perfis por subestação, detecção em satélite real na Visão, página nova da
+  Auditoria em 3 camadas e as **8 telas do dashboard do contrato**, que não tinham documentação
+  (a partir de `visao_geral_sistema.md`, `real_vs_mock.md` e `metodo_espacial.md`). Patamares,
+  faixas horárias, limitações e a lista de telas são lidos de `content/calendario.ts`,
+  `content/limitacoes.ts` e `modules.ts` (sem cópia).
+- **Painel → página**: o `ajuda` de cada módulo em `modules.ts` é o id da página (as telas do
+  contrato ganharam `ajuda`; a Auditoria passou de `visao` para `auditoria`). `moduloDaRota` foi
+  para `modules.ts` (usado pela casca e pela ajuda).
+- **Quadro F1** (`Ajuda.tsx` só com atalho/foco; `documentacao/QuadroAjuda.tsx` carregado sob
+  demanda, para o texto não pesar no bundle inicial: 410 kB → a ajuda é um chunk de 138 kB que só
+  desce no primeiro F1): índice por grupo com busca (sem acento, título primeiro), links entre
+  páginas, "Abrir a tela", "← esta tela", paginação anterior/próxima, tema claro/escuro. F1 lê a tela
+  da URL do navegador: o React Router navega em transição e, logo após navegar, o `pathname` do React
+  ainda era o da tela anterior (achado na verificação no navegador).
+- **Exportar** (`exportar.tsx`): página ou documentação completa em Markdown, HTML autocontido (o
+  mesmo `Renderizador.tsx` da tela, via `renderToStaticMarkup` carregado sob demanda, CSS embutido)
+  e Imprimir/PDF (iframe invisível + diálogo de impressão). Download comum em `utils/download.ts`
+  (o CSV passou a usá-lo).
+- **Testes** (`documentacao.test.ts`): toda tela do menu tem página; toda página de tela está ligada a
+  uma tela; todo `[[link]]` existe; tabelas bem formadas; parser inline; busca; Markdown com âncoras
+  válidas; HTML com todas as páginas e sem recurso externo; `Ajuda.tsx` sem `docs/status`/iframe.
+  Frontend 59 testes, `tsc` limpo; verificado no navegador (F1, busca, links, abrir a tela, menu
+  exportar, HTML gerado, tema claro, layout estreito).
+- **Não mudou**: o Sphinx (`docs/oraculo/documentacao_sphinx`) e a rota `/api/docs/status` seguem
+  servindo só a interface legada (`/legado`); o dashboard não os usa mais.

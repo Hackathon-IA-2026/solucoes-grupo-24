@@ -37,8 +37,9 @@ const calendario = {
 // Proxy do prefixo da API: o navegador chama /api/... na MESMA origem do dashboard e o Vite
 // repassa para o FastAPI. Sem CORS no desenvolvimento e com a mesma URL relativa que o
 // Backend usa quando ele mesmo serve o build (dist/) em produção.
-// /docs (ajuda F1: documentação Sphinx do protótipo) e /legado (interface HTML/JS original do
-// protótipo, com /css e /js) também vêm do Backend.
+// /legado (interface HTML/JS original do protótipo, com /css e /js) e /docs (a documentação
+// Sphinx que só a interface legada usa) também vêm do Backend. A ajuda F1 do dashboard NÃO usa
+// /docs: é escrita no próprio frontend (src/oraculo/documentacao/).
 const proxy = Object.fromEntries(
   [api.prefixo, '/docs', '/legado', '/css', '/js'].map((p) => [p, { target: alvoApi, changeOrigin: true }]),
 )

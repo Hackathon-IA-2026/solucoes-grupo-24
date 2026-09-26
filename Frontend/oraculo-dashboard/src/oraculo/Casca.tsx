@@ -12,7 +12,7 @@ import { Suspense } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { FonteDados } from '../components/layout/FonteDados'
 import { SeverityFilters } from '../components/layout/SeverityFilters'
-import { MODULES, type ModuleDef } from '../modules'
+import { MODULES, moduloDaRota } from '../modules'
 import { SeverityFilterProvider } from '../state/severityFilter'
 import { AjudaF1, abrirAjuda } from './Ajuda'
 import { OraculoProvider, useOraculo } from './estado'
@@ -56,10 +56,6 @@ function Icone({ nome }: { nome: string }) {
       <path d={ICONES[nome] || ''} />
     </svg>
   )
-}
-
-export function moduloDaRota(pathname: string): ModuleDef | undefined {
-  return MODULES.find((m) => pathname === m.path || pathname.startsWith(m.path + '/'))
 }
 
 export function OraculoCasca() {
