@@ -47,7 +47,7 @@ from src.features.curtailment import rotulo_explicacao
 from src.models import carga as mc
 from src.models import curtailment as mcur
 from src.models import metricas as mt
-from src.processing.tabelas import SAIDA_CALENDARIO, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA, SAIDA_CARGA_AREA
+from src.processing.saidas import SAIDA_CALENDARIO, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA, SAIDA_CARGA_AREA
 from src.spatial import excedentes as ex
 from src.spatial.saidas import SAIDA_CARGA_MANCHA, SAIDA_MMGD_DIARIA, SAIDA_MMGD_MANCHA
 from src.utils.config import carregar

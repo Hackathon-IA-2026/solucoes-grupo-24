@@ -25,7 +25,7 @@ import pandas as pd
 from src.features import curtailment as fcur
 from src.models import carga as mc
 from src.models.split import Split
-from src.processing.tabelas import SAIDA_CALENDARIO, SAIDA_CARGA, SAIDA_ROTULOS
+from src.processing.saidas import SAIDA_CALENDARIO, SAIDA_CARGA, SAIDA_ROTULOS
 from src.utils.banco_analitico import conectar
 from src.utils.config import carregar
 from src.utils.paths import MODELOS, ensure

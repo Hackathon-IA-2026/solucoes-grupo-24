@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from src.features.calendario import dia_dos_pais, faixa_curtailment, patamar
-from src.processing.tabelas import SAIDA_CALENDARIO, SAIDA_CARGA, SAIDA_ROTULOS
+from src.processing.saidas import SAIDA_CALENDARIO, SAIDA_CARGA, SAIDA_ROTULOS
 from src.utils.banco_analitico import conectar
 from src.utils.config import razoes_curtailment
 

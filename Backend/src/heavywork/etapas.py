@@ -15,6 +15,7 @@ from src.models import carga as modelos_carga
 from src.models import curtailment as modelos_curtailment
 from src.models import relatorio_carga, relatorio_curtailment
 from src.processing import mapeamento, tabelas
+from src.processing import saidas as processamento_saidas
 from src.publicacao import montar as publicacao
 from src.spatial import bdgd as espacial_bdgd
 from src.spatial import construir as espacial
@@ -95,14 +96,16 @@ def _entradas_espacializacao() -> str:
 # importa do projeto, via codigo_de: nunca uma lista escrita à mão) + as configs. Mudou o split,
 # um hiperparâmetro ou uma feature? A etapa refaz sozinha. Mexeu só em outro modelo? Não refaz.
 def _entradas_treino_carga() -> str:
-    arquivos = [tabelas.SAIDA_CARGA, tabelas.SAIDA_CALENDARIO, *codigo_de("src.models.carga", RAIZ),
+    arquivos = [processamento_saidas.SAIDA_CARGA, processamento_saidas.SAIDA_CALENDARIO,
+                *codigo_de("src.models.carga", RAIZ),
                 CONFIG / "modelos_carga.yaml", CONFIG / "processamento.yaml"]
     return de_arquivos(arquivos, RAIZ)
 
 
 def _entradas_treino_curtailment() -> str:
     # config da carga entra: os horizontes do curtailment são os da carga
-    arquivos = [tabelas.SAIDA_ROTULOS, tabelas.SAIDA_CARGA, tabelas.SAIDA_CALENDARIO,
+    arquivos = [processamento_saidas.SAIDA_ROTULOS, processamento_saidas.SAIDA_CARGA,
+                processamento_saidas.SAIDA_CALENDARIO,
                 *codigo_de("src.models.curtailment", RAIZ), CONFIG / "modelos_curtailment.yaml",
                 CONFIG / "modelos_carga.yaml", CONFIG / "processamento.yaml"]
     return de_arquivos(arquivos, RAIZ)
@@ -136,8 +139,9 @@ def _prever_curtailment() -> str:
 # sem saída real), o código de contrato/banco/publicação, as migrations, a config e o PRÓPRIO
 # endereço do banco (trocar DATABASE_URL publica de novo no banco novo).
 def _entradas_publicacao() -> str:
-    arquivos = [tabelas.SAIDA_CARGA, tabelas.SAIDA_CAPACIDADE_MMGD, tabelas.SAIDA_CALENDARIO,
-                tabelas.SAIDA_CARGA_AREA, espacial_saidas.SAIDA_MMGD_MANCHA, espacial_saidas.SAIDA_MMGD_DIARIA,
+    arquivos = [processamento_saidas.SAIDA_CARGA, processamento_saidas.SAIDA_CAPACIDADE_MMGD,
+                processamento_saidas.SAIDA_CALENDARIO, processamento_saidas.SAIDA_CARGA_AREA,
+                espacial_saidas.SAIDA_MMGD_MANCHA, espacial_saidas.SAIDA_MMGD_DIARIA,
                 espacial_saidas.SAIDA_CARGA_MANCHA, CONFIG / "espacial.yaml",
                 modelos_carga.ARQ_PREVISOES, modelos_curtailment.ARQ_PREVISOES,
                 modelos_curtailment.ARQ_MODELOS, modelos_curtailment.ARQ_USINAS,
@@ -166,7 +170,7 @@ def montar() -> list[Etapa]:
         Etapa("processamento",
               "mapeamento subsistema x área + calendário, carga supervisionada e rótulos de curtailment",
               executar=_processar, entradas=_entradas_processamento,
-              saidas=(ARQUIVO_MAPEAMENTO, *tabelas.SAIDAS),
+              saidas=(ARQUIVO_MAPEAMENTO, *processamento_saidas.SAIDAS),
               estimativa=lambda: est["processamento"]),
         Etapa("espacializacao",
               "BDGD (LIGHT + Enel RJ) -> manchas por subestação, MMGD por mancha (desempate com a ANEEL) e pesos de carga",

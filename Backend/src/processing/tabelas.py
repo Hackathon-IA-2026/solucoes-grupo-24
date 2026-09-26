@@ -23,15 +23,14 @@ from src.features.calendario import montar_calendario
 from src.utils.banco_analitico import conectar
 from src.utils.config import arquivo_direto, carregar, razoes_curtailment
 from src.utils.joins import cruzar_subsistema_area
+from src.processing.saidas import (SAIDA_CALENDARIO, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA, SAIDA_CARGA_AREA,
+                                   SAIDA_ROTULOS)
 from src.utils.paths import DATA_PROCESSED, DOCS_REPORTS, RAW_ONS, ensure
 from src.utils.tempo import de_local_ons, de_utc, fim_para_inicio
 
 CFG = carregar("processamento")
-SAIDA_CALENDARIO = DATA_PROCESSED / "calendario.csv"
-SAIDA_CARGA = DATA_PROCESSED / "carga_supervisionada.csv"
-SAIDA_ROTULOS = DATA_PROCESSED / "rotulos_curtailment.parquet"
-SAIDA_CAPACIDADE_MMGD = DATA_PROCESSED / "capacidade_mmgd.csv"
-SAIDA_CARGA_AREA = DATA_PROCESSED / "carga_area.csv"
+# Caminhos das saídas (SAIDA_*, SAIDAS) ficam em src/processing/saidas.py: quem só lê as
+# tabelas importa de lá, sem puxar este módulo para a impressão digital do próprio código.
 
 
 # Leitura das bases brutas: sempre hive_partitioning=false. As pastas ano=/area= são só
@@ -297,9 +296,6 @@ def cobertura(nome: str, df: pd.DataFrame, grupo: str | None) -> pd.DataFrame:
 
 
 TABELAS = ("calendario", "carga", "rotulos", "capacidade_mmgd", "carga_area")
-# Arquivos que a etapa de processamento precisa deixar prontos (o run_heavywork.py refaz a
-# etapa se algum sumir, mesmo que as entradas não tenham mudado).
-SAIDAS = (SAIDA_CALENDARIO, SAIDA_CARGA, SAIDA_ROTULOS, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA_AREA)
 
 
 def construir(tabelas=TABELAS) -> pd.DataFrame:

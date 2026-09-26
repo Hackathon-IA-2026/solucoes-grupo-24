@@ -41,7 +41,7 @@ import pandas as pd
 
 from src.features import carga as fc
 from src.models.split import Split
-from src.processing.tabelas import SAIDA_CALENDARIO, SAIDA_CARGA
+from src.processing.saidas import SAIDA_CALENDARIO, SAIDA_CARGA
 from src.utils.config import carregar
 from src.utils.paths import MODELOS, ensure
 from src.utils.tempo import PASSO
