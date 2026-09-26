@@ -684,3 +684,20 @@ estão intactos.
   traz esses campos; entrar com eles é mudança de schema (combinar com o Luiz).
 - Testes: frontend 45 passaram; `tsc -b` e `oxlint` limpos. Conferido no navegador pelo DOM (447
   áreas, 306 ícones com as classes padrão, 176 ligações, seleção por área/ícone/link, tiles da Esri).
+
+## 2026-09-26 — Visão computacional: detecção em imagem de satélite real ✅
+
+- **Pedido do Tiago**: o mapa de `/visao` deve ser terra real (satélite), não desenho; painéis em
+  bounding box; o selecionado, uma borda.
+- **Backend** (`oraculo/vision/satelite_real.py` + `GET /api/mapa/vision/real?lat=&lon=&lado_m=`):
+  baixa os ladrilhos da Esri World Imagery (zoom 19, ~0,28 m/px no RJ) do quadrado em volta do
+  ponto, costura, recorta e roda o MESMO `scan_scene` do protótipo. Cada detecção sai com o polígono
+  em lat/lon. Cache em disco dos ladrilhos e do resultado (`data/oraculo_cache/satelite_esri`).
+  Proveniência no envelope; aviso explícito: sem verdade fundamental, precisão/revocação não são
+  medidas em imagem real (o detector clássico foi calibrado na cena sintética).
+- **Tela** (`pages/Visao.tsx`, `CenaSatelite.tsx`): fundo de satélite; "Imagem real" é o padrão
+  (clique no mapa analisa outro local); "Imagem sintética (banco de ensaio)" continua num chip.
+  Detecção = bounding box só com contorno; selecionada = borda âmbar grossa; o clique na caixa não
+  vaza para o mapa.
+- Testes: `tests_oraculo/test_satelite_real.py` (GSD, projeção, recorte e georreferência com ladrilho
+  falso, sem rede); backend 106 passaram (visão + API + novo); frontend 45; `tsc` e `oxlint` limpos.

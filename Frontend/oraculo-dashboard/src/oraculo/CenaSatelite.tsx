@@ -1,15 +1,18 @@
 /**
- * Cena de satélite com as detecções de painel fotovoltaico, sobre o OpenStreetMap. Peças usadas
- * por duas telas (DRY — antes cada uma tinha a sua cópia):
- * - Visão computacional (/visao): a cena de referência do banco de ensaio, num mapa próprio;
- * - Perfis por subestação (/mapa): a cena de cada subestação, desenhada no MESMO mapa do
- *   Brasil → UF → subestação.
+ * Cena de satélite com as detecções de painel fotovoltaico, para a tela Visão computacional
+ * (/visao) e a tabela de detecções do detalhe em Perfis por subestação.
  *
- * A cena é sintética e georreferenciada (vision.geo: centro, extensão em metros, tamanho em
- * pixels); as detecções vêm com a caixa em pixels da cena e viram polígonos pelo pixelParaLatLon.
+ * Duas origens de cena, o mesmo desenho:
+ * - REAL: imagem de satélite da Esri (o fundo do mapa) e o detector do protótipo rodado nela pelo
+ *   backend (/api/mapa/vision/real); cada detecção já vem com o polígono em lat/lon;
+ * - SINTÉTICA (banco de ensaio): ortoimagem gerada, sobreposta ao mapa; as detecções vêm com a
+ *   caixa em pixels da cena e viram polígonos pelo pixelParaLatLon (vision.geo).
+ *
+ * Painel = bounding box só com contorno (a imagem por baixo continua visível); a selecionada é
+ * a borda grossa âmbar.
  */
 import type { ReactNode } from 'react'
-import { Pane, Polygon, Rectangle, Tooltip } from 'react-leaflet'
+import { Pane, Polygon, Rectangle, Tooltip, useMapEvents } from 'react-leaflet'
 import { color } from './charts'
 import { num, pct } from './format'
 import { ImagemGeo, limitesDaCena, pixelParaLatLon, type Limites } from './MapaOsm'
@@ -41,8 +44,8 @@ export function geoValida(g: Dado): g is GeoCena {
 }
 
 /** Enquadramento do entorno da cena: a cena sozinha (~230 m) não mostra onde ela está. */
-export function limitesDoEntorno(geo: GeoCena, fator = 10): Limites {
-  const [[la0, lo0], [la1, lo1]] = limitesDaCena(geo)
+export function limitesDoEntorno(lim: Limites, fator = 10): Limites {
+  const [[la0, lo0], [la1, lo1]] = lim
   const dla = ((la1 - la0) * (fator - 1)) / 2
   const dlo = ((lo1 - lo0) * (fator - 1)) / 2
   return [
@@ -51,7 +54,7 @@ export function limitesDoEntorno(geo: GeoCena, fator = 10): Limites {
   ]
 }
 
-/** Vistas da imagem servidas pela API (sufixo da URL da cena). */
+/** Vistas da imagem sintética servidas pela API (sufixo da URL da cena). */
 export const MODOS_IMAGEM: [string, string][] = [
   ['', 'vista padrão'],
   ['?truth=1&tiles=1', 'verdade + ladrilhos'],
@@ -59,47 +62,55 @@ export const MODOS_IMAGEM: [string, string][] = [
   ['?channel=borda', 'densidade de borda'],
 ]
 
+/** Anel [lat, lon] da detecção: o polígono pronto (cena real) ou a caixa em pixels + geo (sintética). */
+function anelDaDeteccao(x: Dado, geo: GeoCena | null): [number, number][] | null {
+  if (Array.isArray(x.poligono) && x.poligono.length >= 4) return x.poligono as [number, number][]
+  const b = x.box
+  if (!geo || !Array.isArray(b) || b.length < 4) return null
+  const [x0, y0, x1, y1] = b as number[]
+  return [pixelParaLatLon(geo, x0, y0), pixelParaLatLon(geo, x1, y0), pixelParaLatLon(geo, x1, y1), pixelParaLatLon(geo, x0, y1)]
+}
+
 /**
- * Camadas da cena para ir DENTRO de um MapaOsm: imagem (num pane abaixo dos vetores, para as
- * detecções e marcadores ficarem por cima dela em qualquer ordem de montagem), contorno
- * tracejado da cena e as detecções. A detecção selecionada ganha contorno âmbar.
+ * Camadas da cena para ir DENTRO de um MapaOsm: imagem sintética opcional (num pane abaixo dos
+ * vetores), contorno tracejado da cena e as bounding boxes das detecções.
  */
 export function CamadaCena({
-  url,
-  geo,
+  url = null,
+  geo = null,
+  limites,
   dets,
-  opacidade,
+  opacidade = 1,
   sel,
   onSel,
   mostrarDets = true,
 }: {
-  url: string | null
-  geo: GeoCena
+  /** imagem sintética sobreposta; null na cena real (a imagem é o próprio fundo de satélite) */
+  url?: string | null
+  geo?: GeoCena | null
+  /** extensão da cena; sem ela, vem da geo */
+  limites?: Limites
   dets: Dado[]
-  opacidade: number
+  opacidade?: number
   sel?: number | null
   onSel?: (i: number) => void
   mostrarDets?: boolean
 }) {
-  const lim = limitesDaCena(geo)
+  const lim = limites ?? (geo ? limitesDaCena(geo) : null)
   const teal = color('teal')
   const ambar = color('amber')
   return (
     <>
-      {url && (
+      {url && lim && (
         <Pane name="cena" style={{ zIndex: 380 }}>
           <ImagemGeo key={url} url={url} limites={lim} opacidade={opacidade} />
         </Pane>
       )}
-      <Rectangle bounds={lim} interactive={false} pathOptions={{ color: ambar, weight: 1.5, dashArray: '5 4', fill: false }} />
+      {lim && <Rectangle bounds={lim} interactive={false} pathOptions={{ color: ambar, weight: 1.5, dashArray: '5 4', fill: false }} />}
       {mostrarDets &&
         dets.map((x, i) => {
-          const b = x.box
-          if (!Array.isArray(b) || b.length < 4) return null
-          const [x0, y0, x1, y1] = b as number[]
-          const anel = [pixelParaLatLon(geo, x0, y0), pixelParaLatLon(geo, x1, y0), pixelParaLatLon(geo, x1, y1), pixelParaLatLon(geo, x0, y1)]
-          // a confiança pinta a detecção: quanto mais certa, mais opaca
-          const sc = Math.max(0, Math.min(1, Number(x.score) || 0))
+          const anel = anelDaDeteccao(x, geo)
+          if (!anel) return null
           const on = sel === i
           return (
             <Polygon
@@ -107,13 +118,9 @@ export function CamadaCena({
               key={i + (on ? '-on' : '')}
               positions={anel}
               eventHandlers={onSel ? { click: () => onSel(i) } : undefined}
-              pathOptions={{
-                color: on ? ambar : teal,
-                weight: on ? 3 : 2,
-                opacity: 0.6 + 0.4 * sc,
-                fillColor: teal,
-                fillOpacity: 0.1 + 0.45 * sc,
-              }}
+              // bounding box: só o contorno; o preenchimento transparente mantém o clique na caixa toda.
+              // bubblingMouseEvents: false — o clique na caixa não chega ao mapa (lá ele analisaria outro ponto)
+              pathOptions={{ color: on ? ambar : teal, weight: on ? 4 : 2, opacity: 1, fill: true, fillOpacity: 0, bubblingMouseEvents: false }}
             >
               <Tooltip direction="top">
                 #{i + 1} · {num(x.area_m2, 1)} m² · {num(x.kwp, 2)} kWp · confiança {num(x.score, 3)}
@@ -125,20 +132,30 @@ export function CamadaCena({
   )
 }
 
+/** Clique no mapa devolve o ponto (para analisar outro local na imagem real). */
+export function CliqueNoMapa({ onClique }: { onClique: (lat: number, lon: number) => void }) {
+  useMapEvents({ click: (e) => onClique(e.latlng.lat, e.latlng.lng) })
+  return null
+}
+
 /** Legenda sobre o mapa da cena (MapaOsm `sobreposicao`). */
-export function LegendaCena() {
+export function LegendaCena({ sintetica = false }: { sintetica?: boolean }) {
   return (
     <div className="osm-legenda">
-      {/* a cena do protótipo é gerada (não é foto): o aviso fica no próprio mapa, onde a imagem aparece */}
-      <strong style={{ color: 'var(--o-amber)' }}>Imagem sintética de demonstração</strong>
+      {/* a cena sintética é gerada (não é foto): o aviso fica no próprio mapa, onde a imagem aparece */}
+      {sintetica ? (
+        <strong style={{ color: 'var(--o-amber)' }}>Imagem sintética de demonstração</strong>
+      ) : (
+        <strong>Imagem de satélite real · Esri</strong>
+      )}
       <span>
-        <i style={{ background: 'var(--o-teal)', opacity: 0.8 }} /> painel detectado (mais opaco = mais confiança)
+        <i style={{ border: '2px solid var(--o-teal)', background: 'transparent' }} /> painel detectado (bounding box)
       </span>
       <span>
-        <i style={{ border: '2px solid var(--o-amber)', background: 'transparent' }} /> selecionado
+        <i style={{ border: '3px solid var(--o-amber)', background: 'transparent' }} /> selecionado
       </span>
       <span>
-        <i style={{ border: '1.5px dashed var(--o-amber)', background: 'transparent' }} /> extensão da cena
+        <i style={{ border: '1.5px dashed var(--o-amber)', background: 'transparent' }} /> área analisada
       </span>
     </div>
   )
@@ -161,8 +178,9 @@ export function ControlesCena({
   modos?: [string, string][]
   modo: string
   setModo: (m: string) => void
-  opacidade: number
-  setOpacidade: (v: number) => void
+  /** sem opacidade (cena real, sem imagem sobreposta) o controle some */
+  opacidade?: number
+  setOpacidade?: (v: number) => void
   mostrarDets: boolean
   setMostrarDets: (v: boolean) => void
   entorno?: boolean
@@ -173,6 +191,7 @@ export function ControlesCena({
 }) {
   return (
     <>
+      {modos.length > 0 && (
       <div className="chips" style={{ marginTop: 8 }}>
         {modos.map(([q, rot]) => (
           <Chip key={q} on={modo === q} onClick={() => setModo(q)}>
@@ -180,6 +199,7 @@ export function ControlesCena({
           </Chip>
         ))}
       </div>
+      )}
       <div className="chips" style={{ marginTop: 6 }}>
         {extra}
         {mapa && setEntorno && (
@@ -197,11 +217,13 @@ export function ControlesCena({
             <Chip on={mostrarDets} onClick={() => setMostrarDets(!mostrarDets)} title="liga/desliga os polígonos das detecções sobre o mapa">
               contornos das detecções
             </Chip>
+            {opacidade !== undefined && setOpacidade && (
             <label className="chip" style={{ gap: 6 }}>
               opacidade da imagem
               <input type="range" min={0} max={1} step={0.05} value={opacidade} style={{ width: 90 }} onChange={(e) => setOpacidade(parseFloat(e.target.value))} />
               <span>{pct(opacidade, 0)}</span>
             </label>
+            )}
           </>
         )}
       </div>

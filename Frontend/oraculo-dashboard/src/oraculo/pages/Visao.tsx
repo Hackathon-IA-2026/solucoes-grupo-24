@@ -11,6 +11,7 @@ import { usePersistido } from '../estado'
 import { num, pct, signed } from '../format'
 import {
   CamadaCena,
+  CliqueNoMapa,
   ControlesCena,
   DetalheDeteccao,
   LegendaCena,
@@ -20,7 +21,7 @@ import {
   limitesDoEntorno,
   type GeoCena,
 } from '../CenaSatelite'
-import { MapaOsm, limitesDaCena } from '../MapaOsm'
+import { MapaOsm, limitesDaCena, type Limites } from '../MapaOsm'
 import { Chip, Conteudo, Grafico, Kpi, OCard, Pagina, Proveniencia, StatLines, useApi } from '../ui'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -290,20 +291,26 @@ export function PainelVisao({ body, comCena = true }: { body: Envelope; comCena?
 }
 
 /**
- * Cena de referência do banco de ensaio: sobre o OpenStreetMap (padrão) ou só a imagem.
- * No mapa: roda do mouse dá zoom, "cena"/"entorno" alterna o enquadramento, clicar numa detecção
- * (ou na linha da tabela) mostra os atributos dela; a legenda fica por cima do mapa.
+ * Cena da tela, sempre sobre imagem de satélite real (Esri), em duas origens:
+ * - "Imagem real" (padrão): o backend baixa a imagem do ponto e roda o detector nela
+ *   (/api/mapa/vision/real); clicar no mapa analisa outro local;
+ * - "Banco de ensaio": a ortoimagem sintética com verdade fundamental, sobreposta ao satélite.
+ * Painéis em bounding box (só contorno); o selecionado é a borda grossa âmbar. Roda do mouse dá
+ * zoom, "cena"/"entorno" alterna o enquadramento, a tabela abaixo seleciona no mapa.
  */
 function CenaReferencia({ refe }: { refe: Dado }) {
+  const [fonte, setFonte] = usePersistido<'real' | 'sintetica'>('oraculo.visaoFonte', 'real')
   const [bench, setBench] = useState('')
-  const [osm, setOsm] = usePersistido('oraculo.visaoOsm', true)
   const [opac, setOpac] = usePersistido('oraculo.visaoOsmOpacidade', 0.85)
   const [mostrarDets, setMostrarDets] = usePersistido('oraculo.visaoDets', true)
   const [entorno, setEntorno] = useState(false)
   const [selDet, setSelDet] = useState<number | null>(null)
+  // ponto escolhido no mapa; sem clique, o centro da cena de referência
+  const [ponto, setPonto] = useState<[number, number] | null>(null)
+  const ehReal = fonte === 'real'
   const url: string = bench ? '/api/mapa/bench.png' + bench : refe.image_url
 
-  // 1) geo na própria referência; 2) detalhe da subestação de referência; 3) estimada das detecções
+  // geo da cena sintética: 1) na própria referência; 2) detalhe da subestação; 3) estimada das detecções
   const geoApi = [refe.geo, refe.vision?.geo].find(geoValida) || null
   const subId: string | null = geoApi ? null : refe.sub_id || refe.substation_id || null
   const detalhe = useApi(() => (subId ? Api.get('mapa/substations/' + encodeURIComponent(subId)) : Promise.resolve(null)), [subId])
@@ -313,70 +320,102 @@ function CenaReferencia({ refe }: { refe: Dado }) {
   const detsRef: Dado[] = refe.detections || []
   const geoEst = geoApi || geoSub || !tam ? null : geoPorDeteccoes(detsRef, tam[0], tam[1])
   const geo: GeoCena | null = geoApi || geoSub || geoEst
-  const dets: Dado[] = detsRef.length ? detsRef : visSub.detections || []
-  const verOsm = osm && !!geo
-  const lim = geo ? (entorno ? limitesDoEntorno(geo) : limitesDaCena(geo)) : null
+
+  // cena real: detector do protótipo rodado pelo backend na imagem de satélite do ponto
+  const centro: [number, number] | null = ponto ?? (geo ? [geo.center_lat, geo.center_lon] : null)
+  const real = useApi(
+    () => (ehReal && centro ? Api.get('mapa/vision/real', { lat: centro[0].toFixed(6), lon: centro[1].toFixed(6) }) : Promise.resolve(null)),
+    [ehReal, centro?.[0], centro?.[1]],
+  )
+  const dReal: Dado = real.status === 'ok' && real.dado ? real.dado.data : null
+
+  const dets: Dado[] = ehReal ? dReal?.detections || [] : detsRef.length ? detsRef : visSub.detections || []
+  // enquadramento: o da análise real (ou, enquanto ela carrega, um quadrado de 230 m no ponto)
+  const limCena: Limites | null = ehReal
+    ? dReal?.limites ?? (centro ? limitesDaCena({ center_lat: centro[0], center_lon: centro[1], extent_m: [230.4, 230.4] }) : null)
+    : geo
+      ? limitesDaCena(geo)
+      : null
+  const lim = limCena ? (entorno ? limitesDoEntorno(limCena) : limCena) : null
   const det = selDet !== null ? dets[selDet] : null
+  const analisar = (lat: number, lon: number) => {
+    setPonto([lat, lon])
+    setSelDet(null)
+    setEntorno(false)
+  }
+
+  const hint = ehReal
+    ? real.status === 'carregando'
+      ? 'baixando a imagem e rodando o detector…'
+      : dReal
+        ? num(dReal.kept_count) + ' painéis detectados · ' + num(dReal.total_kwp, 1) + ' kWp · clique no mapa para analisar outro local'
+        : ''
+    : num(refe.truth) + ' painéis reais · ' + num(refe.pred) + ' detectados'
 
   return (
     <OCard
-      title="Cena de referência"
-      hint={num(refe.truth) + ' painéis reais · ' + num(refe.pred) + ' detectados'}
+      title={ehReal ? 'Detecção em imagem de satélite real' : 'Cena de referência · banco de ensaio'}
+      hint={hint}
       note={
-        <>
-          Na vista &quot;verdade&quot;: âmbar = verdade fundamental, carmim = painel real não detectado. Os canais de característica mostram <em>por que</em> o detector
-          marcou o que marcou.
-          {verOsm && geo && (
-            <>
-              {' '}
-              Cena sintética georreferenciada (GSD {num(geo.gsd_m, 2)} m) sobre o OpenStreetMap
-              {geoEst ? ', georreferência reconstruída a partir do lat/lon das detecções' : ''}; © OpenStreetMap contributors.
-            </>
-          )}
-        </>
+        ehReal ? (
+          <>
+            {dReal?.aviso} Imagem: {dReal?.imagem?.fonte ?? 'Esri World Imagery'}, zoom {dReal?.imagem?.zoom ?? 19} (GSD {num(dReal?.imagem?.gsd_m, 2)} m),{' '}
+            {num(dReal?.imagem?.ladrilhos)} ladrilhos · {dReal?.imagem?.atribuicao ?? ''}.
+          </>
+        ) : (
+          <>
+            Ortoimagem sintética, sobreposta ao satélite. Na vista &quot;verdade&quot;: âmbar = verdade fundamental, carmim = painel real não detectado. Os canais de
+            característica mostram <em>por que</em> o detector marcou o que marcou.
+          </>
+        )
       }
     >
-      {verOsm && lim && geo ? (
-        <MapaOsm limites={lim} altura={460} maxZoom={19} rolagem animar sobreposicao={<LegendaCena />}>
-          <CamadaCena url={url} geo={geo} dets={dets} opacidade={opac} sel={selDet} onSel={setSelDet} mostrarDets={mostrarDets} />
+      <div className="chips" style={{ marginBottom: 8 }}>
+        <Chip on={ehReal} onClick={() => setFonte('real')}>
+          Imagem real (satélite)
+        </Chip>
+        <Chip on={!ehReal} onClick={() => setFonte('sintetica')}>
+          Imagem sintética (banco de ensaio)
+        </Chip>
+        {ehReal && ponto && (
+          <Chip onClick={() => analisar(...((geo ? [geo.center_lat, geo.center_lon] : ponto) as [number, number]))}>voltar ao ponto de referência</Chip>
+        )}
+      </div>
+      {lim ? (
+        <MapaOsm limites={lim} altura={480} maxZoom={19} rolagem animar fundo="satelite" sobreposicao={<LegendaCena sintetica={!ehReal} />}>
+          <CamadaCena
+            url={ehReal ? null : url}
+            geo={ehReal ? null : geo}
+            limites={limCena ?? undefined}
+            dets={dets}
+            opacidade={opac}
+            sel={selDet}
+            onSel={setSelDet}
+            mostrarDets={mostrarDets}
+          />
+          {ehReal && <CliqueNoMapa onClique={analisar} />}
         </MapaOsm>
       ) : (
         <img src={url} style={{ width: '100%', borderRadius: 6, border: '1px solid var(--o-line)' }} alt="cena de referência com detecções" />
       )}
-      {verOsm && det && selDet !== null && <DetalheDeteccao det={det} i={selDet} />}
+      {ehReal && real.status === 'erro' && <div className="small faint">Não foi possível analisar a imagem real: {real.erro?.message}</div>}
+      {det && selDet !== null && <DetalheDeteccao det={det} i={selDet} />}
       <ControlesCena
-        modos={BENCH_MODOS}
+        modos={ehReal ? [] : BENCH_MODOS}
         modo={bench}
         setModo={setBench}
-        opacidade={opac}
-        setOpacidade={setOpac}
+        opacidade={ehReal ? undefined : opac}
+        setOpacidade={ehReal ? undefined : setOpac}
         mostrarDets={mostrarDets}
         setMostrarDets={setMostrarDets}
         entorno={entorno}
         setEntorno={setEntorno}
-        mapa={verOsm}
-        extra={
-          <>
-            <Chip on={osm} onClick={() => setOsm(true)}>
-              Sobre o OpenStreetMap
-            </Chip>
-            <Chip on={!osm} onClick={() => setOsm(false)}>
-              Imagem
-            </Chip>
-          </>
-        }
+        mapa={!!lim}
       />
-      {osm && !geo && (
-        <div className="small faint">
-          {(subId && detalhe.status === 'carregando') || (!geoApi && !subId && !tam && refe.image_url)
-            ? 'Obtendo a georreferência da cena…'
-            : 'A cena de referência não traz georreferência na API: exibindo só a imagem.'}
-        </div>
-      )}
-      {verOsm && (
+      {lim && (
         <div style={{ marginTop: 10 }}>
           <div className="okpi-label" style={{ marginBottom: 4 }}>
-            Detecções da cena · clique para localizar no mapa
+            Detecções · clique para localizar no mapa
           </div>
           <TabelaDeteccoes dets={dets} sel={selDet} onSel={setSelDet} />
         </div>

@@ -254,6 +254,27 @@ async def vision_route(request: Request) -> Response:
         return _fail(exc)
 
 
+async def vision_real_route(request: Request) -> Response:
+    """Detector do protótipo sobre imagem de satélite REAL (Esri) em volta de lat/lon."""
+    from ..vision import satelite_real as SR
+    try:
+        lat = float(request.query_params["lat"])
+        lon = float(request.query_params["lon"])
+    except (KeyError, ValueError):
+        return _json(envelope.error("BAD_REQUEST", "informe lat e lon numéricos"), 400)
+    try:
+        lado = float(request.query_params.get("lado_m", SR.LADO_PADRAO_M))
+        d = SR.analisar(lat, lon, lado)
+    except ValueError as exc:
+        return _json(envelope.error("BAD_REQUEST", str(exc)[:400]), 400)
+    except Exception as exc:
+        return _json(envelope.error("UPSTREAM_UNAVAILABLE", str(exc)[:400], "Sem acesso à imagem de satélite da Esri."), 502)
+    prov = [{"dataset": "Esri World Imagery", "resource": "zoom %d, %d ladrilhos" % (d["imagem"]["zoom"], d["imagem"]["ladrilhos"]),
+             "url": SR.URL_LADRILHO, "fetched_at": d["analisado_em"], "mode": "cache" if d["cache"] else "live",
+             "lag_note": SR.ATRIBUICAO}]
+    return _json(envelope.ok(d, mode="cache" if d["cache"] else "live", provenance=prov, notes=[d["aviso"]]))
+
+
 async def bench_png_route(request: Request) -> Response:
     try:
         return _png(SERVICE.bench_png(
@@ -598,6 +619,7 @@ routes = [
     Route("/api/mapa/scene/{sub_id}", substation_scene_route),
     Route("/api/mapa/bench.png", bench_png_route),
     Route("/api/mapa/vision", vision_route),
+    Route("/api/mapa/vision/real", vision_real_route),
     Route("/api/mapa/classes", classes_route),
     Route("/api/clm/spec", clm_spec_route),
     Route("/api/clm/curvas", clm_curves_route),
