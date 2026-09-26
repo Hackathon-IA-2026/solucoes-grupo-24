@@ -1,0 +1,17 @@
+# Dependências de RUNTIME do serviço web (Backend/main.py) — só o que a API importa de fato.
+# Decisão: o pyproject.toml lista também a parte pesada (pandas, geopandas, lightgbm,
+# pytorch-forecasting...), que só o run_heavywork.py usa. A API é somente leitura (ver
+# src/api/__init__.py), então a imagem de deploy fica pequena instalando só isto.
+# Medido carregando `import main` e listando sys.modules (2026-09-26).
+fastapi
+uvicorn[standard]
+sqlalchemy>=2
+alembic
+pyyaml
+pydantic
+jsonschema
+httpx
+numpy
+scipy
+pillow
+# PostgreSQL só se DATABASE_URL apontar para um (no Workshop Studio o RDS é bloqueado: SQLite).

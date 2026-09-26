@@ -710,3 +710,19 @@ estão intactos.
   foca o ícone; `tooltipAnchor` põe o tooltip acima do selo em vez de cobri-lo.
 - `oraculo.css`: hover sem `transform: scale()` (gerava artefato visual dentro do marcador
   posicionado por `translate3d`); destaque por sombra e sem contorno de foco no clique.
+
+## Deploy na AWS (Workshop Studio) — 2026-09-26
+
+- **No ar:** https://or-b24113735a0b4c8d9d3ac76b44512935.ecs.us-west-2.on.aws (API + dashboard, dados reais do `oraculo.db`;
+  conta temporária do workshop: a URL some quando o evento acabar).
+- **Arquitetura:** ECS Fargate (modo Express: ALB HTTPS + security groups + autoscaling gerenciados). Autoscaling por
+  CPU média (alvo 60%), 1 a 4 tasks (`--min-tasks/--max-tasks`). Um serviço só: a API serve o build do dashboard.
+- **Por que não CloudFront / ECR / Lambda:** o papel do participante nega CloudFront, Application Auto Scaling direto,
+  push no ECR, security group, EC2 e `PassRole` para Lambda. Só S3, ECS e criar as próprias roles passam (o Deny cobre
+  roles `WS*`, `cdk-*`, `*CodeEditor*`). O Express Mode contorna isso com uma role de infraestrutura nossa.
+- **Sem ECR:** a task usa a imagem pública `python:3.11-slim` e baixa do S3 o pacote (código + deps Linux + dist) com a
+  task role, então novas tasks do autoscaling sobem mesmo depois de as credenciais temporárias expirarem.
+- **Como refazer:** `npm run build` no dashboard; depois, de `Backend/`, com as credenciais no ambiente:
+  `python deploy/deploy_ecs.py` (idempotente). O `Backend/deploy/Dockerfile` (testado local) serve para contas sem essas
+  restrições (ECR + ECS/App Runner).
+- **Segredos:** credenciais só em variáveis de ambiente, nunca em arquivo do repositório.

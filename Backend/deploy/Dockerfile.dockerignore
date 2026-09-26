@@ -1,0 +1,17 @@
+# Lista branca: o contexto de build é a raiz do repo (~3 GB com data/raw e modelos), e a imagem
+# só precisa do código, config, banco publicado e do que a API lê. Tudo o mais fica de fora.
+**
+!Backend/main.py
+!Backend/alembic.ini
+!Backend/config
+!Backend/migrations
+!Backend/src
+!Backend/oraculo
+!Backend/oraculo.db
+!Backend/output
+!Backend/data/oraculo_cache
+!Backend/deploy/requirements-api.txt
+!Frontend/oraculo-dashboard
+Frontend/oraculo-dashboard/node_modules
+Frontend/oraculo-dashboard/dist
+**/__pycache__
