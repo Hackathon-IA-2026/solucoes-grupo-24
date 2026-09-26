@@ -20,25 +20,33 @@ import iconeTransformador from './icones/transformador.png'
 import { num } from './format'
 import { Chip, StatLines } from './ui'
 
-/** Classificações da BDGD (texto da API) → ícone e rótulo, na ordem das camadas do RDX. */
-export const CLASSES_SE: { chave: string; rotulo: string; icone: string; proporcao: number }[] = [
-  { chave: 'Distribuição plena', rotulo: 'Distribuição plena', icone: iconeRaio, proporcao: 73 / 128 },
-  { chave: 'Distribuição satélite', rotulo: 'Distribuição satélite', icone: iconeSatelite, proporcao: 1 },
-  { chave: 'Transformadora pura', rotulo: 'Transformadora pura', icone: iconeTransformador, proporcao: 1 },
-  { chave: 'Transporte/manobra', rotulo: 'Transporte/manobra', icone: iconeTorre, proporcao: 1 },
+/** Classificações da BDGD (texto da API) → ícone, cor do selo e rótulo, na ordem das camadas do RDX. */
+export const CLASSES_SE: { chave: string; rotulo: string; icone: string; cor: string }[] = [
+  { chave: 'Distribuição plena', rotulo: 'Distribuição plena', icone: iconeRaio, cor: 'var(--o-teal)' },
+  { chave: 'Distribuição satélite', rotulo: 'Distribuição satélite', icone: iconeSatelite, cor: 'var(--o-purple)' },
+  { chave: 'Transformadora pura', rotulo: 'Transformadora pura', icone: iconeTransformador, cor: 'var(--o-amber)' },
+  { chave: 'Transporte/manobra', rotulo: 'Transporte/manobra', icone: iconeTorre, cor: 'var(--o-muted)' },
 ]
 const POR_CHAVE = new Map(CLASSES_SE.map((c) => [c.chave, c]))
 
-/** Ícone Leaflet por classificação; a selecionada fica maior. Criados uma vez só (cache). */
-const cacheIcones = new Map<string, L.Icon>()
-function icone(classificacao: string, grande: boolean): L.Icon {
+/**
+ * Ícone da subestação: o PNG do RDX dentro de um selo branco redondo com a borda na cor da
+ * classe. Só o PNG (11×20 px) sumia sobre o violeta das áreas de influência; o RDX usava de 25 a
+ * 70 px. A selecionada fica maior. Criados uma vez só (cache).
+ */
+const cacheIcones = new Map<string, L.DivIcon>()
+function icone(classificacao: string, grande: boolean): L.DivIcon {
   const k = classificacao + (grande ? '+' : '')
   let i = cacheIcones.get(k)
   if (!i) {
     const c = POR_CHAVE.get(classificacao) ?? CLASSES_SE[3]
-    const alt = grande ? 34 : 20
-    const larg = Math.round(alt * c.proporcao)
-    i = L.icon({ iconUrl: c.icone, iconSize: [larg, alt], iconAnchor: [larg / 2, alt / 2], className: grande ? 'icone-se sel' : 'icone-se' })
+    const lado = grande ? 38 : 26
+    i = L.divIcon({
+      html: `<span class="se-selo${grande ? ' sel' : ''}" style="border-color:${c.cor}"><img src="${c.icone}" alt="" /></span>`,
+      className: 'icone-se',
+      iconSize: [lado, lado],
+      iconAnchor: [lado / 2, lado / 2],
+    })
     cacheIcones.set(k, i)
   }
   return i

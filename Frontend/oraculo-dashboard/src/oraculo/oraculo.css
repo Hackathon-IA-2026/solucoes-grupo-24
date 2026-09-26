@@ -551,6 +551,12 @@ body.help-locked { overflow: hidden; }
 .fluxo-alimentacao.sel { stroke: var(--o-ink); opacity: 1; }
 @keyframes fluxo-andando { to { stroke-dashoffset: -24; } }
 @media (prefers-reduced-motion: reduce) { .fluxo-alimentacao { animation: none; } }
-/* ícones das subestações: leve sombra para destacar sobre o satélite */
-.icone-se { filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.55)); }
-.icone-se.sel { filter: drop-shadow(0 0 3px var(--o-teal)) drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+/* ícones das subestações: PNG do RDX num selo branco com a borda na cor da classe (RedeBdgd.tsx) */
+.icone-se { background: none; border: 0; }
+.icone-se .se-selo {
+  display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; box-sizing: border-box;
+  background: #fff; border: 2.5px solid; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,.55);
+}
+.icone-se .se-selo img { height: 62%; width: auto; }
+.icone-se .se-selo.sel { border-width: 3.5px; box-shadow: 0 0 0 3px rgba(255,255,255,.85), 0 2px 6px rgba(0,0,0,.6); }
+.icone-se:hover .se-selo { transform: scale(1.12); }
