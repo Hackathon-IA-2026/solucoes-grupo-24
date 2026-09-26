@@ -80,6 +80,19 @@ arquivos_diretos:
     # A ANEEL atualiza todo dia; rebaixar semanalmente basta para a escala do hackathon
     # (~100 MB por download). Sem esta chave, um arquivo direto nunca expira.
     atualizar_apos_dias: 7
+  # SIGA (ANEEL): empreendimentos de geração com CEG e COORDENADAS. Dá a posição real de cada
+  # usina/conjunto no Mapa Híbrido (via CEG dos membros do conjunto, cadastro usina_conjunto do
+  # ONS). CSV ';' com decimal em vírgula: vira Parquet (tudo texto) na chegada. ~8 MB.
+  - apelido: aneel_siga_empreendimentos
+    url: https://dadosabertos.aneel.gov.br/dataset/6d90b77c-c5f5-4d81-bdec-7bc619494bb9/resource/11ec447d-698d-4ab8-977f-b424d5deee6a/download/siga-empreendimentos-geracao.csv
+    destino: data/raw/aneel/siga_empreendimentos_geracao.csv
+    atualizar_apos_dias: 7
+  # Malha dos municípios (IBGE, API de malhas v3, qualidade mínima, ~3,6 MB): ponto
+  # representativo de cada município para a densidade de MMGD. GeoJSON vira GeoParquet na chegada.
+  - apelido: ibge_malha_municipios
+    url: https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?formato=application/vnd.geo+json&qualidade=minima&intrarregiao=municipio
+    destino: data/raw/ibge/malha_municipios.geojson
+    atualizar_apos_dias: 180
 
 # API REST de carga (fora do CKAN e fora do MCP). Limite: 3 meses por chamada.
 api_carga:

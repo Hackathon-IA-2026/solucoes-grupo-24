@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { Card } from './Card'
 
 interface KpiCardProps {
@@ -14,6 +15,8 @@ interface KpiCardProps {
   accent?: string
   /** classe de cor do número (padrão: text-ink) */
   valueClass?: string
+  /** rota da tela que detalha este número: o card inteiro vira link */
+  to?: string
 }
 
 /**
@@ -24,9 +27,9 @@ interface KpiCardProps {
  * Os selos (`actions`, ex.: MOCK) ficam na linha do número, não no cabeçalho: com quatro KPIs
  * lado a lado, selo no cabeçalho cortava o rótulo ("CARGA SUPERVIS…").
  */
-export function KpiCard({ label, value, unit, hint, actions, accent, valueClass = 'text-ink' }: KpiCardProps) {
-  return (
-    <Card title={label} accent={accent}>
+export function KpiCard({ label, value, unit, hint, actions, accent, valueClass = 'text-ink', to }: KpiCardProps) {
+  const card = (
+    <Card title={label} accent={accent} className={to ? 'h-full transition-colors group-hover:border-ink-faint' : ''}>
       <div className="flex items-start justify-between gap-2">
         <p className={`kpi flex items-baseline gap-1.5 ${valueClass}`}>
           <span className="text-kpi font-semibold">{value}</span>
@@ -36,5 +39,13 @@ export function KpiCard({ label, value, unit, hint, actions, accent, valueClass 
       </div>
       {hint && <p className="mt-2 text-xs text-ink-muted">{hint}</p>}
     </Card>
+  )
+  // Link em volta do card: o KPI leva à tela que o detalha (foco visível para teclado)
+  return to ? (
+    <Link to={to} className="group block focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent">
+      {card}
+    </Link>
+  ) : (
+    card
   )
 }

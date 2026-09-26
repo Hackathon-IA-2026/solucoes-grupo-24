@@ -117,6 +117,74 @@ export function filtrarPorSeveridade<T>(
   return { visiveis, ocultos: itens.length - visiveis.length }
 }
 
+/**
+ * Resumo de uma curva prevista (painel "Resumo da curva" do Despacho e cabeçalho da curva na
+ * Visão Geral): mínima e máxima do P50 com o instante, amplitude (máx − mín, a "amplitude
+ * diária" do PAR/PEL) e incerteza (largura P90 − P10, média e máxima). null para curva vazia.
+ */
+export function resumoCurva(pontos: readonly PontoPrevisao[]) {
+  if (!pontos.length) return null
+  let iMin = 0
+  let iMax = 0
+  let iBanda = 0
+  let somaBanda = 0
+  pontos.forEach((p, i) => {
+    if (p.p50 < pontos[iMin].p50) iMin = i
+    if (p.p50 > pontos[iMax].p50) iMax = i
+    const banda = p.p90 - p.p10
+    somaBanda += banda
+    if (banda > pontos[iBanda].p90 - pontos[iBanda].p10) iBanda = i
+  })
+  return {
+    minimo: { mw: pontos[iMin].p50, timestamp: pontos[iMin].timestamp },
+    maximo: { mw: pontos[iMax].p50, timestamp: pontos[iMax].timestamp },
+    amplitudeMw: pontos[iMax].p50 - pontos[iMin].p50,
+    bandaMediaMw: somaBanda / pontos.length,
+    bandaMaxima: { mw: pontos[iBanda].p90 - pontos[iBanda].p10, timestamp: pontos[iBanda].timestamp },
+  }
+}
+
+/**
+ * P50 e largura de banda médios dentro de um patamar (horas BRT [ini, fim)), sobre todos os
+ * trechos da curva que caem nele. null se a curva não passa pelo patamar.
+ */
+export function resumoPatamar(pontos: readonly PontoPrevisao[], horas: readonly [number, number]) {
+  const idx = trechosNoIntervalo(pontos, horas).flatMap((t) =>
+    Array.from({ length: t.fim - t.inicio + 1 }, (_, k) => t.inicio + k),
+  )
+  if (!idx.length) return null
+  const media = (f: (p: PontoPrevisao) => number) => idx.reduce((s, i) => s + f(pontos[i]), 0) / idx.length
+  return { p50MedioMw: media((p) => p.p50), bandaMediaMw: media((p) => p.p90 - p.p10), pontos: idx.length }
+}
+
+/**
+ * Resumo do erro diário num período (tela Validação): médias do modelo e do baseline, em
+ * quantos dias o modelo errou menos e o pior dia do modelo. Usa os últimos `dias` do histórico.
+ */
+export function resumoValidacao(
+  historico: readonly { data: string; mae: number; maeBaseline: number }[],
+  dias: number,
+) {
+  const janela = historico.slice(-dias)
+  if (!janela.length) return null
+  const media = (f: (h: (typeof janela)[number]) => number) => janela.reduce((s, h) => s + f(h), 0) / janela.length
+  const pior = janela.reduce((a, h) => (h.mae > a.mae ? h : a))
+  return {
+    dias: janela.length,
+    maeMedio: media((h) => h.mae),
+    maeBaselineMedio: media((h) => h.maeBaseline),
+    diasMelhorQueBaseline: janela.filter((h) => h.mae < h.maeBaseline).length,
+    piorDia: { data: pior.data, mae: pior.mae },
+  }
+}
+
+/** Contagem por categoria, na ordem das chaves informadas (zero para categoria ausente). */
+export function contarPor<T, K extends string>(itens: readonly T[], chave: (t: T) => K, chaves: readonly K[]): Record<K, number> {
+  const c = Object.fromEntries(chaves.map((k) => [k, 0])) as Record<K, number>
+  for (const it of itens) c[chave(it)] = (c[chave(it)] ?? 0) + 1
+  return c
+}
+
 /** Montante previsto (MW) por razão, com zero para razão sem risco (ordem fixa ENE, CNF, REL). */
 export function montantePorRazao(riscos: readonly RiscoUsina[]): Record<Razao, number> {
   const total: Record<Razao, number> = { ENE: 0, CNF: 0, REL: 0 }

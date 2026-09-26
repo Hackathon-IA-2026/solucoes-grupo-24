@@ -15,10 +15,14 @@ import { Carregando, ErroDados } from '../components/ui/Estado'
 import { MiniStat } from '../components/ui/MiniStat'
 import { MockTag } from '../components/ui/MockTag'
 import { SegmentedControl } from '../components/ui/SegmentedControl'
+import { BotaoExportar } from '../components/ui/BotaoExportar'
+import { CELULA, LINHA, Tabela } from '../components/ui/Tabela'
 import { formatIntervalo, PATAMARES } from '../content/calendario'
+import { resumoCurva, resumoPatamar } from '../data/derivados'
 import { getCarga, getPrevisao } from '../data/dataSource'
-import { HorizonteSchema, type CargaSnapshot, type FatoresClimaticos, type Horizonte, type PrevisaoCurva } from '../data/types'
+import { HorizonteSchema, type CargaSnapshot, type FatoresClimaticos, type Horizonte, type PontoPrevisao, type PrevisaoCurva } from '../data/types'
 import { useDados } from '../data/useDados'
+import type { ColunaCsv } from '../utils/csv'
 import { formatDataHoraBrt, formatGw, formatHoraBrt, formatMw, formatNum, formatPct } from '../utils/format'
 
 // Opções do seletor vêm do próprio schema: horizonte novo no contrato aparece aqui sozinho.
@@ -108,13 +112,18 @@ function Termo({ rotulo, mw, apoio, cor }: { rotulo: string; mw: number; apoio: 
   )
 }
 
+const VISOES = ['Gráfico', 'Tabela'] as const
+type Visao = (typeof VISOES)[number]
+
 function Previsao({ curvas, horizonte, onHorizonte }: { curvas: PrevisaoCurva[]; horizonte: Horizonte; onHorizonte: (h: Horizonte) => void }) {
   const curva = curvas.find((c) => c.horizonte === horizonte)
+  const [visao, setVisao] = useState<Visao>('Gráfico')
   return (
     <>
       {/* filtros numa linha acima do gráfico */}
       <div className="flex flex-wrap items-center gap-3">
         <SegmentedControl label="Horizonte de previsão" options={HORIZONTES} value={horizonte} onChange={onHorizonte} />
+        <SegmentedControl label="Visualização" options={VISOES} value={visao} onChange={setVisao} />
         {curva && (
           <span className="kpi text-xs text-ink-muted">
             {formatDataHoraBrt(curva.pontos[0].timestamp)} → {formatDataHoraBrt(curva.pontos.at(-1)!.timestamp)} BRT ·{' '}
@@ -125,10 +134,13 @@ function Previsao({ curvas, horizonte, onHorizonte }: { curvas: PrevisaoCurva[];
 
       {curva ? (
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
-          <PainelCurva curva={curva} />
+          <div className="min-w-0 space-y-4">
+            {visao === 'Gráfico' ? <PainelCurva curva={curva} /> : <TabelaCurva curva={curva} />}
+            <ResumoDaCurva curva={curva} />
+          </div>
           <div className="space-y-4">
             <PainelClima fatores={curva.fatoresClimaticos} mock={curva.mock} />
-            <PainelPatamares />
+            <PainelPatamares curva={curva} />
           </div>
         </div>
       ) : (
@@ -178,20 +190,98 @@ function PainelClima({ fatores, mock }: { fatores: FatoresClimaticos; mock: bool
  * Por que os patamares estão marcados na curva: o erro de previsão de carga é ASSIMÉTRICO
  * (lacuna declarada pelo ONS, planejamento v2). Texto e horas vêm de content/calendario.ts.
  */
-function PainelPatamares() {
+function PainelPatamares({ curva }: { curva: PrevisaoCurva }) {
   return (
     <Card title="Patamares · o erro que custa mais">
       <ul className="space-y-3">
-        {PATAMARES.map((p) => (
-          <li key={p.chave}>
-            <p className="flex items-baseline justify-between gap-2 text-body text-ink">
-              {p.nome}
-              <span className="kpi text-xs text-ink-faint">{formatIntervalo(p.horas)}</span>
-            </p>
-            <p className="mt-0.5 text-xs text-ink-muted">Pior erro: {p.errarPior}.</p>
-          </li>
-        ))}
+        {PATAMARES.map((p) => {
+          // o que ESTA curva prevê dentro do patamar (P50 e incerteza médios)
+          const r = resumoPatamar(curva.pontos, p.horas)
+          return (
+            <li key={p.chave}>
+              <p className="flex items-baseline justify-between gap-2 text-body text-ink">
+                {p.nome}
+                <span className="kpi text-xs text-ink-faint">{formatIntervalo(p.horas)}</span>
+              </p>
+              {r ? (
+                <p className="kpi mt-0.5 text-xs text-ink">
+                  P50 médio {formatGw(r.p50MedioMw)} GW · banda {formatGw(r.bandaMediaMw)} GW
+                </p>
+              ) : (
+                <p className="mt-0.5 text-xs text-ink-faint">fora da janela desta curva</p>
+              )}
+              <p className="mt-0.5 text-xs text-ink-muted">Pior erro: {p.errarPior}.</p>
+            </li>
+          )
+        })}
       </ul>
+    </Card>
+  )
+}
+
+/**
+ * Resumo da curva (pitch, slide 5: "amplitude diária" e rampa): mínima e máxima do P50 com o
+ * horário, amplitude, incerteza média e o instante de maior incerteza. Tudo de resumoCurva().
+ */
+function ResumoDaCurva({ curva }: { curva: PrevisaoCurva }) {
+  const r = resumoCurva(curva.pontos)
+  if (!r) return null
+  const itens: [string, string, string][] = [
+    ['Mínima (P50)', `${formatGw(r.minimo.mw)} GW`, `${formatHoraBrt(r.minimo.timestamp)} BRT`],
+    ['Máxima (P50)', `${formatGw(r.maximo.mw)} GW`, `${formatHoraBrt(r.maximo.timestamp)} BRT`],
+    ['Amplitude', `${formatGw(r.amplitudeMw)} GW`, 'máx − mín'],
+    [`Maior rampa (${curva.janelaRampaHoras}h)`, `${formatGw(curva.rampaProjetadaMw)} GW`, 'subida do P50'],
+    ['Incerteza média', `${formatGw(r.bandaMediaMw)} GW`, 'largura P10–P90'],
+    ['Maior incerteza', `${formatGw(r.bandaMaxima.mw)} GW`, `${formatHoraBrt(r.bandaMaxima.timestamp)} BRT`],
+  ]
+  return (
+    <dl className="grid gap-px border border-line bg-line sm:grid-cols-3 2xl:grid-cols-6">
+      {itens.map(([k, v, apoio]) => (
+        <div key={k} className="bg-surface px-4 py-2.5">
+          <dt className="rotulo text-[10px]">{k}</dt>
+          <dd className="kpi mt-0.5 text-lg font-semibold text-ink">{v}</dd>
+          <dd className="text-[11px] text-ink-faint">{apoio}</dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+const CSV_CURVA: ColunaCsv<PontoPrevisao>[] = [
+  { rotulo: 'timestamp_utc', valor: (p) => p.timestamp },
+  { rotulo: 'horario_brt', valor: (p) => formatDataHoraBrt(p.timestamp) },
+  { rotulo: 'p10_mw', valor: (p) => p.p10 },
+  { rotulo: 'p50_mw', valor: (p) => p.p50 },
+  { rotulo: 'p90_mw', valor: (p) => p.p90 },
+  { rotulo: 'banda_mw', valor: (p) => p.p90 - p.p10 },
+]
+
+/** Os 48 pontos em tabela (leitura exata e acessibilidade) + CSV. */
+function TabelaCurva({ curva }: { curva: PrevisaoCurva }) {
+  return (
+    <Card
+      flush
+      title={`Pontos da curva · horizonte ${curva.horizonte}`}
+      actions={
+        <>
+          <MockTag mock={curva.mock} />
+          <BotaoExportar nome={`previsao_carga_${curva.horizonte}`} colunas={CSV_CURVA} linhas={curva.pontos} />
+        </>
+      }
+    >
+      <div className="max-h-[26rem] overflow-y-auto">
+        <Tabela colunas={[{ rotulo: 'Horário (BRT)' }, { rotulo: 'P10', num: true }, { rotulo: 'P50', num: true }, { rotulo: 'P90', num: true }, { rotulo: 'Banda P10–P90', num: true }]}>
+          {curva.pontos.map((p) => (
+            <tr key={p.timestamp} className={LINHA}>
+              <td className={`${CELULA} kpi text-ink-muted`}>{formatDataHoraBrt(p.timestamp)}</td>
+              <td className={`${CELULA} kpi text-right text-ink-muted`}>{formatMw(p.p10)}</td>
+              <td className={`${CELULA} kpi text-right text-ink`}>{formatMw(p.p50)}</td>
+              <td className={`${CELULA} kpi text-right text-ink-muted`}>{formatMw(p.p90)}</td>
+              <td className={`${CELULA} kpi text-right text-ink-faint`}>{formatMw(p.p90 - p.p10)}</td>
+            </tr>
+          ))}
+        </Tabela>
+      </div>
     </Card>
   )
 }

@@ -14,7 +14,7 @@ O que faz:
 Gabarito opcional: `gabarito.csv` na pasta das imagens (colunas imagem,n_paineis). Com ele, o
 diagnóstico aponta falso positivo (imagem sem painel com detecção) e falso negativo. SEM ele o
 relatório NUNCA diz "adequado": "nenhum aviso" sem gabarito só quer dizer sanidade ok — a
-qualidade se confere nas imagens anotadas. Decisão tomada depois que o modelo público marcou
+qualidade se confere nas imagens anotadas. Decisão tomada depois que o modelo (best.pt, versão antiga do treinamento) marcou
 "solar-panel" em fotos de ônibus e pessoas (imagens de exemplo do ultralytics) com o
 diagnóstico antigo dizendo "adequado".
 

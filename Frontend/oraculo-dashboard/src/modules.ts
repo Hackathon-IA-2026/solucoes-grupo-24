@@ -25,6 +25,8 @@ import {
  */
 /** Caminho do Detalhe do Alerta: usado no registro E em rotaDetalheAlerta() — uma fonte só. */
 const DETALHE_ALERTA_PATH = '/detalhe-alerta'
+/** Caminho do Mapa Híbrido: usado no registro E em rotaMapa() — uma fonte só. */
+const MAPA_PATH = '/mapa-hibrido'
 
 export interface ModuleDef {
   /** caminho base da rota (também usado no link do menu) */
@@ -46,7 +48,7 @@ export const MODULES: readonly ModuleDef[] = [
     Page: lazy(() => import('./pages/VisaoGeral')),
   },
   {
-    path: '/mapa-hibrido',
+    path: MAPA_PATH,
     label: 'Mapa Híbrido',
     description: 'Usinas em risco, excedentes TSO-DSO e densidade de MMGD sobre o mapa do Brasil.',
     icon: MapIcon,
@@ -102,3 +104,27 @@ export const MODULES: readonly ModuleDef[] = [
 export function rotaDetalheAlerta(riscoUsinaId: string): string {
   return `${DETALHE_ALERTA_PATH}/${encodeURIComponent(riscoUsinaId)}`
 }
+
+/**
+ * Seleção do Mapa Híbrido na URL (`/mapa-hibrido?sel=risco:<id>`): o link "ver no mapa" das
+ * outras telas abre o mapa já com o item selecionado e o zoom nele, e a seleção fica
+ * compartilhável. Formato definido SÓ aqui (quem monta e quem lê usam estas duas funções).
+ */
+export type SelecaoMapa = { tipo: 'risco' | 'excedente'; id: string }
+export const PARAM_SELECAO_MAPA = 'sel'
+
+export function rotaMapa(sel?: SelecaoMapa): string {
+  const base = MAPA_PATH
+  return sel ? `${base}?${PARAM_SELECAO_MAPA}=${encodeURIComponent(`${sel.tipo}:${sel.id}`)}` : base
+}
+
+export function lerSelecaoMapa(valor: string | null): SelecaoMapa | null {
+  if (!valor) return null
+  const i = valor.indexOf(':')
+  const tipo = valor.slice(0, i)
+  const id = valor.slice(i + 1)
+  return (tipo === 'risco' || tipo === 'excedente') && id ? { tipo, id } : null
+}
+
+/** Id estável de um excedente (o contrato não tem id): área + distribuidora. */
+export const idExcedente = (e: { areaConcessao: string; distribuidora: string }) => `${e.areaConcessao}|${e.distribuidora}`

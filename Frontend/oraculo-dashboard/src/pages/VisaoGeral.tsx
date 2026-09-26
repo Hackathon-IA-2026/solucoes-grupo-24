@@ -22,12 +22,14 @@ import { getCarga, getPrevisao, getRiscos } from '../data/dataSource'
 import {
   composicaoCarga,
   montanteEmRiscoMw,
+  contarPor,
   montantePorRazao,
   ordenarPorSeveridade,
+  resumoCurva,
   riscoAgregadoPct,
   severidadePorProbabilidade,
 } from '../data/derivados'
-import { RazaoSchema, type CargaSnapshot, type PrevisaoCurva, type RiscoUsina } from '../data/types'
+import { HorizonteSchema, RazaoSchema, type CargaSnapshot, type PrevisaoCurva, type RiscoUsina } from '../data/types'
 import { useDados } from '../data/useDados'
 import { MODULES, rotaDetalheAlerta } from '../modules'
 import { useFiltradosPorSeveridade } from '../state/useSeverityFilter'
@@ -44,6 +46,7 @@ const SERIES = {
 // Links pelo registro de módulos (nenhum caminho escrito à mão).
 const DESPACHO = MODULES.find((m) => m.label === 'Despacho Preditivo')!
 const LISTA = MODULES.find((m) => m.label === 'Lista de Riscos')!
+const MAPA = MODULES.find((m) => m.label === 'Mapa Híbrido')!
 
 export default function VisaoGeral() {
   // getCarga/getRiscos/getPrevisao são referências estáveis de módulo: cada efeito roda uma vez.
@@ -96,6 +99,7 @@ function KpisCarga({ c }: { c: CargaSnapshot }) {
     <>
       <KpiCard
         label="Carga supervisionada"
+        to={DESPACHO.path}
         accent="border-t-chart-1"
         value={formatGw(c.cargaSupervisionadaMw)}
         unit="GW"
@@ -104,6 +108,7 @@ function KpisCarga({ c }: { c: CargaSnapshot }) {
       />
       <KpiCard
         label="MMGD estimada"
+        to={MAPA.path}
         accent="border-t-chart-2"
         value={formatGw(c.mmgdEstimadaMw)}
         unit="GW"
@@ -124,6 +129,7 @@ function KpisRisco({ riscos }: { riscos: RiscoUsina[] }) {
     <>
       <KpiCard
         label="Risco de curtailment"
+        to={LISTA.path}
         accent={RISK_STYLES[nivel].topo}
         value={pct === null ? '—' : formatPct(pct)}
         unit="%"
@@ -137,6 +143,7 @@ function KpisRisco({ riscos }: { riscos: RiscoUsina[] }) {
       />
       <KpiCard
         label="Montante em risco"
+        to={LISTA.path}
         value={formatMw(montanteEmRiscoMw(riscos))}
         unit="MW"
         actions={<MockTag mock={algumMock} />}
@@ -150,6 +157,7 @@ function KpisRisco({ riscos }: { riscos: RiscoUsina[] }) {
 function CurvaD1({ curvas }: { curvas: PrevisaoCurva[] }) {
   const curva = curvas.find((c) => c.horizonte === 'D+1')
   if (!curva) return null
+  const r = resumoCurva(curva.pontos)
   return (
     <Card
       title="Carga supervisionada prevista · D+1 · P10/P50/P90"
@@ -162,6 +170,14 @@ function CurvaD1({ curvas }: { curvas: PrevisaoCurva[] }) {
         </>
       }
     >
+      {r && (
+        <p className="kpi mb-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-ink-muted">
+          <span>mín <span className="text-ink">{formatGw(r.minimo.mw)} GW</span> às {formatHoraBrt(r.minimo.timestamp)}</span>
+          <span>máx <span className="text-ink">{formatGw(r.maximo.mw)} GW</span> às {formatHoraBrt(r.maximo.timestamp)}</span>
+          <span>amplitude <span className="text-ink">{formatGw(r.amplitudeMw)} GW</span></span>
+          <span>incerteza média <span className="text-ink">{formatGw(r.bandaMediaMw)} GW</span></span>
+        </p>
+      )}
       <GraficoPrevisao curva={curva} altura="h-64" />
       <div className="mt-3">
         <LegendaPrevisao janelaRampaHoras={curva.janelaRampaHoras} />
@@ -208,6 +224,7 @@ function ComposicaoCarga({ c }: { c: CargaSnapshot }) {
 function AlertasAtivos({ riscos }: { riscos: RiscoUsina[] }) {
   const { visiveis, ocultos } = useFiltradosPorSeveridade(ordenarPorSeveridade(riscos), (r) => r.severidade)
   const porRazao = montantePorRazao(visiveis)
+  const porHorizonte = contarPor(visiveis, (r) => r.horizonte, HorizonteSchema.options)
 
   return (
     <Card
@@ -267,6 +284,15 @@ function AlertasAtivos({ riscos }: { riscos: RiscoUsina[] }) {
                   {razao}
                 </dt>
                 <dd className="kpi mt-1 text-sm text-ink">{formatMw(porRazao[razao])}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="rotulo border-t border-line/60 px-3.5 pt-2.5 text-[10px]">Alertas por horizonte</p>
+          <dl className="grid grid-cols-3 divide-x divide-line/60">
+            {HorizonteSchema.options.map((h) => (
+              <div key={h} className="px-2 py-2.5 text-center">
+                <dt className="font-mono text-[10px] font-semibold text-ink-muted">{h}</dt>
+                <dd className="kpi mt-1 text-sm text-ink">{porHorizonte[h]}</dd>
               </div>
             ))}
           </dl>

@@ -5,10 +5,11 @@
  * Rota: /detalhe-alerta/:alertId? — o id é o de RiscoUsina (vem da Lista de Riscos).
  * Sem id, a página lista os alertas disponíveis para escolher.
  */
-import { useCallback } from 'react'
-import { ArrowLeft, ChevronRight, Database } from 'lucide-react'
+import { useCallback, useState } from 'react'
+import { ArrowLeft, Check, ChevronLeft, ChevronRight, Copy, Database, MapPin } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { BarrasShap } from '../components/charts/BarrasShap'
+import { Botao, BotaoLink } from '../components/ui/Botao'
 import { Card } from '../components/ui/Card'
 import { Carregando, ErroDados } from '../components/ui/Estado'
 import { MockTag } from '../components/ui/MockTag'
@@ -18,7 +19,7 @@ import { getAlerta, getRiscos } from '../data/dataSource'
 import { ordenarPorSeveridade } from '../data/derivados'
 import type { AlertaDetalhado, RiscoUsina } from '../data/types'
 import { useDados } from '../data/useDados'
-import { MODULES, rotaDetalheAlerta } from '../modules'
+import { MODULES, rotaDetalheAlerta, rotaMapa } from '../modules'
 import { RAZAO_INFO } from '../theme/razao'
 import { RISK_STYLES } from '../theme/severity'
 import { formatDataHoraBrt, formatMw, formatPct } from '../utils/format'
@@ -30,6 +31,7 @@ const LISTA = MODULES.find((m) => m.label === 'Lista de Riscos')!
 const METODOS: Record<string, string> = {
   ExplicadorPrecomputado: 'SHAP pré-computado (stub — modelo real ainda não integrado)',
   ExplicadorShap: 'SHAP calculado sobre o modelo',
+  ExplicadorLightGBM: 'SHAP exato do LightGBM (TreeSHAP do próprio modelo)',
 }
 
 export default function DetalheAlerta() {
@@ -56,10 +58,19 @@ export default function DetalheAlerta() {
       </Card>
     )
   }
-  return <Alerta alerta={alerta.data} risco={risco} />
+  // vizinhos na MESMA ordem da Lista de Riscos (triagem sequencial sem voltar à lista)
+  const ordem = ordenarPorSeveridade(riscos.data)
+  const i = ordem.findIndex((r) => r.id === risco.id)
+  return <Alerta alerta={alerta.data} risco={risco} anterior={ordem[i - 1]} proximo={ordem[i + 1]} posicao={[i + 1, ordem.length]} />
 }
 
-function Alerta({ alerta, risco }: { alerta: AlertaDetalhado; risco: RiscoUsina }) {
+function Alerta({ alerta, risco, anterior, proximo, posicao }: {
+  alerta: AlertaDetalhado
+  risco: RiscoUsina
+  anterior?: RiscoUsina
+  proximo?: RiscoUsina
+  posicao: [number, number]
+}) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -70,7 +81,19 @@ function Alerta({ alerta, risco }: { alerta: AlertaDetalhado; risco: RiscoUsina 
         <SeverityBadge level={risco.severidade} />
         <RazaoBadge razao={risco.razao} />
         <MockTag mock={alerta.mock} />
+        <span className="ml-auto flex items-center gap-1.5">
+          <BotaoLink to={rotaMapa({ tipo: 'risco', id: risco.id })}>
+            <MapPin className="size-3" aria-hidden /> Ver no mapa
+          </BotaoLink>
+          <NavVizinho r={anterior} rotulo="Anterior" Icone={ChevronLeft} />
+          <span className="kpi px-1 text-[11px] text-ink-faint">
+            {posicao[0]}/{posicao[1]}
+          </span>
+          <NavVizinho r={proximo} rotulo="Próximo" Icone={ChevronRight} depois />
+        </span>
       </div>
+
+      <FaixaKpis alerta={alerta} risco={risco} />
 
       <TextoAlerta texto={alerta.textoAlerta} barra={RISK_STYLES[risco.severidade].barra} />
 
@@ -89,8 +112,57 @@ function Alerta({ alerta, risco }: { alerta: AlertaDetalhado; risco: RiscoUsina 
   )
 }
 
-/** Bloco estilo terminal com o texto exatamente como o Backend gerou. */
+/** Anterior/Próximo na ordem da Lista de Riscos (desabilitado nas pontas). */
+function NavVizinho({ r, rotulo, Icone, depois = false }: { r?: RiscoUsina; rotulo: string; Icone: typeof ChevronLeft; depois?: boolean }) {
+  if (!r)
+    return (
+      <Botao disabled aria-label={`${rotulo}: não há`}>
+        {!depois && <Icone className="size-3" aria-hidden />} {rotulo} {depois && <Icone className="size-3" aria-hidden />}
+      </Botao>
+    )
+  return (
+    <BotaoLink to={rotaDetalheAlerta(r.id)} title={`${rotulo}: ${r.nome}`}>
+      {!depois && <Icone className="size-3" aria-hidden />} {rotulo} {depois && <Icone className="size-3" aria-hidden />}
+    </BotaoLink>
+  )
+}
+
+/** Os números do alerta de relance, antes do texto. */
+function FaixaKpis({ alerta, risco }: { alerta: AlertaDetalhado; risco: RiscoUsina }) {
+  const itens: [string, string, string?][] = [
+    ['Probabilidade', `${formatPct(alerta.probabilidadePct, 1)}%`, RISK_STYLES[risco.severidade].label],
+    ['Montante previsto', `${formatMw(alerta.montanteMw)} MW`],
+    ['Horário previsto', `${formatDataHoraBrt(alerta.horarioPrevisto)}`, 'BRT'],
+    ['Janela', alerta.janelaPrevisao],
+    ['Fonte', risco.fonte],
+    ['Distribuidora', risco.distribuidora],
+  ]
+  return (
+    <dl className={`grid gap-px border border-line bg-line sm:grid-cols-3 xl:grid-cols-6 border-t-2 ${RISK_STYLES[risco.severidade].topo}`}>
+      {itens.map(([k, v, apoio]) => (
+        <div key={k} className="bg-surface px-4 py-2.5">
+          <dt className="rotulo text-[10px]">{k}</dt>
+          <dd className="kpi mt-0.5 truncate text-lg font-semibold text-ink" title={v}>
+            {v} {apoio && <span className="text-[11px] font-normal text-ink-faint">{apoio}</span>}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+/** Bloco estilo terminal com o texto exatamente como o Backend gerou, com "copiar". */
 function TextoAlerta({ texto, barra }: { texto: string; barra: string }) {
+  const [copiado, setCopiado] = useState(false)
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(texto)
+      setCopiado(true)
+      window.setTimeout(() => setCopiado(false), 1800)
+    } catch {
+      setCopiado(false) // sem permissão de área de transferência: o texto continua selecionável
+    }
+  }
   return (
     <section aria-label="Texto do alerta" className={`overflow-hidden border border-line border-l-4 bg-fundo ${barra}`}>
       <header className="flex items-center gap-2 border-b border-line bg-surface px-4 py-1.5">
@@ -98,6 +170,9 @@ function TextoAlerta({ texto, barra }: { texto: string; barra: string }) {
         <span className="size-2 rounded-full bg-ink-faint" aria-hidden />
         <span className="size-2 rounded-full bg-ink-faint" aria-hidden />
         <span className="ml-2 font-mono text-[11px] text-ink-faint">explicabilidade.gerar_texto_alerta()</span>
+        <Botao variante="fantasma" className="ml-auto" onClick={copiar} title="Copiar o texto para enviar à distribuidora">
+          {copiado ? <Check className="size-3" aria-hidden /> : <Copy className="size-3" aria-hidden />} {copiado ? 'copiado' : 'copiar'}
+        </Botao>
       </header>
       {/* pre: preserva as quebras de linha do texto gerado; sem reformatação na tela */}
       <pre className="overflow-x-auto whitespace-pre-wrap px-4 py-3 font-mono text-sm leading-relaxed text-ink">{texto}</pre>

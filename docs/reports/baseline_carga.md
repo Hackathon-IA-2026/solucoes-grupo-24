@@ -14,20 +14,20 @@ Gerado por `python run_heavywork.py` (etapa 4; código em `Backend/src/models/`)
 | horizonte | modelo | mae | rmse | mape | pinball | cobertura | skill | erro_pico | erro_vale | erro_rampa |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 30min | persistencia | 1631 | 2033 | 2.25 | 532 | 56.8 | 0.810 | 108 | 108 | 459 |
-| 30min | sazonal_dia | 4442 | 6776 | 6.69 | 1615 | 78.3 | 0.482 | 3228 | 6530 | 4038 |
-| 30min | sazonal_semana | 3172 | 4530 | 4.62 | 1086 | 74.0 | 0.630 | 2062 | 4645 | 3909 |
-| 30min | climatologia | 8570 | 9498 | 11.73 | 2773 | 31.3 | 0.000 | 12408 | 9085 | 21513 |
-| 30min | lightgbm | 555 | 699 | 0.76 | 167 | 74.8 | 0.935 | 486 | 283 | 592 |
+| 30min | sazonal_dia | 4441 | 6775 | 6.68 | 1614 | 78.3 | 0.482 | 3226 | 6529 | 4038 |
+| 30min | sazonal_semana | 3169 | 4528 | 4.61 | 1086 | 74.0 | 0.630 | 2061 | 4642 | 3909 |
+| 30min | climatologia | 8573 | 9501 | 11.73 | 2774 | 31.3 | 0.000 | 12415 | 9079 | 21513 |
+| 30min | lightgbm | 555 | 700 | 0.76 | 167 | 74.8 | 0.935 | 486 | 283 | 592 |
 | 3h | persistencia | 8983 | 10788 | 12.28 | 2906 | 55.9 | -0.048 | 581 | 289 | 1471 |
-| 3h | sazonal_dia | 4442 | 6777 | 6.69 | 1615 | 78.2 | 0.482 | 3228 | 6530 | 4038 |
-| 3h | sazonal_semana | 3172 | 4530 | 4.62 | 1087 | 74.0 | 0.630 | 2062 | 4645 | 3909 |
-| 3h | climatologia | 8571 | 9499 | 11.73 | 2773 | 31.3 | 0.000 | 12408 | 9085 | 21513 |
-| 3h | lightgbm | 1559 | 2239 | 2.32 | 512 | 73.8 | 0.818 | 1144 | 2384 | 2432 |
-| D+1 | persistencia | 4448 | 6783 | 6.70 | 1617 | 78.2 | 0.481 | 3228 | 6530 | 4038 |
-| D+1 | sazonal_dia | 4448 | 6783 | 6.70 | 1617 | 78.2 | 0.481 | 3228 | 6530 | 4038 |
-| D+1 | sazonal_semana | 3176 | 4534 | 4.62 | 1088 | 74.0 | 0.630 | 2062 | 4645 | 3909 |
-| D+1 | climatologia | 8574 | 9502 | 11.74 | 2774 | 31.3 | 0.000 | 12408 | 9085 | 21513 |
-| D+1 | lightgbm | 1685 | 2418 | 2.51 | 551 | 74.4 | 0.803 | 1183 | 2708 | 2845 |
+| 3h | sazonal_dia | 4441 | 6776 | 6.68 | 1615 | 78.3 | 0.482 | 3226 | 6529 | 4038 |
+| 3h | sazonal_semana | 3169 | 4529 | 4.61 | 1086 | 74.0 | 0.630 | 2061 | 4642 | 3909 |
+| 3h | climatologia | 8573 | 9502 | 11.73 | 2774 | 31.3 | 0.000 | 12415 | 9079 | 21513 |
+| 3h | lightgbm | 1557 | 2238 | 2.31 | 512 | 73.8 | 0.818 | 1142 | 2383 | 2433 |
+| D+1 | persistencia | 4447 | 6782 | 6.69 | 1616 | 78.2 | 0.482 | 3226 | 6529 | 4038 |
+| D+1 | sazonal_dia | 4447 | 6782 | 6.69 | 1616 | 78.2 | 0.482 | 3226 | 6529 | 4038 |
+| D+1 | sazonal_semana | 3173 | 4533 | 4.62 | 1087 | 74.0 | 0.630 | 2061 | 4642 | 3909 |
+| D+1 | climatologia | 8577 | 9505 | 11.74 | 2775 | 31.3 | 0.000 | 12415 | 9079 | 21513 |
+| D+1 | lightgbm | 1683 | 2416 | 2.50 | 551 | 74.5 | 0.804 | 1182 | 2705 | 2844 |
 
 MW, exceto MAPE e cobertura (%) e skill (fração). Pico, vale e rampa: erro médio diário.
 
@@ -36,20 +36,20 @@ MW, exceto MAPE e cobertura (%) e skill (fração). Pico, vale e rampa: erro mé
 | horizonte | modelo | minima_diurna | outro | ponta_noturna | rampa_vespertina |
 |---|---|---|---|---|---|
 | 30min | persistencia | 1761 | 1316 | 854 | 3261 |
-| 30min | sazonal_dia | 7053 | 3047 | 3168 | 4735 |
-| 30min | sazonal_semana | 4701 | 2497 | 2256 | 2992 |
-| 30min | climatologia | 6892 | 8539 | 12139 | 9032 |
-| 30min | lightgbm | 436 | 640 | 505 | 572 |
+| 30min | sazonal_dia | 7052 | 3046 | 3166 | 4734 |
+| 30min | sazonal_semana | 4698 | 2494 | 2255 | 2990 |
+| 30min | climatologia | 6886 | 8545 | 12145 | 9038 |
+| 30min | lightgbm | 436 | 640 | 506 | 572 |
 | 3h | persistencia | 7887 | 7345 | 7601 | 18929 |
-| 3h | sazonal_dia | 7053 | 3047 | 3168 | 4735 |
-| 3h | sazonal_semana | 4701 | 2497 | 2256 | 2992 |
-| 3h | climatologia | 6892 | 8540 | 12139 | 9032 |
-| 3h | lightgbm | 2470 | 1118 | 1190 | 1418 |
-| D+1 | persistencia | 7065 | 3048 | 3174 | 4744 |
-| D+1 | sazonal_dia | 7065 | 3048 | 3174 | 4744 |
-| D+1 | sazonal_semana | 4707 | 2500 | 2259 | 2996 |
-| D+1 | climatologia | 6901 | 8541 | 12140 | 9032 |
-| D+1 | lightgbm | 2640 | 1227 | 1222 | 1603 |
+| 3h | sazonal_dia | 7052 | 3046 | 3166 | 4734 |
+| 3h | sazonal_semana | 4698 | 2495 | 2255 | 2990 |
+| 3h | climatologia | 6886 | 8545 | 12145 | 9038 |
+| 3h | lightgbm | 2469 | 1115 | 1188 | 1419 |
+| D+1 | persistencia | 7064 | 3048 | 3172 | 4743 |
+| D+1 | sazonal_dia | 7064 | 3048 | 3172 | 4743 |
+| D+1 | sazonal_semana | 4704 | 2497 | 2258 | 2994 |
+| D+1 | climatologia | 6895 | 8547 | 12147 | 9039 |
+| D+1 | lightgbm | 2637 | 1225 | 1222 | 1601 |
 
 ## LightGBM × melhor baseline, por série e horizonte (MAE, MW)
 
@@ -62,11 +62,11 @@ MW, exceto MAPE e cobertura (%) e skill (fração). Pico, vale e rampa: erro mé
 | NE | 3h | sazonal_semana | 482 | 331 | 31.3 | sim |
 | NE | D+1 | sazonal_semana | 482 | 370 | 23.3 | sim |
 | S | 30min | persistencia | 415 | 150 | 63.9 | sim |
-| S | 3h | sazonal_semana | 1108 | 516 | 53.4 | sim |
+| S | 3h | sazonal_semana | 1107 | 516 | 53.4 | sim |
 | S | D+1 | sazonal_semana | 1106 | 634 | 42.7 | sim |
 | SE | 30min | persistencia | 931 | 252 | 73.0 | sim |
-| SE | 3h | sazonal_semana | 2264 | 1045 | 53.8 | sim |
-| SE | D+1 | sazonal_semana | 2265 | 1198 | 47.1 | sim |
+| SE | 3h | sazonal_semana | 2261 | 1044 | 53.8 | sim |
+| SE | D+1 | sazonal_semana | 2263 | 1196 | 47.2 | sim |
 | SIN | 30min | persistencia | 1631 | 555 | 66.0 | sim |
-| SIN | 3h | sazonal_semana | 3172 | 1559 | 50.8 | sim |
-| SIN | D+1 | sazonal_semana | 3176 | 1685 | 46.9 | sim |
+| SIN | 3h | sazonal_semana | 3169 | 1557 | 50.9 | sim |
+| SIN | D+1 | sazonal_semana | 3173 | 1683 | 47.0 | sim |

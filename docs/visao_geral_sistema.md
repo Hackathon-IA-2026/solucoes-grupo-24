@@ -251,7 +251,7 @@ sob CRITICAL) e cada tela diz quantos ficaram ocultos. Os KPIs de sistema não s
 cadastrada na BDGD. O casamento painel ↔ cadastro é por distância (até 25 m), um para um.
 
 Situação: o fluxo roda de ponta a ponta **só em modo mock** (painéis, BDGD e ANEEL sintéticos, marcados).
-O modelo disponível (`best.pt`) é um YOLOv8s-seg público, sem ajuste local; em teste com fotos comuns marcou
+O modelo em uso (`best.pt`, configurado em `config/visao.yaml`) é uma versão antiga do treinamento do time (YOLOv8s-seg, checkpoint de 2023), ainda sem o ajuste com imagens da área piloto; em teste com fotos comuns marcou
 "solar-panel" onde não havia painel. A validação (`validar_modelo.py`) só declara o modelo "adequado" com um
 gabarito de imagens da área. O fator ainda **não é consumido** pelos modelos (`caminho_fator_correcao` vazio
 em `config/projeto.yaml`).

@@ -3,11 +3,12 @@
 # auditoria_camadas_2_3.py. Caminhos relativos a Backend/.
 
 modelo:
-  # Pesos do YOLO. Vazio = passar --modelo na linha de comando. Pesos NÃO vão para o git
-  # (*.pt no .gitignore): combinar com o time onde fica a cópia (sugestão: data/modelos/visao/).
-  # Em 2026-09-26 o arquivo disponível é um YOLOv8s-seg público (classe "solar-panel", treinado
-  # em 2023-07-10 por terceiros, imgsz 640), ainda SEM o fine-tuning local do planejamento.
-  caminho: ""
+  # Pesos do YOLO (--modelo na linha de comando tem prioridade). Pesos NÃO vão para o git (*.pt e
+  # data/modelos/ no .gitignore): cada máquina coloca a cópia neste caminho.
+  # Modelo em uso (decisão do Luiz, 2026-09-26): `best.pt`, VERSÃO ANTIGA do treinamento do time —
+  # YOLOv8s-seg, classe "solar-panel", imgsz 640, checkpoint de 2023-07-10 (ultralytics 8.0.57).
+  # Ainda sem o fine-tuning com imagens degradadas da área piloto previsto no planejamento.
+  caminho: data/modelos/visao/best.pt
   confianca_minima: 0.25
   # Resolução mais grossa (metros por pixel) em que um painel residencial (~1,7 m × 1 m, arranjos
   # de 10–40 m²) ainda ocupa pixels suficientes para o modelo. Imagem acima disso é recusada
