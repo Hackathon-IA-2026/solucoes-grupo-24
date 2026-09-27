@@ -8,3 +8,8 @@ rotulos_curtailment,eolica,13109328,2021-10-01 00:00:00,2026-09-25 23:30:00
 rotulos_curtailment,solar,2954448,2024-04-01 00:00:00,2026-09-25 23:30:00
 capacidade_mmgd,todos,76115,1900-01-01 00:00:00,2026-08-31 00:00:00
 carga_area,RJ,188210,2015-12-31 23:00:00,2026-09-25 23:30:00
+curtailment_mensal,eolica,588,2021-10-01 00:00:00,2026-09-01 00:00:00
+curtailment_mensal,solar,180,2024-04-01 00:00:00,2026-09-01 00:00:00
+clima_uf,todos,6480,2026-09-19 21:00:00,2026-09-29 20:00:00
+usinas_cadastro,eolica,200,,
+usinas_cadastro,solar,90,,
