@@ -1,0 +1,91 @@
+# Deploy automático na AWS (ECS Fargate) a cada push na main.
+# O que faz: build do dashboard -> empacota (Backend/deploy/deploy_ecs.py) -> atualiza o serviço ECS.
+#
+# PRÉ-REQUISITOS (uma vez):
+#  1) Secrets do repositório (Settings > Secrets and variables > Actions):
+#       AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN
+#     Na conta do Workshop Studio as credenciais são TEMPORÁRIAS (poucas horas): quando expirarem,
+#     o job falha em "sts" e é preciso atualizar os 3 secrets. O site já no ar continua funcionando.
+#  2) O banco e as saídas reais NÃO estão no git: alguém com o Backend/oraculo.db roda UMA vez
+#     `python deploy/deploy_ecs.py` local, que os envia ao S3 (dados/dados.zip); o CI os baixa de lá.
+#     Para atualizar os DADOS na demo (novo run_heavywork), repita o deploy local.
+name: Deploy AWS
+
+on:
+  push:
+    branches: [main]
+    # Só o que entra no pacote: mudança em docs/ ou testes não precisa reimplantar.
+    paths:
+      - "Backend/src/**"
+      - "Backend/oraculo/**"
+      - "Backend/config/**"
+      - "Backend/migrations/**"
+      - "Backend/main.py"
+      - "Backend/deploy/**"
+      - "Frontend/**"
+      - ".github/workflows/deploy-aws.yml"
+  workflow_dispatch: {}   # botão "Run workflow" para reimplantar sem commit
+
+# Um deploy por vez; um push novo cancela o anterior ainda em andamento.
+concurrency:
+  group: deploy-aws
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+      AWS_DEFAULT_REGION: us-west-2
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Frontend/oraculo-dashboard/package-lock.json
+
+      # Mesmo build do Dockerfile: o vite.config.ts lê Backend/config/*.yaml, que já está no checkout.
+      - name: Build do dashboard
+        working-directory: Frontend/oraculo-dashboard
+        run: |
+          npm ci
+          npm run build
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar boto3
+        run: pip install boto3
+
+      # Falha cedo e com mensagem clara se os secrets estiverem vazios ou expirados.
+      - name: Validar credenciais AWS
+        run: python -c "import boto3; print(boto3.client('sts').get_caller_identity()['Arn'])"
+
+      - name: Deploy (ECS Fargate)
+        working-directory: Backend
+        run: python deploy/deploy_ecs.py
+
+      # Confirma que o site novo responde antes de dar o job como verde.
+      - name: Verificar o site
+        working-directory: Backend
+        run: |
+          python - <<'PY'
+          import boto3, time, urllib.request
+          ecs = boto3.client("ecs")
+          arn = "arn:aws:ecs:us-west-2:%s:service/default/oraculo" % boto3.client("sts").get_caller_identity()["Account"]
+          host = ecs.describe_express_gateway_service(serviceArn=arn)["service"]["activeConfigurations"][0]["ingressPaths"][0]["endpoint"]
+          for i in range(40):  # até ~13 min: as tasks novas baixam o pacote do S3 ao subir
+              try:
+                  if urllib.request.urlopen(f"https://{host}/api-docs", timeout=15).status == 200:
+                      print("no ar:", f"https://{host}"); raise SystemExit(0)
+              except Exception as e:
+                  print(i, "aguardando:", type(e).__name__)
+              time.sleep(20)
+          raise SystemExit("o site não respondeu 200 a tempo")
+          PY

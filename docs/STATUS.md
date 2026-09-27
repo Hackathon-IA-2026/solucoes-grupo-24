@@ -761,3 +761,16 @@ estão intactos.
   exportar, HTML gerado, tema claro, layout estreito).
 - **Não mudou**: o Sphinx (`docs/oraculo/documentacao_sphinx`) e a rota `/api/docs/status` seguem
   servindo só a interface legada (`/legado`); o dashboard não os usa mais.
+
+## Deploy automático na AWS (GitHub Actions) — 2026-09-26
+
+- `.github/workflows/deploy-aws.yml`: a cada push na `main` (só se mexer em código/config/Frontend/deploy) faz o build do
+  dashboard, roda `Backend/deploy/deploy_ecs.py` e espera o site responder 200. Também roda manualmente
+  (Actions > Deploy AWS > Run workflow).
+- **Secrets necessários** (Settings > Secrets and variables > Actions): `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+  `AWS_SESSION_TOKEN`. No Workshop Studio elas expiram em poucas horas: quando o job falhar em "Validar credenciais AWS",
+  atualize os 3 secrets. O site que já está no ar não cai por isso.
+- **Dados fora do git** (`oraculo.db`, `output/`, `data/oraculo_cache`): o deploy LOCAL (`python deploy/deploy_ecs.py`, de
+  quem tem o banco) os envia ao S3 (`dados/dados.zip`); o CI os baixa de lá. Novos dados na demo = deploy local.
+- `deploy_ecs.py`: agora distingue criar de atualizar (describe explícito) e força novo deployment das tasks, porque o pacote
+  novo só é baixado quando a task reinicia.

@@ -42,10 +42,15 @@ SERVICO = "oraculo"
 IMAGEM = "public.ecr.aws/docker/library/python:3.11-slim"  # mesma versão do pyproject (>=3.11,<3.13)
 PORTA = 8000
 
+# Dados que NÃO estão no git (.gitignore): banco publicado pelo run_heavywork.py, saídas da visão
+# e cache do protótipo. Vão para o S3 num zip só; o deploy local os envia e o CI (GitHub Actions),
+# que só tem o código, os baixa de lá. Para atualizar os dados na demo: rodar o deploy LOCAL.
+DADOS = ["oraculo.db", "output", "data/oraculo_cache"]
+CHAVE_DADOS = "dados/dados.zip"
+
 # O que a API lê em runtime (mesma lista branca do Dockerfile.dockerignore). Como não há limite de
 # 250 MB aqui (isso era do Lambda), o cache real do protótipo entra: a demo não depende da rede do ONS.
-COPIAR = ["main.py", "alembic.ini", "config", "migrations", "src", "oraculo", "oraculo.db",
-          "output", "data/oraculo_cache"]
+COPIAR = ["main.py", "alembic.ini", "config", "migrations", "src", "oraculo", *DADOS]
 
 # Roles próprias (o workshop só bloqueia anexar policy a roles WS*/cdk-*/CodeEditor).
 POLICY_EXEC = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
@@ -101,6 +106,37 @@ def zipar(pasta: Path, saida: Path) -> None:
                 z.write(f, f.relative_to(pasta).as_posix())
 
 
+def _bucket(s3, conta: str, regiao: str) -> str:
+    """Cria (ou reaproveita) o bucket do deploy e devolve o nome."""
+    from botocore.exceptions import ClientError
+    bucket = f"oraculo-deploy-{conta}-{regiao}"
+    try:
+        s3.create_bucket(Bucket=bucket, CreateBucketConfiguration={"LocationConstraint": regiao})
+    except ClientError as e:
+        if e.response["Error"]["Code"] not in ("BucketAlreadyOwnedByYou", "BucketAlreadyExists"):
+            raise
+    return bucket
+
+
+def sincronizar_dados(s3, bucket: str) -> None:
+    """Máquina com o banco (deploy local): envia os dados ao S3. Sem o banco (CI): baixa e extrai."""
+    if (BACKEND / "oraculo.db").exists():
+        tmp = Path(tempfile.gettempdir()) / "oraculo_dados.zip"
+        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
+            for rel in DADOS:
+                origem = BACKEND / rel
+                arquivos = [f for f in origem.rglob("*") if f.is_file()] if origem.is_dir() else [origem]
+                for f in arquivos:
+                    z.write(f, f.relative_to(BACKEND).as_posix())
+        print(f"enviando dados ({tmp.stat().st_size / 1024 / 1024:.0f} MB) para s3://{bucket}/{CHAVE_DADOS}")
+        s3.upload_file(str(tmp), bucket, CHAVE_DADOS)
+        return
+    print(f"oraculo.db não está no checkout: baixando dados de s3://{bucket}/{CHAVE_DADOS}")
+    tmp = Path(tempfile.gettempdir()) / "oraculo_dados.zip"
+    s3.download_file(bucket, CHAVE_DADOS, str(tmp))  # falha clara se ninguém fez o deploy local antes
+    zipfile.ZipFile(tmp).extractall(BACKEND)
+
+
 def _role(iam, nome: str, servico: str, policy_arn: str | None = None, inline: dict | None = None) -> str:
     """Cria (ou reaproveita) uma role confiável para `servico` e anexa a policy. Devolve o ARN."""
     from botocore.exceptions import ClientError
@@ -119,22 +155,15 @@ def _role(iam, nome: str, servico: str, policy_arn: str | None = None, inline: d
     return arn
 
 
-def publicar(zip_path: Path, regiao: str, min_tasks: int, max_tasks: int) -> None:
+def publicar(zip_path: Path, regiao: str, min_tasks: int, max_tasks: int, s3, bucket: str, conta: str) -> None:
     import boto3
     from botocore.exceptions import ClientError
 
-    conta = boto3.client("sts", region_name=regiao).get_caller_identity()["Account"]
-    s3 = boto3.client("s3", region_name=regiao)
     iam = boto3.client("iam", region_name=regiao)
     ecs = boto3.client("ecs", region_name=regiao)
     logs = boto3.client("logs", region_name=regiao)
 
-    bucket, chave = f"oraculo-deploy-{conta}-{regiao}", f"{SERVICO}.zip"
-    try:
-        s3.create_bucket(Bucket=bucket, CreateBucketConfiguration={"LocationConstraint": regiao})
-    except ClientError as e:
-        if e.response["Error"]["Code"] not in ("BucketAlreadyOwnedByYou", "BucketAlreadyExists"):
-            raise
+    chave = f"{SERVICO}.zip"
     print(f"enviando {zip_path.stat().st_size / 1024 / 1024:.0f} MB para s3://{bucket}/{chave} ...")
     s3.upload_file(str(zip_path), bucket, chave)
 
@@ -169,16 +198,22 @@ def publicar(zip_path: Path, regiao: str, min_tasks: int, max_tasks: int) -> Non
         # Autoscaling: mantém CPU média em ~60%; sobe até max_tasks sob carga e volta a min_tasks.
         scalingTarget={"minTaskCount": min_tasks, "maxTaskCount": max_tasks,
                        "autoScalingMetric": "AVERAGE_CPU", "autoScalingTargetValue": 60})
+    arn = f"arn:aws:ecs:{regiao}:{conta}:service/default/{SERVICO}"
+    # Existe? (describe é a checagem explícita; não dependo do texto do erro de create)
     try:
+        existe = ecs.describe_express_gateway_service(serviceArn=arn)["service"]["status"]["statusCode"] == "ACTIVE"
+    except ClientError:
+        existe = False
+    if not existe:
         r = ecs.create_express_gateway_service(**args)
-    except ClientError as e:
-        if "already" not in e.response["Error"]["Message"].lower() and e.response["Error"]["Code"] not in (
-                "InvalidParameterException", "ResourceInUseException"):
-            raise
-        # Já existe: atualiza (o pacote novo no S3 é baixado no restart das tasks).
-        args.pop("serviceName")
-        r = ecs.update_express_gateway_service(
-            serviceArn=f"arn:aws:ecs:{regiao}:{conta}:service/default/{SERVICO}", **args)
+    else:
+        # O update não aceita nome nem role de infraestrutura (fixos na criação).
+        for k in ("serviceName", "infrastructureRoleArn"):
+            args.pop(k)
+        r = ecs.update_express_gateway_service(serviceArn=arn, **args)
+        # A configuração pode não ter mudado (só o pacote no S3), e nesse caso o ECS não faria
+        # nenhum deployment: força a troca das tasks para elas baixarem o pacote novo.
+        ecs.update_service(cluster="default", service=SERVICO, forceNewDeployment=True)
     print(json.dumps(r, default=str, indent=2)[:1500])
 
 
@@ -192,6 +227,14 @@ def main() -> None:
     ap.add_argument("--max-tasks", type=int, default=4)
     args = ap.parse_args()
 
+    s3 = bucket = conta = None
+    if not args.so_empacotar:
+        import boto3
+        conta = boto3.client("sts", region_name=args.regiao).get_caller_identity()["Account"]
+        s3 = boto3.client("s3", region_name=args.regiao)
+        bucket = _bucket(s3, conta, args.regiao)
+        sincronizar_dados(s3, bucket)  # antes de empacotar: no CI é daqui que vem o banco
+
     if args.saida.exists():
         shutil.rmtree(args.saida)
     pacote = args.saida / "pacote"
@@ -200,7 +243,7 @@ def main() -> None:
     zipar(pacote, zip_path)
     print(f"zip: {zip_path} ({zip_path.stat().st_size / 1024 / 1024:.0f} MB)")
     if not args.so_empacotar:
-        publicar(zip_path, args.regiao, args.min_tasks, args.max_tasks)
+        publicar(zip_path, args.regiao, args.min_tasks, args.max_tasks, s3, bucket, conta)
 
 
 if __name__ == "__main__":
