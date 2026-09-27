@@ -1,8 +1,18 @@
 /**
  * Risco de curtailment e excedentes (protótipo, painel "risco"). Porte de V.risco em
- * 02-PROTOTIPO/web/js/views/operacao.js: mapa esquemático por UF, eventos priorizados por
+ * 02-PROTOTIPO/web/js/views/operacao.js: mapa do Brasil por UF, eventos priorizados por
  * severidade, alerta explicado com evidências e probabilidade horária da área selecionada.
+ *
+ * Mapa: divisas reais das UFs (IBGE, src/data/geo/ufs.geo.json, a mesma malha do Mapa Híbrido),
+ * coloridas pela severidade. Decisão: sem camada de tiles — o fundo é 100% local e a tela funciona
+ * offline (regra travada em src/pages/semServicoExterno.test.ts). Substitui a grade esquemática
+ * de quadrados do protótipo, que não parecia o Brasil.
  */
+import 'leaflet/dist/leaflet.css'
+import { useEffect, useMemo, useRef } from 'react'
+import L from 'leaflet'
+import { GeoJSON, MapContainer } from 'react-leaflet'
+import ufsGeo from '../../data/geo/ufs.geo.json'
 import { Api, type Envelope } from '../api'
 import { lineChart } from '../charts'
 import { usePersistido } from '../estado'
@@ -12,16 +22,9 @@ import { Conteudo, Grafico, Kpi, OCard, Pagina, Proveniencia, ReasonTag, Vazio, 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Dado = any
 
-// Arranjo geografico aproximado das UF (linhas x colunas).
-const UF_GRID = [
-  ['', '', '', '', '', 'AP', ''],
-  ['AC', 'AM', '', 'PA', 'MA', '', 'RR'],
-  ['', 'RO', 'MT', 'TO', 'PI', 'CE', 'RN'],
-  ['', '', 'MS', 'GO', 'BA', 'PE', 'PB'],
-  ['', '', '', 'MG', 'ES', 'AL', 'SE'],
-  ['', '', 'PR', 'SP', 'RJ', '', ''],
-  ['', '', 'RS', 'SC', '', '', ''],
-]
+const UFS = ufsGeo as unknown as GeoJSON.FeatureCollection<GeoJSON.Geometry, { uf: string }>
+// Enquadramento: a caixa da própria malha (calculada uma vez).
+const LIMITES_UFS = L.geoJSON(UFS).getBounds()
 
 function sevColor(s: number): string {
   return s >= 0.72 ? 'crimson' : s >= 0.55 ? 'amber' : 'green'
@@ -80,8 +83,8 @@ function Corpo({ body, horizon }: { body: Envelope; horizon: string }) {
 
       <div className="grid g-1-2" style={{ marginBottom: 14 }}>
         <OCard
-          title="Mapa esquemático · severidade por área"
-          note="Arranjo geográfico aproximado por unidade federativa. A granularidade-alvo em produção é área de concessão e transformação de fronteira, que exige a BDGD."
+          title="Mapa do Brasil · severidade por área"
+          note="Divisas das UFs (IBGE); clique numa UF para ver o alerta e a probabilidade horária. A granularidade-alvo em produção é área de concessão e transformação de fronteira, que exige a BDGD."
         >
           <Mapa areas={areas} selArea={selArea} onSel={setSelArea} />
           <div className="legend">
@@ -119,40 +122,75 @@ function Corpo({ body, horizon }: { body: Envelope; horizon: string }) {
   )
 }
 
+/** Cor resolvida de uma variável CSS do protótipo (`--o-*` tem escopo em .oraculo, não no :root). */
+function corDe(el: Element | null, nome: string, reserva: string): string {
+  const v = el ? getComputedStyle(el).getPropertyValue(nome).trim() : ''
+  return v || reserva
+}
+
 function Mapa({ areas, selArea, onSel }: { areas: Dado[]; selArea: string; onSel: (uf: string) => void }) {
-  const byUf: Record<string, Dado> = {}
-  areas.forEach((a) => {
-    byUf[a.area] = a
+  const caixa = useRef<HTMLDivElement | null>(null)
+  const camada = useRef<L.GeoJSON | null>(null)
+  const porUf = useMemo(() => new Map<string, Dado>(areas.map((a) => [a.area, a])), [areas])
+  // refs: os handlers do Leaflet são criados uma vez e precisam ler o valor atual
+  const estado = useRef({ porUf, selArea, onSel })
+  useEffect(() => {
+    estado.current = { porUf, selArea, onSel }
   })
+
+  const estilo = (uf: string | undefined): L.PathOptions => {
+    const el = caixa.current
+    const a = uf ? estado.current.porUf.get(uf) : undefined
+    const sel = uf !== undefined && uf === estado.current.selArea
+    const linha = corDe(el, '--o-line', '#3a4150')
+    if (!a) return { color: linha, weight: 0.7, fillColor: corDe(el, '--o-panel-2', '#20242c'), fillOpacity: 0.55 }
+    const cor = corDe(el, `--o-${sevColor(a.severity)}`, '#f0b030')
+    return {
+      color: sel ? corDe(el, '--o-teal', '#4fd1c5') : linha,
+      weight: sel ? 2.4 : 0.9,
+      fillColor: cor,
+      // mesma escala da grade antiga: mais severa, mais opaca
+      fillOpacity: 0.2 + 0.6 * Math.min(1, a.severity),
+    }
+  }
+
+  // o GeoJSON do react-leaflet não reestiliza sozinho: reaplica quando muda a seleção ou os dados
+  useEffect(() => {
+    camada.current?.setStyle((f) => estilo(f?.properties?.uf))
+    camada.current?.eachLayer((l) => {
+      const uf = (l as L.GeoJSON & { feature?: GeoJSON.Feature }).feature?.properties?.uf
+      if (uf === selArea) (l as L.Path).bringToFront()
+    })
+  }, [selArea, porUf]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
-    <div className="map-grid">
-      {UF_GRID.flatMap((row, i) =>
-        row.map((uf, j) => {
-          const key = i + '-' + j
-          if (!uf) return <div key={key} className="map-cell empty" />
-          const a = byUf[uf]
-          if (!a) {
-            return (
-              <div key={key} className="map-cell empty">
-                <span className="uf">{uf}</span>
-              </div>
-            )
-          }
-          const c = sevColor(a.severity)
-          return (
-            <div
-              key={key}
-              className={'map-cell' + (selArea === uf ? ' sel' : '')}
-              data-uf={uf}
-              onClick={() => onSel(uf)}
-              style={{ background: `color-mix(in srgb, var(--o-${c}) ${Math.round(12 + a.severity * 45)}%, var(--o-panel-2))` }}
-            >
-              <span className="uf">{uf}</span>
-              <span className="mw">{num(a.expected_mw)} MW</span>
-            </div>
-          )
-        }),
-      )}
+    <div ref={caixa} className="mapa-brasil" style={{ height: 380 }}>
+      <MapContainer
+        bounds={LIMITES_UFS}
+        maxBounds={LIMITES_UFS.pad(0.3)}
+        zoomSnap={0.25}
+        scrollWheelZoom={false}
+        attributionControl={false}
+        style={{ height: '100%', width: '100%', background: 'transparent' }}
+      >
+        <GeoJSON
+          ref={camada}
+          data={UFS}
+          style={(f) => estilo(f?.properties?.uf)}
+          onEachFeature={(f, layer) => {
+            const uf: string = f.properties?.uf
+            layer.bindTooltip(() => {
+              const a = estado.current.porUf.get(uf)
+              return a
+                ? `<strong>${uf}</strong> · ${num(a.expected_mw)} MW esperados<br/>P = ${pct(a.probability, 0)} · severidade ${num(a.severity, 2)} · ${a.reason}`
+                : `<strong>${uf}</strong> · sem área modelada`
+            }, { sticky: true })
+            layer.on('click', () => {
+              if (estado.current.porUf.has(uf)) estado.current.onSel(uf)
+            })
+          }}
+        />
+      </MapContainer>
     </div>
   )
 }

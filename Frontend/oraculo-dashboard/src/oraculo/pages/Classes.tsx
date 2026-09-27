@@ -149,7 +149,8 @@ function Corpo({ body }: { body: Envelope }) {
                   series: [
                     { label: 'observado (ONS, carga global)', values: s.observed, color: 'ink', width: 2.2, digits: 4 },
                     ...(s.assembled
-                      ? [{ label: 'montado (composição × perfis medidos)', values: s.assembled, color: 'teal', style: 'dash', digits: 4 }]
+                      ? // `as const`: dentro do spread o TS alarga 'dash' para string e o tipo Serie recusa
+                        [{ label: 'montado (composição × perfis medidos)', values: s.assembled, color: 'teal', style: 'dash' as const, digits: 4 }]
                       : []),
                   ],
                 })
