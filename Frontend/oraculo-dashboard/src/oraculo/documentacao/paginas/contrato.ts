@@ -15,8 +15,8 @@ const GRUPO = 'Dashboard do contrato'
 /** Rota → situação, conforme docs/real_vs_mock.md (2026-09-26). */
 const SITUACAO_RECURSOS: Record<string, [string, string]> = {
   carga: ['`GET /api/carga/snapshot`', '**real** — carga e MMGD do ONS na última semi-hora com os 4 subsistemas completos, capacidade da ANEEL até a data'],
-  previsao: ['`GET /api/previsao`', 'pontos P10/P50/P90 e rampa **reais** (LightGBM fora da amostra); fatores climáticos ainda **mock** (sem fonte meteorológica), por isso o registro sai `mock: true`'],
-  riscos: ['`GET /api/riscos`', 'usina, razão, probabilidade, montante, severidade e ação **reais**; `distribuidora` "a definir" e posição = sede da UF, por isso o registro sai `mock: true`'],
+  previsao: ['`GET /api/previsao`', 'pontos P10/P50/P90 e rampa **reais** (previsões fora da amostra); fatores climáticos **reais** (Open-Meteo, ECMWF IFS, média das UFs ponderada pela MMGD). Só sai `mock: true` se o tempo baixado não cobrir a janela da curva'],
+  riscos: ['`GET /api/riscos`', 'usina, razão, probabilidade, montante, severidade e ação **reais**; `distribuidora` = ponto de conexão publicado pelo ONS; posição = coordenada do SIGA/ANEEL. Só a usina sem coordenada no SIGA (~18%) fica na sede da UF e sai `mock: true`'],
   alertas: ['`GET /api/alertas/{id}`', '**real** — mesmo classificador; SHAP exato do LightGBM agrupado em rótulos legíveis'],
   excedentes: ['`GET /api/excedentes`', '**real (estimativa)** — excedente previsto por subestação de fronteira do RJ (BDGD × ANEEL × carga da área RJ)'],
   densidade: ['`GET /api/mmgd/densidade`', '**real** — capacidade de MMGD por área de influência do RJ; fora do RJ o calor fica vazio'],
@@ -106,7 +106,7 @@ export const MAPA_HIBRIDO: PaginaDoc = {
         'Fundo 100% local',
         'Contorno do Brasil (Natural Earth) e divisas das UFs (IBGE) estão no próprio pacote: o mapa funciona offline e na rede do ONS. Um teste impede a volta de camada de tiles remota.',
       ),
-      aviso('limite', 'Posição das usinas', 'O projeto não ingere coordenada por usina: a posição publicada é a **sede da UF**. Por isso o registro de riscos sai `mock: true`.'),
+      aviso('limite', 'Posição das usinas', 'A posição vem do **SIGA/ANEEL** (média das usinas do conjunto, ponderada pela potência). Cerca de 18% das usinas não têm coordenada no SIGA: essas ficam na **sede da UF** e só esses registros saem `mock: true`.'),
     ),
     situacao('riscos', 'excedentes', 'areas', 'densidade'),
   ],
@@ -151,8 +151,8 @@ export const DESPACHO_PREDITIVO: PaginaDoc = {
     secao(
       'Patamares e fatores climáticos',
       'O cartão **Patamares · o erro que custa mais** usa os horários de `Backend/config/processamento.yaml` (ver [[como-ler]]): a faixa desenhada nunca discorda da métrica por patamar.',
-      aviso('limite', 'Fatores climáticos', 'Temperatura, radiação, vento e nuvens do painel lateral ainda são **mock** (não há fonte meteorológica integrada). É o que faz a curva sair com o selo MOCK, embora os pontos P10/P50/P90 sejam reais.'),
-      'Próximo passo declarado: Temporal Fusion Transformer com **perda assimétrica por patamar**. A versão do protótipo com perda assimétrica está em [[operacao]].',
+      aviso('nota', 'Fatores climáticos', 'Temperatura, radiação, vento e nuvens do painel lateral vêm do **Open-Meteo** (modelo ECMWF IFS) nas sedes das UFs: média na janela da curva, ponderada pela MMGD cadastrada em cada UF; a radiação é a média só das horas de sol. São exibidos para contexto: **não entram** nos modelos.'),
+      'O **Temporal Fusion Transformer com perda assimétrica por patamar** (pesos em `Backend/config/modelos_tft.yaml`) roda no pipeline e entra no backtest ao lado do LightGBM (`docs/reports/baseline_carga.md`). O modelo exibido nesta tela é o de `curva.modelo` em `Backend/config/modelos_carga.yaml`. A versão do protótipo com perda assimétrica está em [[operacao]].',
     ),
     situacao('carga', 'previsao'),
   ],
@@ -203,7 +203,7 @@ export const LISTA_RISCOS: PaginaDoc = {
         'Limites',
         lista(
           'REL não é modelada; o CNF roda sem os limites de exportação NE e N/NE, que não existem no portal.',
-          '`distribuidora` = "a definir" e posição = sede da UF.',
+          '`distribuidora` mostra o ponto de conexão (usinas da rede básica não têm distribuidora); usina sem coordenada no SIGA fica na sede da UF.',
           'O rótulo é a decisão operativa observada, não o potencial físico.',
         ),
       ),

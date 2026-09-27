@@ -4,8 +4,11 @@ Uso (de dentro de Backend/):
     python -m pipeline.download_satelite                       # bbox de config/visao.yaml
     python -m pipeline.download_satelite --bbox -43.33 -15.82 -43.29 -15.78 [--dry-run]
 
-TODO (Tiago): a área piloto ainda é provisória (config/projeto.yaml). Quando for confirmada,
-preencher `satelite.bbox` em config/visao.yaml; até lá, sem --bbox o script para e avisa.
+Área piloto confirmada: RJ (LIGHT + Enel RJ, config/projeto.yaml, decisão de 2026-09-26). O
+recorte dentro dela (`satelite.bbox` em config/visao.yaml) ainda está vazio: o estado inteiro é
+grande demais para uma imagem submétrica. TODO (Luiz): escolher o recorte (ex.: as áreas de
+influência com mais MMGD em output/areas_influencia_rj.geojson); até lá, sem --bbox o script
+para e avisa.
 
 Saída: GeoTIFF composto (mediana do período, filtro de nuvens) em satelite.saida, pronto para
 auditoria_camada1.py (o GeoTIFF traz a própria georreferência).

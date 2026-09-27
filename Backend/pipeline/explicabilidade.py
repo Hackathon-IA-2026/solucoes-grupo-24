@@ -7,11 +7,13 @@ variáveis que explicam a previsão). Saída: o payload glass box
 
 consumido pelo dashboard (Detalhe do Alerta) e por gerar_texto_alerta().
 
-Estado atual — STUB: os modelos reais (classificadores ENE/CNF do Tiago) ainda não existem.
-Por isso a contribuição de cada variável vem PRONTA no dicionário (chave `variaveis_shap`) e é
-só normalizada aqui (`ExplicadorPrecomputado`). Quando o modelo existir, passa-se um
-`ExplicadorShap(modelo, dados_referencia, nomes_features)` e o dicionário traz as `features` da
-previsão no lugar de `variaveis_shap`. A assinatura de explicar_saida() não muda.
+Explicadores (a assinatura de explicar_saida() é a mesma para todos):
+- `ExplicadorLightGBM`: o dos alertas PUBLICADOS. A publicação (src/publicacao/montar.py) passa
+  as contribuições SHAP exatas do classificador LightGBM de curtailment (Fase 4), já agrupadas
+  em rótulos legíveis.
+- `ExplicadorPrecomputado`: contribuições que já vêm PRONTAS no dicionário (`variaveis_shap`) e
+  só são normalizadas; usado pelo gerador dos mocks do dashboard (pipeline/gerar_alertas_mock.py).
+- `ExplicadorShap(modelo, dados_referencia, nomes_features)`: SHAP genérico para outro modelo.
 
 Decisões:
 - A lib `shap` é importada só dentro de ExplicadorShap (import tardio). O stub, os testes e o

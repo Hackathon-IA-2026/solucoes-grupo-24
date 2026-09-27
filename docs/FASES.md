@@ -9,13 +9,14 @@ Ordem: cada fase libera telas do dashboard (coluna "Libera"). A ordem segue o qu
 | Fase | Nome | Fatia do plano | Libera no dashboard | Situação |
 |---|---|---|---|---|
 | 0 | Fundação do repositório | — | — | ✅ |
-| 1 | Dados: ingestão e processamento | 1 | — | 🟡 falta qualidade, histórico e episódios |
+| 1 | Dados: ingestão e processamento | 1 | — | 🟡 falta só a qualidade das bases (Peça A) |
 | 2 | Banco, API e publicação | 6 (parte) | Visão Geral (real) | ✅ dashboard ligado na API |
-| 3 | Baseline de carga | 2 | Despacho Preditivo, Validação | ✅ falta só fonte meteorológica (fatores climáticos) |
-| 4 | Classificador de curtailment ENE | 5 | Lista de Riscos, Detalhe do Alerta | 🟡 código e testes prontos; falta a 1ª execução com dado real, `distribuidora` (Luiz) e lead time |
-| 5 | TFT com perda assimétrica | 3 | Despacho Preditivo (melhor modelo) | ⬜ 🔒 torch |
+| 3 | Baseline de carga | 2 | Despacho Preditivo, Validação | ✅ fatores climáticos reais (Open-Meteo) |
+| 4 | Classificador de curtailment ENE | 5 | Lista de Riscos, Detalhe do Alerta | ✅ rodado com dado real; lead time medido (Peça C) |
+| 5 | TFT com perda assimétrica | 3 | Despacho Preditivo (melhor modelo) | 🟡 torch destravado, TFT pronto e testado; falta escolher o modelo exibido |
 | 6 | Espacialização: MMGD por área de influência da subestação e excedentes | 4 e 5 | Excedentes, Mapa Híbrido | 🟡 RJ pronto; falta fator do satélite (Luiz) e contrato das áreas de influência |
-| 7 | Entrega: pitch, prova documental, README | 1 e 6 | — | ⬜ |
+| 7 | Entrega: pitch, prova documental, README | 1 e 6 | — | 🟡 Figura 1 e caso real prontos; falta janela da demo e link |
+| P | Protótipo `Backend/oraculo/` (fora do plano original) | — | 18 telas em `src/oraculo/pages` | 🟡 funciona; não acompanhado nas fases até 2026-09-26 (ver seção própria) |
 
 ---
 
@@ -44,8 +45,8 @@ Processamento
 - [x] Rótulos de curtailment por razão (ENE, CNF, REL), chave fonte + id
 - [x] Capacidade de MMGD por UF e data (ANEEL, sem colunas pessoais)
 - [ ] **Peça A — qualidade das bases**: checagem contra o dicionário do ONS, nulos, duplicatas, buracos → `docs/reports/`; alimenta o status das fontes na tela Validação
-- [ ] *Peça B — histórico mensal de curtailment por razão × capacidade × carga* (Figura 1 do pitch: "ENE domina desde abr/2025?")
-- [ ] *Peça C — episódios de corte e o caso real de restrição total* (prova documental; também serve ao backtest da Fase 4)
+- [x] *Peça B — histórico mensal de curtailment por razão × capacidade × carga* (Figura 1 do pitch): `src/analise/historico.py`, tabela `curtailment_mensal.csv` com ENE/CNF/REL, `docs/reports/historico_curtailment.md`. Resposta: ENE é a maior razão em 17 de 18 meses desde abr/2025 (exceção: jan/2026, CNF) e 65% da energia cortada, contra 30% antes (2026-09-26)
+- [x] *Peça C — episódios de corte e o caso real de restrição total*: `src/analise/episodios.py`, `docs/reports/episodios_curtailment.md` (episódios por usina, lead time nos inícios do teste, caso real escolhido automaticamente fora da amostra) (2026-09-26)
 
 Orquestração
 - [x] `run_heavywork.py`: script único, sem argumentos, pula etapas em dia
@@ -61,7 +62,8 @@ Orquestração
 - [x] Testes: contrato × mocks do dashboard, migrations × modelos, API sem a parte pesada
 - [x] Contrato v3 (telas Excedentes, Validação e Mapa Híbrido): `lat`/`lon`, baseline e metadados do modelo na validação, recurso `mmgd_densidade`; rotas da API geradas de `RECURSOS` (2026-09-26)
 - [x] Dashboard ligado na API: modo `api` padrão, proxy `/api` lido de `config/api.yaml`, `main.py` serve o build, pill de origem dos dados (2026-09-26)
-- [ ] 👤 **Luiz**: definir o que o campo `distribuidora` mostra na lista de riscos
+- [x] Campo `distribuidora` = ponto de conexão publicado pelo ONS (decisão do Tiago, 2026-09-26)
+- [x] Posição das usinas no mapa = coordenada do SIGA/ANEEL (tabela `usinas_cadastro`, 81,7% das usinas; sem coordenada -> sede da UF e `mock: true` só naquele registro) (2026-09-26)
 
 ## Fase 3 — Baseline de carga (Fatia 2) ✅
 
@@ -86,28 +88,28 @@ Integração
 - [x] Previsão (modo replay): todas as emissões desde o início do teste; a publicação escolhe o "agora"
 - [x] Publicar `previsao` com pontos reais (P10/P50/P90 + rampa); registro `mock: true` só por causa dos fatores climáticos
 - [x] Publicar `validacao` real (métricas do backtest do SIN no D+1 + status das fontes vindo do manifesto de download)
-- [ ] 🔒👤 `fatoresClimaticos` da previsão: só com fonte meteorológica, ou o contrato aceitar o campo vazio (combinar com o Luiz)
+- [x] `fatoresClimaticos` reais: Open-Meteo (ECMWF IFS) nas sedes das UFs, ponderado pela MMGD cadastrada; só exibição, fora dos modelos (decisão do Tiago, 2026-09-26)
 
-## Fase 4 — Classificador de curtailment ENE (Fatia 5) 🟡 falta rodar com dado real (métricas ainda não medidas)
+## Fase 4 — Classificador de curtailment ENE (Fatia 5) ✅
 
 - [x] Features (`src/features/curtailment.py`): histórico de cortes da usina, estado do sistema (fração de usinas cortando no subsistema e no SIN), carga supervisionada e MMGD, faixas horárias, calendário, atributos da usina
 - [x] Split cronológico (treino abr/2023 → dez/2025, teste 2026) + testes de vazamento e de códigos de usina estáveis
 - [x] **Classificador ENE** (probabilidade de corte por usina/conjunto, 3 horizontes) **(nunca cortar)**
 - [x] Montante esperado = P(corte) × E[MW | corte]
 - [x] Métricas: ROC-AUC, PR-AUC, Brier, precisão/recall, erro de montante, contra persistência e frequência recente (`docs/reports/classificador_curtailment.md`)
-- [ ] Lead time útil (antecedência com que o risco sobe antes do início de um episódio de corte) — depende da Peça C (episódios)
+- [x] Lead time útil (antecedência com que o risco sobe antes do início de um episódio de corte): `docs/reports/episodios_curtailment.md` (Peça C)
 - [x] Explicabilidade com SHAP exato do LightGBM (`ExplicadorLightGBM`), agrupado em rótulos legíveis
 - [x] Publicar `alertas` reais; `riscos` reais exceto `distribuidora`
-- [ ] 👤 **Luiz**: o que o campo `distribuidora` mostra (usinas da rede básica não têm distribuidora); até lá o risco sai `mock: true`
+- [x] Campo `distribuidora` = ponto de conexão (ver Fase 2)
 - [x] *Classificador CNF (cortável)*: roda com as mesmas features; 🔒 sem os limites de exportação NE e N/NE (não existem no portal nem no MCP)
 
-## Fase 5 — TFT com perda assimétrica (Fatia 3) ⬜ 🔒
+## Fase 5 — TFT com perda assimétrica (Fatia 3) 🟡
 
-- [ ] 👤 Corrigir o torch no Windows (erro de DLL em `c10.dll`: Visual C++ Redistributable ou outra versão)
-- [ ] Perda assimétrica por patamar, com pesos em `config/*.yaml` **(nunca cortar)**
-- [ ] TFT com quantis P10/P50/P90 **(nunca cortar)**
-- [ ] Comparação contra os baselines da Fase 3, por horizonte e patamar
-- [ ] Publicar a previsão do melhor modelo (a tela não muda)
+- [x] Torch no Windows: a causa era o runtime do Visual C++ 14.27 que o Python do Anaconda carrega; o projeto carrega o do sistema no `__init__` de `src` e `oraculo` (`src/utils/torch_windows.py`) (2026-09-26)
+- [x] Perda assimétrica por patamar, com pesos em `config/modelos_tft.yaml` **(nunca cortar)**: `src/models/perda_assimetrica.py`
+- [x] TFT com quantis P10/P50/P90 **(nunca cortar)**: `src/models/tft.py`, mesmo split/horizontes do LightGBM, banda por CQR, teste de vazamento
+- [x] Comparação contra os baselines da Fase 3, por horizonte e patamar (no mesmo relatório `docs/reports/baseline_carga.md`, com viés por patamar)
+- [ ] 👤 Publicar a previsão do melhor modelo (a tela não muda): trocar `curva.modelo`/`validacao.modelo` em `config/modelos_carga.yaml` depois de ver o backtest
 
 ## Fase 6 — Espacialização: MMGD por área de influência da subestação e excedentes (Fatias 4 e 5) 🟡
 
@@ -128,7 +130,7 @@ Método completo em `docs/metodo_espacial.md`.
 
 ## Fase 7 — Entrega ⬜
 
-- [ ] Figura 1 (vinda da Peça B da Fase 1)
+- [x] Figura 1 (vinda da Peça B da Fase 1): `docs/reports/figura1_curtailment_mensal.png`
 - [ ] Caso real de constrained-off com o diagnóstico que o sistema teria dado (Peça C + Fase 4) — cenário `dia_dos_pais_2024` pronto em `python -m pipeline.teste_e2e` (extrai do dado real a carga mínima e a fração de usinas cortadas); falta rodar na máquina com as bases. Atenção: 2024-08-11 está no treino do classificador (in-sample)
 - [x] Harness ponta a ponta `pipeline/teste_e2e.py` (status real/mock lido dos dados, relatório em `docs/reports/teste_e2e.md`) (2026-09-26)
 - [x] Dashboard: revisão de design com o protótipo Figma, tela Metodologia, filtros de severidade ligados às telas, mapa sem tiles externos (2026-09-26)
@@ -144,7 +146,34 @@ Método completo em `docs/metodo_espacial.md`.
 |---|---|---|
 | Área piloto | 6 | ✅ Tiago (2026-09-26: RJ) → avisar Luiz |
 | Meteorologia (ERA5) agora ou depois | 3 | ✅ Tiago (2026-09-25: depois) |
-| `fatoresClimaticos` sem fonte meteorológica: manter mock ou aceitar vazio no contrato | 3 | Tiago + Luiz |
-| Campo `distribuidora` do risco | 4 | Luiz |
-| Correção do torch no Windows | 5 | Tiago |
+| `fatoresClimaticos` sem fonte meteorológica | 3 | ✅ Tiago (2026-09-26: Open-Meteo) |
+| Campo `distribuidora` do risco | 4 | ✅ Tiago (2026-09-26: ponto de conexão) → avisar Luiz |
+| Correção do torch no Windows | 5 | ✅ resolvida no código |
+| Modelo exibido na tela (LightGBM ou TFT) | 5 | Tiago |
+| Patamares do protótipo (`oraculo/config.py`) diferem do CLAUDE.md, de propósito segundo a ajuda F1 | P | Tiago |
 | Janela da demo (replay) | 7 | Tiago |
+
+---
+
+## Trilha P — Protótipo `Backend/oraculo/` (fora do plano original)
+
+Consolidado no repositório em 2026-09-26, com API própria (Starlette, montada no mesmo servidor por
+`src/api/app.py`) e 18 telas em `Frontend/oraculo-dashboard/src/oraculo/pages`. Não estava nas
+fases; registrado aqui para o time enxergar o que existe.
+
+- [x] BESS: onde uma bateria recupera mais energia cortada (`oraculo/bess/`, telas Bess e BessMetodo)
+- [x] Projeção do corte ENE por modelo físico da carga líquida (`oraculo/ene/`, tela Projecao)
+- [x] Curva do pato prevista pelo tempo (Open-Meteo: ECMWF AIFS/IFS, GFS; `oraculo/tempo/`, tela Pato)
+- [x] Parametrização do CLM (CMPLDW/WECC) para o ORGANON (`oraculo/clm/`, tela Clm)
+- [x] Correlação da fronteira T-D (SED × SE de fronteira, modelo de Huff; `oraculo/fronteira/`, telas Fronteira e Correlacao)
+- [x] Mapa de perfis de carga e MMGD por subestação (desafio Radix; telas Perfis, Classes, Mapa)
+- [x] Visão computacional clássica e em satélite real (Esri), adaptador YOLO (telas Visao e AuditoriaMmgd)
+- [x] Torch destravado também aqui (os 22 testes de `tests_oraculo` que caíam no import passam)
+- [ ] 👤 Decidir o que entra no pitch e o que se unifica com `src/`. Duplicações hoje (DRY): calendário
+      (`oraculo/core/calendar_br.py` × `src/features/calendario.py`), ingestão (`oraculo/ons/` ×
+      `src/ingestion/`), backtest e métricas (`oraculo/validation/` × `src/models/metricas.py`),
+      classificador de risco (logístico × LightGBM), desempate da MMGD (`oraculo/triangulation/` ×
+      `pipeline/auditoria_camadas_2_3.py`)
+- [ ] 👤 Patamares do protótipo (`oraculo/config.py`: ponta 18–22 h, rampa 16–19 h, sobrepostos) diferem
+      do CLAUDE.md (ponta 19–22 h) e estão fixos no código, não no yaml; a ajuda F1 diz que é de propósito
+- [ ] Confirmar que a demo publicada nunca cai no modo sintético (`oraculo/demo/synthetic.py`)

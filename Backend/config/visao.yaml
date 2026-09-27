@@ -49,8 +49,9 @@ auditoria:
 
 satelite:
   # Download parametrizado por bounding box via Google Earth Engine (download_satelite.py).
-  # TODO (Tiago): preencher `bbox` quando a área piloto for confirmada (config/projeto.yaml ainda
-  # marca a área como provisória). Formato: [lon_min, lat_min, lon_max, lat_max] em graus.
+  # Área piloto confirmada: RJ (config/projeto.yaml, 2026-09-26). TODO (Luiz): escolher o RECORTE
+  # dentro dela (o estado inteiro é grande demais para imagem submétrica), ex.: as áreas de
+  # influência com mais MMGD. Formato: [lon_min, lat_min, lon_max, lat_max] em graus.
   bbox: null
   gee_projeto: ""            # id do projeto Cloud habilitado no Earth Engine (credencial do Luiz)
   # ATENÇÃO: Sentinel-2 tem 10 m/pixel — grosso demais para painel residencial (ver
