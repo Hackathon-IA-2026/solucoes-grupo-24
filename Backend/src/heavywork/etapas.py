@@ -14,6 +14,8 @@ from src.ingestion import download
 from src.models import carga as modelos_carga
 from src.models import curtailment as modelos_curtailment
 from src.models import relatorio_carga, relatorio_curtailment
+# O TFT (src.models.tft) NÃO é importado aqui: ele carrega o torch, pesado. As funções abaixo o
+# importam só quando a etapa roda; as impressões digitais usam só caminhos de mc (carga.py).
 from src.processing import mapeamento, tabelas
 from src.processing import saidas as processamento_saidas
 from src.publicacao import montar as publicacao
@@ -102,6 +104,20 @@ def _entradas_treino_carga() -> str:
     return de_arquivos(arquivos, RAIZ)
 
 
+def _entradas_treino_tft() -> str:
+    # As mesmas tabelas do LightGBM + o código do TFT (e tudo que ele importa, inclusive
+    # src/models/carga.py: split e calibração são os mesmos) + as duas configs.
+    arquivos = [processamento_saidas.SAIDA_CARGA, processamento_saidas.SAIDA_CALENDARIO,
+                *codigo_de("src.models.tft", RAIZ),
+                CONFIG / "modelos_tft.yaml", CONFIG / "modelos_carga.yaml", CONFIG / "processamento.yaml"]
+    return de_arquivos(arquivos, RAIZ)
+
+
+def _treinar_tft() -> str:
+    from src.models import tft  # import tardio (torch)
+    return tft.treinar()
+
+
 def _entradas_treino_curtailment() -> str:
     # config da carga entra: os horizontes do curtailment são os da carga
     arquivos = [processamento_saidas.SAIDA_ROTULOS, processamento_saidas.SAIDA_CARGA,
@@ -114,10 +130,26 @@ def _entradas_treino_curtailment() -> str:
 # --------------------------------------------------------------------------- 4. previsão
 # Entradas do treino + os modelos salvos (treino refeito -> previsões refeitas) + o código do
 # relatório do backtest.
+def _entradas_previsao_tft() -> str:
+    return de_objeto([_entradas_treino_tft(), de_arquivos([_arq_ckpt_tft()], RAIZ)])
+
+
+def _arq_ckpt_tft():
+    # Mesmo caminho de src/models/tft.py (ARQ_CKPT), sem importar o torch para calcular a impressão.
+    return modelos_carga.ARQ_PREVISOES_TFT.with_name("tft.ckpt")
+
+
+def _prever_tft() -> str:
+    from src.models import tft  # import tardio (torch)
+    return tft.prever()
+
+
+# O relatório do backtest de carga compara TODOS os modelos, inclusive o TFT: as previsões do
+# TFT entram nas entradas desta etapa (TFT refeito -> relatório refeito).
 def _entradas_previsao_carga() -> str:
     return de_objeto([_entradas_treino_carga(),
-                      de_arquivos([modelos_carga.ARQ_MODELOS, *codigo_de("src.models.relatorio_carga", RAIZ)],
-                                  RAIZ)])
+                      de_arquivos([modelos_carga.ARQ_MODELOS, modelos_carga.ARQ_PREVISOES_TFT,
+                                   *codigo_de("src.models.relatorio_carga", RAIZ)], RAIZ)])
 
 
 def _entradas_previsao_curtailment() -> str:
@@ -144,7 +176,8 @@ def _entradas_publicacao() -> str:
                 espacial_saidas.SAIDA_MMGD_AREA_INFLUENCIA, espacial_saidas.SAIDA_MMGD_DIARIA,
                 espacial_saidas.SAIDA_CARGA_AREA_INFLUENCIA, espacial_saidas.SAIDA_AREAS_INFLUENCIA_GEOJSON,
                 CONFIG / "espacial.yaml",
-                modelos_carga.ARQ_PREVISOES, modelos_curtailment.ARQ_PREVISOES,
+                modelos_carga.ARQ_PREVISOES, modelos_carga.ARQ_PREVISOES_TFT,
+                modelos_curtailment.ARQ_PREVISOES,
                 modelos_curtailment.ARQ_MODELOS, modelos_curtailment.ARQ_USINAS,
                 *sorted(DASHBOARD_MOCK.glob("*.json")), CONFIG / "publicacao.yaml",
                 CONFIG / "modelos_carga.yaml", CONFIG / "modelos_curtailment.yaml",
@@ -177,16 +210,25 @@ def montar() -> list[Etapa]:
               "BDGD (LIGHT + Enel RJ) -> áreas de influência por subestação, MMGD por área de influência (desempate com a ANEEL) e pesos de carga",
               executar=espacial.construir, entradas=_entradas_espacializacao, saidas=espacial_saidas.SAIDAS,
               estimativa=lambda: est["espacializacao"]),
-        # 3. Treino (um por modelo) e 4. previsão (modo replay). O TFT (Fatia 3) entra como
-        # mais um par treino/previsão.
+        # 3. Treino (um por modelo) e 4. previsão (modo replay). O TFT (Fatia 3) é mais um par
+        # treino/previsão; a previsão dele vem ANTES da previsao_carga, que escreve o relatório
+        # comparando todos os modelos.
         Etapa("treino_carga",
               "baselines + LightGBM quantílico da carga supervisionada, split cronológico",
               executar=modelos_carga.treinar, entradas=_entradas_treino_carga,
               saidas=(modelos_carga.ARQ_MODELOS,), estimativa=lambda: est["treino_carga"]),
+        Etapa("treino_tft",
+              "TFT com perda assimétrica por patamar (P10/P50/P90), mesmo split da carga",
+              executar=_treinar_tft, entradas=_entradas_treino_tft,
+              saidas=(_arq_ckpt_tft(),), estimativa=lambda: est["treino_tft"]),
         Etapa("treino_curtailment",
               "classificador de curtailment por razão (ENE, CNF) + montante, split cronológico",
               executar=modelos_curtailment.treinar, entradas=_entradas_treino_curtailment,
               saidas=(modelos_curtailment.ARQ_MODELOS,), estimativa=lambda: est["treino_curtailment"]),
+        Etapa("previsao_tft",
+              "previsões do TFT fora da amostra de cada semi-hora (modo replay)",
+              executar=_prever_tft, entradas=_entradas_previsao_tft,
+              saidas=(modelos_carga.ARQ_PREVISOES_TFT,), estimativa=lambda: est["previsao_tft"]),
         Etapa("previsao_carga",
               "previsões de carga fora da amostra de cada semi-hora (modo replay) + relatório do backtest",
               executar=_prever_carga, entradas=_entradas_previsao_carga,

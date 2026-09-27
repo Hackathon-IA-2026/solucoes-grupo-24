@@ -60,6 +60,9 @@ def resolver_caminho_modelo(cli: str | None) -> Path:
 
 def carregar_modelo(arquivo: Path) -> Any:
     """YOLO do ultralytics (import tardio: só quem roda o modelo precisa do torch)."""
+    from src.utils.torch_windows import carregar_runtime_do_sistema
+
+    carregar_runtime_do_sistema()  # o ultralytics importa o torch (ver src/utils/torch_windows.py)
     try:
         from ultralytics import YOLO
     except ImportError as e:  # pragma: no cover - depende do ambiente

@@ -20,9 +20,10 @@ from src.utils.tempo import PASSO
 
 SUBSISTEMAS = ("SE", "S", "NE", "N")
 
-# Código numérico de cada patamar, derivado da MESMA config que o calendário usa (patamar novo
+# Código numérico de cada patamar (público: a perda assimétrica do TFT indexa os pesos por ele),
+# derivado da MESMA config que o calendário usa (patamar novo
 # no processamento.yaml ganha código sozinho; "outro" = 0).
-_PATAMARES = {"outro": 0, **{nome: i + 1 for i, nome in
+CODIGO_PATAMAR = {"outro": 0, **{nome: i + 1 for i, nome in
                              enumerate(carregar("processamento")["calendario"]["patamares"])}}
 
 
@@ -54,7 +55,7 @@ def calendario(cal: pd.DataFrame) -> pd.DataFrame:
         "dia_dos_pais": cal["dia_dos_pais"].astype(int).to_numpy(),
         "mes": cal["mes"].to_numpy(),
         "dia_do_ano": ts.dt.dayofyear.to_numpy(),
-        "patamar": cal["patamar"].map(_PATAMARES).to_numpy(),
+        "patamar": cal["patamar"].map(CODIGO_PATAMAR).to_numpy(),
     }, index=pd.DatetimeIndex(ts, name="timestamp"))
 
 

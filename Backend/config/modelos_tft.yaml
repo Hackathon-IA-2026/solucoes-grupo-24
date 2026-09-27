@@ -1,0 +1,61 @@
+# TFT (Temporal Fusion Transformer) com perda assimétrica por patamar (Fase 5, Fatia 3).
+# Código: src/models/tft.py (dados, treino, previsão) e src/models/perda_assimetrica.py (loss).
+#
+# O que NÃO está aqui, de propósito (vem de config/modelos_carga.yaml, para a comparação com os
+# baselines e o LightGBM ser justa e não haver duas cópias): séries, horizontes, quantis, split
+# cronológico e janela de calibração conformal.
+
+# Perda assimétrica: pinball ponderada pelo patamar do INSTANTE-ALVO e pelo sinal do erro.
+#   subestimacao  = real acima do previsto (erro > 0)
+#   superestimacao = real abaixo do previsto (erro < 0)
+# Nomes = os patamares de config/processamento.yaml (calendario.patamares) + "outro".
+# Racional operativo (docs/Oraculo_planejamento.md, e o deck):
+#   - ponta noturna: subestimar = faltar geração na hora mais cara -> acionamento emergencial;
+#   - mínima diurna: superestimar = térmica cara ligada à toa (e o corte de renováveis sobe);
+#   - rampa vespertina: subestimar a subida do "pescoço do pato" é o erro perigoso.
+# Ponto de partida = os pesos do protótipo (Backend/oraculo/config.py, ASYMMETRIC_WEIGHTS).
+# Efeito conhecido: com pesos (a, b) o quantil nominal q vira, na prática,
+# a·q / (a·q + b·(1−q)) (ex.: P50 com (2,8; 1,0) mira ~P74). É o viés desejado; a banda
+# P10–P90 continua passando pela calibração conformal, que restaura a cobertura de 80%.
+perda:
+  pesos:
+    #                 [subestimacao, superestimacao]
+    ponta_noturna:    [2.8, 1.0]
+    minima_diurna:    [1.0, 2.2]
+    rampa_vespertina: [2.0, 1.2]
+    outro:            [1.0, 1.0]
+
+# Janelas (passos de 30 min). A previsão sai para os 48 passos de uma vez (multi-horizonte);
+# os horizontes do contrato (h = 1, 6, 48) são lidos desses passos.
+janela:
+  encoder: 96            # 2 dias de histórico como entrada
+  # Defasagens conhecidas no FUTURO (entram também no decoder): só valem se >= 48 passos,
+  # porque aí y(alvo − k) já é passado em qualquer emissão com h <= 48 (conferido no código).
+  defasagens_conhecidas: [48, 336]
+
+rede:
+  hidden_size: 32
+  attention_head_size: 4
+  hidden_continuous_size: 16
+  dropout: 0.1
+  learning_rate: 0.003
+  gradient_clip_val: 0.1
+
+treino:
+  batch_size: 128
+  max_epochs: 12
+  # Janelas de treino sorteadas por época (a série inteira tem ~600 mil janelas; ver cada
+  # uma em todas as épocas não cabe em CPU). 300 lotes × 128 = 38 mil janelas por época.
+  lotes_por_epoca: 300
+  # A janela de calibração do fim do treino (modelos_carga.yaml: calibracao_dias) é dividida
+  # em duas partes que não se misturam: os primeiros `dias_parada_antecipada` dias escolhem a
+  # época (parada antecipada) e o restante mede a correção conformal. Assim a banda não é
+  # calibrada no mesmo pedaço usado para escolher o modelo. Nenhuma das duas toca o teste.
+  dias_parada_antecipada: 91
+  paciencia: 3
+  lotes_validacao: 60
+  semente: 42
+  batch_size_previsao: 512
+
+# Etiquetas exibidas no relatório e (se o TFT for o modelo publicado) na tela Validação.
+nome_modelo: "TFT com perda assimétrica por patamar (CQR) — carga supervisionada"

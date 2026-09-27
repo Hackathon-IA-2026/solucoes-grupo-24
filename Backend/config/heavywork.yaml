@@ -7,7 +7,9 @@ etapas:
   processamento: true
   espacializacao: true
   treino_carga: true
+  treino_tft: true
   treino_curtailment: true
+  previsao_tft: true
   previsao_carga: true
   previsao_curtailment: true
   publicacao: true
@@ -24,5 +26,7 @@ estimativas:
   espacializacao: "~1 min (medido em 2026-09-26: 55 s; BDGD lida direto do .zip)"
   treino_carga: "~9 min (medido em 2026-09-26: 4,4 min com um ajuste por quantil; o reajuste pós-calibração dobra)"
   treino_curtailment: "~8 min (estimado: 3 horizontes × 290 usinas de features + 12 LightGBM em 1,5 M linhas)"
+  treino_tft: "~15 min (estimado em 2026-09-26: ~2,5 min fixos de datasets e calibração + 12 épocas × 300 lotes em CPU)"
+  previsao_tft: "~5 min (estimado: ~110 mil janelas de 48 passos, 5 séries)"
   previsao_carga: "~30 s (medido em 2026-09-26: 22 s)"
   previsao_curtailment: "~6 min (estimado: ~10 M previsões + relatório)"

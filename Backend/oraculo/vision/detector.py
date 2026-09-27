@@ -493,11 +493,17 @@ class YoloSegAdapter:
 
 
 def _probe_runtime() -> tuple[str, str]:
+    # No Windows com Python do Anaconda, `import torch` falha com OSError (WinError 1114) por
+    # causa do runtime do Visual C++ antigo do Anaconda. O carregamento do runtime do sistema
+    # mora num lugar so (src/utils/torch_windows.py); aqui so chamamos antes da sondagem.
+    from src.utils.torch_windows import carregar_runtime_do_sistema
+
+    carregar_runtime_do_sistema()
     for mod in ("torch", "onnxruntime"):
         try:
             __import__(mod)
             return mod, ""
-        except ImportError:
+        except (ImportError, OSError):  # OSError: DLL presente mas que nao inicializa
             continue
     return "", ("Runtime de inferência ausente: torch e onnxruntime não podem "
                 "ser instalados neste ambiente (proxy corporativo bloqueia o "

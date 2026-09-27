@@ -51,16 +51,21 @@ log = logging.getLogger("modelos_carga")
 DIR = MODELOS / "carga"
 ARQ_MODELOS = DIR / "modelos.joblib"
 ARQ_PREVISOES = DIR / "previsoes.parquet"
+# Previsões do TFT (Fase 5, src/models/tft.py). O caminho mora AQUI e não no tft.py: quem só lê
+# previsões (relatório, publicação) não precisa importar o torch.
+ARQ_PREVISOES_TFT = MODELOS / "tft" / "previsoes.parquet"
 
 
-def arq_metadados():
-    """Metadados do treino (versão e data), gravados JUNTO com modelos.joblib: a tela Validação
-    mostra a versão do modelo que de fato foi treinado, não a da config atual. Derivado de
-    ARQ_MODELOS na hora (e não uma constante própria): os dois nunca apontam para pastas
-    diferentes, nem quando os testes redirecionam ARQ_MODELOS."""
-    return ARQ_MODELOS.with_name("metadados.json")
+def arq_metadados(arq_modelo=None):
+    """Metadados do treino (versão e data), gravados JUNTO com o arquivo do modelo: a tela
+    Validação mostra a versão do modelo que de fato foi treinado, não a da config atual. Derivado
+    do arquivo do modelo na hora (e não uma constante própria): os dois nunca apontam para pastas
+    diferentes, nem quando os testes redirecionam ARQ_MODELOS. `arq_modelo` = outro modelo na
+    mesma convenção (o TFT passa o próprio checkpoint)."""
+    return (arq_modelo or ARQ_MODELOS).with_name("metadados.json")
 BASELINES = ("persistencia", "sazonal_dia", "sazonal_semana")
-MODELOS_TODOS = (*BASELINES, "climatologia", "lightgbm")
+MODELOS_TODOS = (*BASELINES, "climatologia", "lightgbm", "tft")
+MODELOS_APRENDIDOS = ("lightgbm", "tft")  # os que precisam ganhar dos baselines
 COLS_QUANTIS = ("p10", "p50", "p90")
 
 
@@ -275,6 +280,11 @@ def metadados_treino() -> dict:
 
 
 def ler_previsoes() -> pd.DataFrame:
+    """Previsões fora da amostra de todos os modelos de carga (baselines, LightGBM e, se já
+    treinado, o TFT), no mesmo formato: o relatório e a publicação leem só daqui."""
     if not ARQ_PREVISOES.exists():
         raise FileNotFoundError(f"{ARQ_PREVISOES} não existe: rode python run_heavywork.py")
-    return pd.read_parquet(ARQ_PREVISOES)
+    partes = [pd.read_parquet(ARQ_PREVISOES)]
+    if ARQ_PREVISOES_TFT.exists():
+        partes.append(pd.read_parquet(ARQ_PREVISOES_TFT))
+    return pd.concat(partes, ignore_index=True)

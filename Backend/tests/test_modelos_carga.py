@@ -84,6 +84,8 @@ def cfg_pequena(monkeypatch, tmp_path):
     monkeypatch.setattr(mc, "DIR", tmp_path)
     monkeypatch.setattr(mc, "ARQ_MODELOS", tmp_path / "m.joblib")
     monkeypatch.setattr(mc, "ARQ_PREVISOES", tmp_path / "p.parquet")
+    # sem TFT neste teste: o parquet real do TFT (se existir na máquina) não pode entrar
+    monkeypatch.setattr(mc, "ARQ_PREVISOES_TFT", tmp_path / "tft_inexistente.parquet")
     return c
 
 
@@ -95,7 +97,7 @@ def test_previsoes_sao_todas_fora_da_amostra(cfg_pequena):
     assert (prev["emissao"] >= pd.Timestamp("2025-03-01")).all()
     assert (prev["emissao"] <= dados.ultimo_dado).all()
     assert (prev["p10"] <= prev["p50"]).all() and (prev["p50"] <= prev["p90"]).all()
-    assert set(prev["modelo"]) == set(mc.MODELOS_TODOS)
+    assert set(prev["modelo"]) == set(mc.MODELOS_TODOS) - {"tft"}  # o TFT tem etapa própria
     # o D+1 chega a 48 passos além do último dado (previsão "do agora" para frente)
     d1 = prev[(prev["serie"] == "SIN") & (prev["horizonte"] == "D+1") & (prev["modelo"] == "lightgbm")]
     assert d1["alvo"].max() == dados.ultimo_dado + 48 * pd.Timedelta("30min")
