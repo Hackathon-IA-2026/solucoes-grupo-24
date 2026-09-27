@@ -275,7 +275,9 @@ header#top {
 .o-tooltip .tt-row .v { font-family: var(--o-mono); color: var(--o-ink); }
 .o-tooltip .tt-dot { width: 8px; height: 8px; border-radius: 2px; }
 /* Mapa do Brasil da tela Risco e excedentes (divisas IBGE, Leaflet sem tiles). */
-.oraculo .mapa-brasil { border: 1px solid var(--o-line); border-radius: var(--o-radius-sm); overflow: hidden; background: var(--o-panel-2); }
+/* isolation: contexto de empilhamento próprio, como no .osm-mapa. Sem ele as camadas do Leaflet
+ * (z-index 400–1000) passavam por cima da documentação do F1 (.help-overlay, z 200) e do header. */
+.oraculo .mapa-brasil { position: relative; isolation: isolate; border: 1px solid var(--o-line); border-radius: var(--o-radius-sm); overflow: hidden; background: var(--o-panel-2); }
 .oraculo .mapa-brasil .leaflet-interactive:hover { stroke: var(--o-teal); stroke-width: 2px; }
 .oraculo .mapa-brasil .leaflet-tooltip { background: var(--o-panel); color: var(--o-ink); border: 1px solid var(--o-line); font-size: 11px; box-shadow: none; }
 .oraculo .matrix { display: grid; grid-template-columns: 110px 1fr 1fr; gap: 7px; align-items: stretch; }
