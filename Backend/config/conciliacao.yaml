@@ -1,0 +1,94 @@
+# Conciliação da capacidade de MMGD: ANEEL (QUANTO e QUANDO) × BDGD (ONDE NA REDE) × visão
+# computacional (ONDE FISICAMENTE). Lido por src/spatial/areas_trafo.py, src/spatial/conciliacao.py e
+# pipeline/paineis_por_transformador.py. Método e decisões em docs/metodo_conciliacao.md.
+#
+# Princípio: conciliar AGREGADOS por município e por transformador, nunca casar telhado com registro.
+# Nesta etapa a área do painel NÃO vira kW: das detecções só entram contagem e localização.
+
+# Área piloto (decisão do Luiz em 2026-09-27): os municípios onde há varredura de satélite.
+# `distribuidora` = sigla em config/espacial.yaml (liga à BDGD e ao SigAgente da ANEEL).
+# `municipios` = código IBGE de 7 dígitos (o mesmo de UNTRMT.MUN na BDGD e CodMunicipioIbge na ANEEL).
+piloto:
+  - distribuidora: LIGHT
+    municipios: ["3304557"]     # Rio de Janeiro
+  - distribuidora: ENEL_RJ
+    municipios: ["3303302"]     # Niterói
+
+aneel:
+  # Só solar fotovoltaica (SigTipoGeracao do cadastro de MMGD).
+  tipo_geracao: UFV
+  # O cadastro NÃO tem data de conexão: a única data é DthAtualizaCadastralEmpreend ("data da última
+  # atualização cadastral", dicionário v2.3 de 17/11/2025). É a mesma convenção do resto da
+  # plataforma (src/spatial/mmgd.py). Um empreendimento antigo recadastrado depois da data-base da
+  # BDGD cai na defasagem; o relatório mede quanto disso já está na BDGD (dupla contagem).
+  # Migração SISGD -> sistema MMGD: atualização suspensa, e inserção mais lenta depois. O buraco e o
+  # acúmulo posterior NÃO são variação real: viram flag, nunca correção.
+  suspensao:
+    inicio: "2025-09-23"
+    fim: "2025-11-13"
+    # Por quanto tempo depois do fim a inserção ainda é tratada como "acúmulo" (premissa: 90 dias).
+    acumulo_dias: 90
+  # Os últimos dias antes da geração do arquivo chegam incompletos (ex.: 08/2026 tem 32 registros no
+  # RJ contra ~2.300/mês). data_ref a menos disso da geração do arquivo ganha flag.
+  atraso_insercao_dias: 60
+
+# Data de referência da defasagem. null = a data mais recente do cadastro (depois do filtro da área).
+# Nada posterior a ela entra no cálculo (cadastro, imagem ou detecção).
+data_ref: null
+
+cobertura:
+  # razão capacidade_BDGD / capacidade_ANEEL(data-base) fora desta faixa -> baixa confiabilidade
+  faixa: [0.8, 1.2]
+
+areas_trafo:
+  # Área atendida por transformador MT/BT = célula de Voronoi dos transformadores (UNTRMT) do
+  # município, recortada pelo município (IBGE) e por um círculo em volta do transformador.
+  # O raio evita célula de dezenas de km² na borda (mata, lagoa, mar), onde não há rede de BT.
+  # PREMISSA: 400 m cobre o alcance típico de uma rede secundária urbana.
+  raio_max_m: 400
+
+visao:
+  # Recorte varrido: áreas de influência (area_id da plataforma) com varredura anterior do time.
+  # Todo transformador dessas subestações tem a área atendida inteira varrida.
+  subestacoes: ["LIGHT:10385925", "LIGHT:10386015", "LIGHT:10386114", "LIGHT:55813421", "ENEL_RJ:ICA"]
+  # Esri World Imagery (a mesma do fundo "Satélite" do dashboard). Zoom 19 = o nível máximo dela no
+  # RJ (~0,27 m/px). A data de captura vem do serviço de metadados da própria Esri, por ladrilho.
+  # O Google (usado pelo Radix) não publica a data da imagem nem permite baixar ladrilhos assim.
+  zoom: 19
+  url_ladrilho: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+  url_metadados: "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/identify"
+  atribuicao: "Imagem © Esri, Vantor, Earthstar Geographics e comunidade de usuários GIS"
+  cache_ladrilhos: data/raw/satelite/esri
+  checkpoint: output/visao/checkpoint_esri.db
+  saida_deteccoes: output/visao/deteccoes_esri.geojson
+  # Polígonos da área varrida, um por data/resolução de imagem: diz onde "há imagem" e de quando.
+  saida_cobertura: output/visao/cobertura_esri.parquet
+  # Inferência roda a 0,25 (como no Radix) e guarda tudo; a conciliação só conta a partir de
+  # `confianca_minima`. Trocar o limiar não exige refazer a inferência.
+  confianca_inferencia: 0.25
+  imgsz: 640
+  lote: 16
+  downloads_paralelos: 8
+  # Partes de painéis de ladrilhos vizinhos a menos disso viram UMA detecção (painel cortado na
+  # borda do ladrilho). PREMISSA: arranjos a < 2 m no mesmo telhado são a mesma instalação.
+  agrupar_m: 2.0
+
+conciliacao:
+  # Detecção abaixo disto não conta (inspeção visual da varredura anterior: abaixo de ~0,6 a maioria
+  # era asfalto, sombra e claraboia).
+  confianca_minima: 0.6
+  # Transformador "com imagem" = pelo menos esta fração da área atendida coberta por ladrilhos varridos.
+  cobertura_imagem_minima: 0.95
+  # Resíduo: excesso de detecções do município > limiar × conexões ANEEL esperadas na área varrida
+  # entre a data-base da BDGD e a data da imagem. Não soma à capacidade (mistura instalações
+  # aguardando conexão, falsos positivos e irregulares).
+  limiar_residuo: 2.0
+
+saidas:
+  areas_trafo: data/processed/areas_atendidas_trafo.parquet
+  capacidade_trafo: data/processed/capacidade_mmgd_trafo.parquet
+  defasagem_municipio: data/processed/defasagem_municipio.parquet
+  serie_aneel: data/processed/capacidade_aneel_municipio.parquet
+  camada_mapa: output/conciliacao/camada_mmgd_trafo.json
+  relatorio: relatorio_conciliacao.md    # em docs/reports/ (a raiz do repo só tem Backend/Frontend/docs)
+  descricao_camada: "Capacidade de MMGD por transformador MT/BT, conciliada (BDGD 2025 + defasagem ANEEL, alocada com visão computacional onde há imagem)"

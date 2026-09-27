@@ -54,13 +54,16 @@ def cadastro_aneel(agentes: list[str]) -> pd.DataFrame:
         SELECT CodEmpreendimento AS ceg, SigAgente AS agente,
                CAST(CAST(CodMunicipioIbge AS BIGINT) AS VARCHAR) AS mun,
                MdaPotenciaInstaladaKW AS pot_aneel_kw, DthAtualizaCadastralEmpreend AS data,
-               SigTipoGeracao AS tipo
+               SigTipoGeracao AS tipo, DatGeracaoConjuntoDados AS data_geracao
         FROM read_parquet('{fonte}')
         WHERE SigAgente IN ({lista}) AND MdaPotenciaInstaladaKW IS NOT NULL
     """).df()
     con.close()
     df["ceg"] = df["ceg"].astype("string").str.strip()
     df["data"] = pd.to_datetime(df["data"])
+    # data em que a ANEEL gerou o arquivo: a conciliação usa para saber se a data de referência
+    # ainda está na janela de inserção atrasada (config/conciliacao.yaml, aneel.atraso_insercao_dias)
+    df["data_geracao"] = pd.to_datetime(df["data_geracao"])
     return df
 
 

@@ -28,7 +28,7 @@ import L from 'leaflet'
 import { AttributionControl, GeoJSON, MapContainer } from 'react-leaflet'
 import { useSearchParams } from 'react-router-dom'
 import { CamadaAreas } from '../components/mapa/CamadaAreas'
-import { CamadaCalor } from '../components/mapa/CamadaCalor'
+import { CamadaCalor, type OpcoesCalor } from '../components/mapa/CamadaCalor'
 import { CamadaUfs, type ResumoUf } from '../components/mapa/CamadaUfs'
 import { MarcadoresExcedente, MarcadoresRisco } from '../components/mapa/Marcadores'
 import { AvisoFiltro } from '../components/ui/AvisoFiltro'
@@ -40,12 +40,12 @@ import { MockTag } from '../components/ui/MockTag'
 import { RazaoBadge } from '../components/ui/RazaoBadge'
 import { SeverityBadge } from '../components/ui/SeverityBadge'
 import { ToggleChip } from '../components/ui/ToggleChip'
-import { getAreasInfluencia, getDensidadeMmgd, getExcedentes, getRiscos } from '../data/dataSource'
+import { getAreasInfluencia, getDensidadeMmgd, getExcedentes, getMmgdTrafo, getRiscos, type MmgdTrafo } from '../data/dataSource'
 import { ordenarExcedentes, ordenarPorSeveridade } from '../data/derivados'
 import brasil from '../data/geo/brasil.geo.json'
 import ufsGeo from '../data/geo/ufs.geo.json'
 import { HorizonteSchema, RazaoSchema, type AreasInfluencia, type DensidadeMmgd, type ExcedenteTsoDso, type Horizonte, type Razao, type RiscoUsina } from '../data/types'
-import { useDados } from '../data/useDados'
+import { useDados, type Dados } from '../data/useDados'
 import { idExcedente, lerSelecaoMapa, MODULES, PARAM_SELECAO_MAPA, rotaDetalheAlerta, type SelecaoMapa } from '../modules'
 import { useFiltradosPorSeveridade } from '../state/useSeverityFilter'
 import { RAZAO_INFO } from '../theme/razao'
@@ -65,15 +65,24 @@ const LISTA = MODULES.find((m) => m.label === 'Lista de Riscos')!
 const UFS = ufsGeo as unknown as ColecaoUfs
 
 /** Camadas ligáveis. O calor de MMGD começa desligado: as áreas de influência já mostram a mesma grandeza. */
-type Camada = 'riscos' | 'excedentes' | 'areas' | 'mmgd'
+type Camada = 'riscos' | 'excedentes' | 'areas' | 'mmgd' | 'trafo'
 const ROTULO_CAMADA: Record<Camada, string> = {
   riscos: 'Usinas em risco',
   excedentes: 'Excedentes TSO-DSO',
   areas: 'Áreas de influência (MMGD)',
   mmgd: 'Densidade MMGD',
+  trafo: 'MMGD por transformador',
 }
 /** Camadas da família MMGD (violeta); as outras usam o acento. */
-const CAMADA_MMGD: ReadonlySet<Camada> = new Set(['areas', 'mmgd'])
+const CAMADA_MMGD: ReadonlySet<Camada> = new Set(['areas', 'mmgd', 'trafo'])
+
+/**
+ * Camada por transformador: ~17 mil pontos (Rio + Niterói), baixados só quando o botão é ligado.
+ * `semCamada` é constante de módulo: com o botão desligado o useDados não refaz nada.
+ * Raio menor e saturação em zoom de bairro: um ponto por transformador, não por subestação.
+ */
+const semCamada = (): Promise<MmgdTrafo | null> => Promise.resolve(null)
+const CALOR_TRAFO: OpcoesCalor = { radius: 12, blur: 10, maxZoom: 15 }
 
 export default function MapaHibrido() {
   const riscos = useDados(getRiscos)
@@ -127,7 +136,8 @@ function Mapa({
   const [destaque, setDestaque] = useState<string | null>(null)
 
   // --- filtros
-  const [camadas, setCamadas] = useState<Record<Camada, boolean>>({ riscos: true, excedentes: true, areas: true, mmgd: false })
+  const [camadas, setCamadas] = useState<Record<Camada, boolean>>({ riscos: true, excedentes: true, areas: true, mmgd: false, trafo: false })
+  const trafo = useDados(camadas.trafo ? getMmgdTrafo : semCamada)
   const [razoes, setRazoes] = useState<Set<Razao>>(() => new Set(RazaoSchema.options))
   const [horizontes, setHorizontes] = useState<Set<Horizonte>>(() => new Set(HorizonteSchema.options))
   const [uf, setUf] = useState<string | null>(null)
@@ -221,6 +231,7 @@ function Mapa({
             />
           ))}
           {(camadas.mmgd || camadas.areas) && <MockTag mock={(camadas.mmgd && mmgd.mock) || (camadas.areas && areas.mock)} />}
+          {camadas.trafo && <StatusTrafo dados={trafo} />}
         </div>
         <FiltroChips rotulo="Razão" opcoes={RazaoSchema.options} ativos={razoes} onChange={setRazoes} pontoOpcao={(r) => RAZAO_INFO[r].dot} />
         <FiltroChips rotulo="Horizonte" opcoes={HorizonteSchema.options} ativos={horizontes} onChange={setHorizontes} />
@@ -248,6 +259,7 @@ function Mapa({
 
               {camadas.areas && <CamadaAreas areas={areas} />}
               {camadas.mmgd && <CamadaCalor pontos={mmgd.pontos} />}
+              {camadas.trafo && trafo.status === 'ok' && trafo.data && <CamadaCalor pontos={trafo.data.pontos} opcoes={CALOR_TRAFO} />}
               {camadas.excedentes && (
                 <MarcadoresExcedente
                   itens={excedentes}
@@ -280,7 +292,13 @@ function Mapa({
                 <Maximize2 className="size-3.5" aria-hidden /> Brasil
               </Botao>
             </div>
-            <Legenda mmgd={camadas.mmgd} mmgdMock={mmgd.mock} areas={camadas.areas} sobrepostos={haSobrepostos} />
+            <Legenda
+              mmgd={camadas.mmgd}
+              mmgdMock={mmgd.mock}
+              areas={camadas.areas}
+              sobrepostos={haSobrepostos}
+              trafoRefKw={camadas.trafo && trafo.status === 'ok' && trafo.data ? trafo.data.referenciaKw : null}
+            />
           </div>
         </Card>
 
@@ -464,7 +482,28 @@ function PainelItens({ aba, onAba, riscos, excedentes, selecionado, destaque, on
 }
 
 /** Legenda sobre o mapa (canto inferior esquerdo). */
-function Legenda({ mmgd, mmgdMock, areas, sobrepostos }: { mmgd: boolean; mmgdMock: boolean; areas: boolean; sobrepostos: boolean }) {
+/** Estado da camada por transformador ao lado dos botões: carregando, erro da API ou indisponível no mock. */
+function StatusTrafo({ dados }: { dados: Dados<MmgdTrafo | null> }) {
+  const classe = 'font-mono text-[10px] text-ink-faint'
+  if (dados.status === 'loading') return <span className={classe}>carregando transformadores…</span>
+  if (dados.status === 'erro') return <span className={`${classe} text-risk-high`} title={dados.erro.message}>camada por transformador indisponível</span>
+  if (!dados.data) return <span className={classe}>sem dado por transformador no modo mock</span>
+  return <span className={classe}>{dados.data.pontos.length.toLocaleString('pt-BR')} transformadores · Rio e Niterói</span>
+}
+
+function Legenda({
+  mmgd,
+  mmgdMock,
+  areas,
+  sobrepostos,
+  trafoRefKw,
+}: {
+  mmgd: boolean
+  mmgdMock: boolean
+  areas: boolean
+  sobrepostos: boolean
+  trafoRefKw: number | null
+}) {
   const niveis = ['critical', 'high', 'medium', 'low'] as const
   return (
     <div className="pointer-events-none absolute bottom-6 left-3 z-[1000] space-y-2 rounded border border-line bg-fundo/90 px-3 py-2 text-[11px] text-ink-muted">
@@ -501,6 +540,12 @@ function Legenda({ mmgd, mmgdMock, areas, sobrepostos }: { mmgd: boolean; mmgdMo
         <p className="flex items-center gap-2">
           <span className="h-2 w-16 rounded-full bg-gradient-to-r from-chart-2/20 via-chart-2 to-mmgd-pico" aria-hidden />
           densidade MMGD{mmgdMock ? ' (sintética)' : ''}
+        </p>
+      )}
+      {trafoRefKw !== null && (
+        <p className="flex items-center gap-2">
+          <span className="h-2 w-16 rounded-full bg-gradient-to-r from-chart-2/20 via-chart-2 to-mmgd-pico" aria-hidden />
+          MMGD conciliada por transformador (cor cheia ≥ {trafoRefKw.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kW)
         </p>
       )}
     </div>

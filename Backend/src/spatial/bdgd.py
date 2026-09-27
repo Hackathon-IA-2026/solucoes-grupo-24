@@ -108,11 +108,16 @@ def subestacoes(dist: Distribuidora) -> gpd.GeoDataFrame:
 
 
 def trafos_distribuicao(dist: Distribuidora) -> gpd.GeoDataFrame:
-    """Transformadores MT/BT (pontos): subestação, alimentador, município e potência (kVA)."""
-    t = _ler(caminho_gdb(dist), cfg()["camadas"]["trafo_distribuicao"], ["SUB", "CTMT", "MUN", "POT_NOM"],
+    """Transformadores MT/BT (pontos): código, subestação, alimentador, município e potência (kVA).
+
+    `trafo_id` = "<sigla>:<COD_ID>": mesma regra de chave composta do area_id (o COD_ID do
+    transformador só é único dentro da distribuidora). É a chave que UGBT.UNI_TR_MT referencia.
+    """
+    t = _ler(caminho_gdb(dist), cfg()["camadas"]["trafo_distribuicao"], ["COD_ID", "SUB", "CTMT", "MUN", "POT_NOM"],
              geometria=True)
     t["POT_NOM"] = t["POT_NOM"].astype(float).fillna(0.0)
     t["area_id"] = _area_id(dist.sigla, t["SUB"])
+    t["trafo_id"] = _area_id(dist.sigla, t["COD_ID"])
     return t
 
 
@@ -155,9 +160,13 @@ def eh_mmgd(ceg: pd.Series, padrao: str) -> pd.Series:
 def unidades_mmgd(dist: Distribuidora) -> pd.DataFrame:
     """Unidades geradoras de MMGD da BDGD (UGBT, UGMT, UGAT), uma linha por unidade.
 
-    Colunas: ceg, area_id, ctmt (alimentador; vazio na UGAT), mun (código IBGE), pot_bdgd_kw,
-    ene_01..12 (kWh gerados no mês), camada. Filtro de MMGD pelo padrão do CEG (ver docstring do módulo). A UGAT publica energia
+    Colunas: ceg, area_id, ctmt (alimentador; vazio na UGAT), trafo_id (transformador MT/BT,
+    "<sigla>:<UNI_TR_MT>"; só a UGBT tem: UGMT/UGAT ligam em MT/AT, sem transformador de
+    distribuição), mun (código IBGE), pot_bdgd_kw, ene_01..12 (kWh gerados no mês), camada.
+    Filtro de MMGD pelo padrão do CEG (ver docstring do módulo). A UGAT publica energia
     em ponta/fora ponta (ENE_P/ENE_F): somadas, como no RDX.
+    A unidade geradora NÃO tem geometria própria (camadas *_tab): a posição na rede vem do
+    transformador (UNI_TR_MT -> UNTRMT) e do ponto de conexão (PN_CON -> PONNOT).
     """
     c, gdb = cfg(), caminho_gdb(dist)
     padrao = c["padrao_ceg_mmgd"]
@@ -171,11 +180,15 @@ def unidades_mmgd(dist: Distribuidora) -> pd.DataFrame:
             [f"ENE_{m}" for m in MESES]
         # UGAT não tem alimentador MT (liga direto na subestação): ctmt fica vazio
         tem_ctmt = "CTMT" in campos
-        ug = _ler(gdb, camada, ["CEG_GD", "SUB", "MUN", "POT_INST", *(["CTMT"] if tem_ctmt else []), *energia])
+        tem_trafo = "UNI_TR_MT" in campos  # só a UGBT (baixa tensão) fica atrás de um trafo MT/BT
+        ug = _ler(gdb, camada, ["CEG_GD", "SUB", "MUN", "POT_INST", *(["CTMT"] if tem_ctmt else []),
+                                *(["UNI_TR_MT"] if tem_trafo else []), *energia])
         ug = ug[eh_mmgd(ug["CEG_GD"], padrao)]
+        vazio = pd.Series(pd.NA, index=ug.index, dtype="string")
         out = pd.DataFrame({"ceg": ug["CEG_GD"].astype("string").str.strip(),
                             "area_id": _area_id(dist.sigla, ug["SUB"]),
-                            "ctmt": ug["CTMT"] if tem_ctmt else pd.Series(pd.NA, index=ug.index, dtype="string"),
+                            "ctmt": ug["CTMT"] if tem_ctmt else vazio,
+                            "trafo_id": _area_id(dist.sigla, ug["UNI_TR_MT"]) if tem_trafo else vazio,
                             "mun": ug["MUN"], "pot_bdgd_kw": ug["POT_INST"].astype(float),
                             "camada": camada})
         for m in MESES:

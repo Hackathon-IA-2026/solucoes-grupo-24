@@ -48,6 +48,10 @@ python -m pipeline.auditoria_camadas_2_3 --mock    # desempate Lag de Sistema ×
 # com modelo e imagens reais: pip install -e ".[visao]" e então
 #   python -m pipeline.validar_modelo --imagens <pasta> --modelo <arquivo.pt>
 #   python -m pipeline.download_satelite --bbox LON_MIN LAT_MIN LON_MAX LAT_MAX
+# Conciliação ANEEL × BDGD × satélite por transformador (Rio e Niterói; método em docs/metodo_conciliacao.md)
+python -m src.spatial.areas_trafo                # áreas atendidas por transformador (~15 s)
+python -m pipeline.paineis_por_transformador     # varredura Esri + YOLO (extra [visao]; ~20 min na CPU)
+python -m src.spatial.conciliacao                # defasagem alocada + camada do mapa + docs/reports/relatorio_conciliacao.md
 
 # 5. Teste ponta a ponta (bases → modelos → contrato → dashboard → alerta): diz o que é real e
 #    o que é mock lendo os próprios dados; relatório em docs/reports/teste_e2e.md
