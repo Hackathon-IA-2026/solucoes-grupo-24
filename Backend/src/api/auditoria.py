@@ -22,6 +22,8 @@ from src.utils.paths import RAIZ
 
 COMANDO = ("python -m pipeline.auditoria_camada1 --mock && "
            "python -m pipeline.auditoria_camadas_2_3 --mock (em Backend/)")
+COMANDO_REAL = ("python -m pipeline.auditoria_camada1 && python -m pipeline.auditoria_camadas_2_3 (em Backend/, "
+                "com imagens e modelo reais)")
 
 
 def _ler(caminho: Path) -> dict | None:
@@ -32,14 +34,12 @@ def _ler(caminho: Path) -> dict | None:
 
 def carregar_auditoria() -> dict:
     cfg = carregar("visao")
+    # Só a saída REAL é servida (decisão do Luiz em 2026-09-27: o dashboard não exibe dado sintético).
+    # O modo --mock do pipeline continua existindo para testes, mas a API não cai mais nele.
     real = (_ler(RAIZ / cfg["camada1"]["saida"]), _ler(RAIZ / cfg["auditoria"]["saida"]))
-    mock = (_ler(RAIZ / cfg["camada1"]["saida_mock"]), _ler(RAIZ / cfg["auditoria"]["mock"]["saida"]))
-    if real[0] is not None and real[1] is not None:
-        camada1, camadas23, is_mock = real[0], real[1], False
-    elif mock[0] is not None and mock[1] is not None:
-        camada1, camadas23, is_mock = mock[0], mock[1], True
-    else:
-        raise LookupError(f"auditoria ainda não gerada: rode {COMANDO}")
+    if real[0] is None or real[1] is None:
+        raise LookupError(f"auditoria real ainda não gerada: rode {COMANDO_REAL}")
+    camada1, camadas23, is_mock = real[0], real[1], False
     modelo = RAIZ / cfg["modelo"]["caminho"]
     return {
         "is_mock": is_mock or bool(camadas23.get("is_mock")),

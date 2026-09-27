@@ -162,7 +162,7 @@ export const COMO_LER: PaginaDoc = {
       sub('3. Modelo aparece sempre ao lado do baseline'),
       'Nenhum desempenho é publicado sozinho. Persistência e sazonal-ingênuo são avaliados no mesmo conjunto de teste, e o *skill score* negativo aparece em vermelho em vez de ser omitido.',
       sub('4. A origem do dado está sempre visível'),
-      'Nas telas do protótipo, o selo `live`, `cache` ou `demo` acompanha a resposta. No dashboard do contrato a topbar diz **DADOS MOCK**, **DADOS DE dd/mm HH:MM** (o "agora" publicado) ou **API INDISPONÍVEL**, e todo cartão com registro sintético leva o selo **MOCK**.',
+      'Nas telas do protótipo, o selo `live`, `cache` ou `demo` acompanha a resposta. No dashboard do contrato a topbar diz **DADOS DE dd/mm HH:MM** (o "agora" publicado) ou **API INDISPONÍVEL**.',
     ),
     secao(
       'Unidades, tempo e patamares',
@@ -294,7 +294,7 @@ export const PROVENIENCIA: PaginaDoc = {
     ),
     secao(
       'No dashboard do contrato',
-      'As telas do grupo Dashboard do contrato não usam o envelope: leem a última publicação do `run_heavywork.py` no banco (tabelas `execucao` e `recurso`). A origem aparece na topbar (data do "agora" publicado) e cada registro sintético traz `mock: true`, exibido com o selo **MOCK**. A rastreabilidade de um alerta até o conjunto de dados de origem está em [[detalhe-alerta]].',
+      'As telas do grupo Dashboard do contrato não usam o envelope: leem a última publicação do `run_heavywork.py` no banco (tabelas `execucao` e `recurso`). A origem aparece na topbar (data do "agora" publicado). A rastreabilidade de um alerta até o conjunto de dados de origem está em [[detalhe-alerta]].',
     ),
     secao(
       'Os conjuntos do ONS usados pelo protótipo',
@@ -325,7 +325,7 @@ export const LIMITACOES_PAGINA: PaginaDoc = {
       aviso(
         'nota',
         'Todo limite é declarado antes de ser perguntado',
-        'Uma limitação descoberta pelo avaliador custa credibilidade; a mesma limitação declarada pelo autor demonstra domínio do problema. Cada limite desta página também aparece na tela correspondente (nota de cartão ou faixa de aviso) e no payload da API (`aviso`, `nota`, `sample_adequacy`, `available`, `mock`).',
+        'Uma limitação descoberta pelo avaliador custa credibilidade; a mesma limitação declarada pelo autor demonstra domínio do problema. Cada limite desta página também aparece na tela correspondente (nota de cartão ou faixa de aviso) e no payload da API (`aviso`, `nota`, `sample_adequacy`, `available`).',
       ),
     ),
     secao(

@@ -62,7 +62,7 @@ export const MAPA: PaginaDoc = {
     ),
     secao(
       'A rede da BDGD (RJ) — dado real',
-      'Vem do recurso `areas_influencia` (`mock: false`): BDGD 2025 da LIGHT e da Enel RJ × cadastro de MMGD da ANEEL, pela pipeline do RDX migrada para `Backend/src/spatial` (método em `docs/metodo_espacial.md`).',
+      'Vem do recurso `areas_influencia` (dado real): BDGD 2025 da LIGHT e da Enel RJ × cadastro de MMGD da ANEEL, pela pipeline do RDX migrada para `Backend/src/spatial` (método em `docs/metodo_espacial.md`).',
       sub('KPIs do estado'),
       tabela(
         ['KPI', 'Como ler'],
@@ -275,73 +275,37 @@ export const VISAO: PaginaDoc = {
 
 export const AUDITORIA: PaginaDoc = {
   id: 'auditoria',
-  titulo: 'Auditoria da MMGD em 3 camadas',
+  titulo: 'Conciliação da MMGD: satélite × BDGD × ANEEL',
   grupo: GRUPO,
-  resumo: 'Painéis detectados em satélite (YOLOv8-seg) × BDGD × cadastro ANEEL: desempate e fator de correção por área.',
-  pergunta: 'Quanto da MMGD que existe fisicamente está na BDGD e no cadastro da ANEEL, e qual o fator que corrige a capacidade cadastrada?',
-  rotas: ['GET /api/auditoria/mmgd'],
+  resumo: 'Capacidade de MMGD por transformador MT/BT: a BDGD localiza, a ANEEL mede a defasagem desde a data-base e o satélite (imagem datada) distribui onde há painel novo.',
+  rotas: ['GET /api/conciliacao/mmgd-trafo'],
   secoes: [
     secao(
-      'A solução de visão do time',
-      'Pipeline em `Backend/pipeline/auditoria_camada1.py` e `auditoria_camadas_2_3.py`, parâmetros em `Backend/config/visao.yaml`. A rota **só lê** as saídas do pipeline; rodar o modelo é trabalho do pipeline (extra `[visao]`: ultralytics + earthengine-api).',
+      'Cada fonte no que tem de melhor',
       tabela(
-        ['Camada', 'Pergunta', 'Fonte', 'Cadência'],
+        ['Fonte', 'Diz', 'Não diz'],
         [
-          ['1 · realidade física', 'o painel existe e onde está?', 'imagem de satélite + YOLOv8-seg', 'periódica'],
-          ['2 · topologia', 'a que alimentador/transformador está ligado?', 'BDGD', 'anual'],
-          ['3 · cadastro', 'foi homologado, e quando?', 'cadastro de GD da ANEEL', 'diária'],
+          ['Cadastro de MMGD da ANEEL', 'QUANTO (kW) e QUANDO', 'onde na rede (só o município)'],
+          ['BDGD 2025 (LIGHT, Enel RJ)', 'ONDE NA REDE: o transformador de cada unidade', 'nada depois da data-base'],
+          ['Satélite (Esri + YOLOv8-seg)', 'ONDE FISICAMENTE há painel, e a data da imagem', 'potência (a área do painel não vira kW)'],
         ],
       ),
+      'Concilia agregados por município e por transformador, nunca telhado com registro. Pipeline em `Backend/src/spatial/conciliacao.py` e `Backend/pipeline/paineis_por_transformador.py`; método completo em `docs/metodo_conciliacao.md`.',
     ),
     secao(
-      'Os KPIs',
-      tabela(
-        ['KPI', 'Como ler'],
-        [
-          ['**Painéis detectados (Camada 1)**', 'contagem, área total em m² e origem (modelo ou mock)'],
-          ['**Capacidade auditada**', 'área × kWp/m² (premissa de `visao.yaml`), **sem** as não homologadas'],
-          ['**Capacidade na BDGD**', 'o cadastrado nas áreas, e o fator agregado auditada ÷ BDGD'],
-          ['**Exceções não homologadas**', 'detecções sem BDGD nem ANEEL, escaladas'],
-        ],
-      ),
+      'Como a defasagem é distribuída',
+      formula('defasagem(município) = capacidade ANEEL em data_ref − capacidade ANEEL na data-base da BDGD'),
+      'Cada transformador recebe a parte proporcional à sua capacidade na BDGD (fallback). Onde há imagem posterior à data-base, a parte das conexões até a data da imagem é redistribuída pelo excesso de detecções sobre as unidades da BDGD. A soma por município é exatamente a defasagem, e nada fica negativo.',
+      'A faixa de incerteza de cada transformador vai da alocação com satélite à alocação 100% fallback. O excesso de detecções acima do esperado vira **resíduo**, registrado e fora da capacidade.',
     ),
     secao(
-      'O desempate (camadas 2 e 3)',
-      'Cada painel detectado é casado com o cadastro por distância (raio na dica do cartão, um para um) e classificado:',
-      tabela(
-        ['Classe', 'Regra', 'Entra no fator?'],
-        [
-          ['**Cadastrada**', 'casou com unidade com GD na BDGD', 'sim'],
-          ['**Lag de Sistema**', 'fora da BDGD, homologado na ANEEL **depois** da data de referência da BDGD: o ciclo anual ainda não absorveu', 'sim'],
-          ['**Divergência cadastral**', 'fora da BDGD, homologado **antes**: divergência entre bases, vai para revisão', 'sim'],
-          ['**Não homologada**', 'nem BDGD nem ANEEL: exceção escalada, **nunca** incorporada em silêncio', 'não'],
-        ],
-      ),
-      formula('fator de correção (por área) = capacidade auditada ÷ capacidade cadastrada na BDGD'),
-      'O cartão **Fator de correção por mancha** traz, por área: BDGD (kW), auditada (kWp), fator (ou o motivo de não haver), capacidade não homologada, contagem por classe e as unidades da BDGD sem detecção.',
-    ),
-    secao(
-      'Os cartões',
-      lista(
-        '**Camada 1 · painéis detectados** — polígonos coloridos pela classificação; clique para ver o desempate daquele painel. Fundo OpenStreetMap ou esquemático.',
-        '**Desempate BDGD × ANEEL** — as quatro classes com contagem e explicação; a dica traz as datas da BDGD e da extração da ANEEL.',
-        '**Detecções** — id, classe, área, m², kWp e confiança; clique para selecionar.',
-        '**Modelo, imagem e reprodução** — caminho dos pesos (presente ou ausente), confiança mínima, GSD máximo aceito, coleção e janela de satélite, bounding box da área piloto e quando foi gerado.',
-      ),
-    ),
-    secao(
-      'Estado atual',
+      'Onde ver',
+      'No Mapa Híbrido, botão **MMGD por transformador**: um ponto por transformador de Rio de Janeiro e Niterói, com a capacidade conciliada. O relatório com os números está em `docs/reports/relatorio_conciliacao.md`.',
       aviso(
         'limite',
-        'Quando a tela mostra DADOS MOCK',
-        'Sem imagem da área piloto nem pesos do modelo na máquina, a Camada 1 usa painéis sintéticos declarados à mão (`pipeline/mock/`), que passam pela mesma geometria do modo real, e a tela exibe a faixa **DADOS MOCK**: nenhum número é medição.',
+        'Sensibilidade do detector',
+        'O modelo foi treinado em imagem Google z20 e acha ~1 em 6 painéis na Esri z19 (0,34 m): a contagem é um piso. Só Icaraí (Niterói) tem imagem posterior à BDGD; no Rio a imagem é de 2025 e o excesso vai para o resíduo.',
       ),
-      aviso(
-        'limite',
-        'Modelo e imagem',
-        'O modelo configurado é uma versão antiga do treinamento do time (YOLOv8s-seg), ainda sem ajuste com imagens da área piloto; a validação (`validar_modelo.py`) só o declara adequado com um gabarito da área. Sentinel-2 (10 m) não enxerga painel residencial: é preciso imagem submétrica. O fator ainda **não é consumido** pelos modelos de carga.',
-      ),
-      'O desempate equivalente sobre a rede **real** da BDGD do RJ (sem a camada de satélite) já roda na espacialização e aparece no mapa de [[mapa]] como **lag de cadastro**.',
     ),
   ],
 }

@@ -96,8 +96,8 @@ export default function Visao() {
   return (
     <Pagina>
       <div className="note-strip" style={{ marginBottom: 12 }}>
-        Esta é a solução de visão do protótipo (detector por subestação). A auditoria em 3 camadas do time (YOLOv8-seg + BDGD + ANEEL) está em{' '}
-        <Link to="/auditoria-mmgd">Visão computacional › Auditoria MMGD · 3 camadas</Link>.
+        Esta é a solução de visão do protótipo (detector por subestação). A conciliação do time (YOLOv8-seg sobre imagem Esri
+        datada + BDGD + ANEEL, por transformador) está em <Link to="/mapa-hibrido">Mapa Híbrido › MMGD por transformador</Link>.
       </div>
       <Conteudo estado={estado} texto="Executando o banco de ensaio do detector…">
         {(body) => <PainelVisao body={body} />}
@@ -299,7 +299,9 @@ export function PainelVisao({ body, comCena = true }: { body: Envelope; comCena?
  * zoom, "cena"/"entorno" alterna o enquadramento, a tabela abaixo seleciona no mapa.
  */
 function CenaReferencia({ refe }: { refe: Dado }) {
-  const [fonte, setFonte] = usePersistido<'real' | 'sintetica'>('oraculo.visaoFonte', 'real')
+  // Só imagem real: a ortoimagem sintética do banco de ensaio saiu da tela (decisão do Luiz, 2026-09-27:
+  // nada de dado sintético exibido). Fica fixo, sem ler o valor salvo no navegador ('sintetica' antigo).
+  const fonte = 'real' as 'real' | 'sintetica'
   const [bench, setBench] = useState('')
   const [opac, setOpac] = usePersistido('oraculo.visaoOsmOpacidade', 0.85)
   const [mostrarDets, setMostrarDets] = usePersistido('oraculo.visaoDets', true)
@@ -371,12 +373,7 @@ function CenaReferencia({ refe }: { refe: Dado }) {
       }
     >
       <div className="chips" style={{ marginBottom: 8 }}>
-        <Chip on={ehReal} onClick={() => setFonte('real')}>
-          Imagem real (satélite)
-        </Chip>
-        <Chip on={!ehReal} onClick={() => setFonte('sintetica')}>
-          Imagem sintética (banco de ensaio)
-        </Chip>
+        <Chip on>Imagem real (satélite)</Chip>
         {ehReal && ponto && (
           <Chip onClick={() => analisar(...((geo ? [geo.center_lat, geo.center_lon] : ponto) as [number, number]))}>voltar ao ponto de referência</Chip>
         )}

@@ -487,7 +487,7 @@ function StatusTrafo({ dados }: { dados: Dados<MmgdTrafo | null> }) {
   const classe = 'font-mono text-[10px] text-ink-faint'
   if (dados.status === 'loading') return <span className={classe}>carregando transformadores…</span>
   if (dados.status === 'erro') return <span className={`${classe} text-risk-high`} title={dados.erro.message}>camada por transformador indisponível</span>
-  if (!dados.data) return <span className={classe}>sem dado por transformador no modo mock</span>
+  if (!dados.data) return <span className={classe}>camada por transformador só com a API</span>
   return <span className={classe}>{dados.data.pontos.length.toLocaleString('pt-BR')} transformadores · Rio e Niterói</span>
 }
 

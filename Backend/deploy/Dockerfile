@@ -22,6 +22,8 @@ RUN npm run build
 # ---------- estágio 2: runtime da API ----------
 FROM python:3.11-slim AS runtime
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+# Cache do protótipo vai na imagem (data/oraculo_cache): vale 30 dias, é um retrato publicado a cada build.
+ENV ORACULO_CACHE_TTL=2592000
 WORKDIR /app/Backend
 
 COPY Backend/deploy/requirements-api.txt /tmp/requirements-api.txt

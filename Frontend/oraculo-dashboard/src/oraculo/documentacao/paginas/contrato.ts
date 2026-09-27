@@ -15,8 +15,8 @@ const GRUPO = 'Dashboard do contrato'
 /** Rota → situação, conforme docs/real_vs_mock.md (2026-09-26). */
 const SITUACAO_RECURSOS: Record<string, [string, string]> = {
   carga: ['`GET /api/carga/snapshot`', '**real** — carga e MMGD do ONS na última semi-hora com os 4 subsistemas completos, capacidade da ANEEL até a data'],
-  previsao: ['`GET /api/previsao`', 'pontos P10/P50/P90 e rampa **reais** (previsões fora da amostra); fatores climáticos **reais** (Open-Meteo, ECMWF IFS, média das UFs ponderada pela MMGD). Só sai `mock: true` se o tempo baixado não cobrir a janela da curva'],
-  riscos: ['`GET /api/riscos`', 'usina, razão, probabilidade, montante, severidade e ação **reais**; `distribuidora` = ponto de conexão publicado pelo ONS; posição = coordenada do SIGA/ANEEL. Só a usina sem coordenada no SIGA (~18%) fica na sede da UF e sai `mock: true`'],
+  previsao: ['`GET /api/previsao`', 'pontos P10/P50/P90 e rampa **reais** (previsões fora da amostra); fatores climáticos **reais** (Open-Meteo, ECMWF IFS, média das UFs ponderada pela MMGD)'],
+  riscos: ['`GET /api/riscos`', 'usina, razão, probabilidade, montante, severidade e ação **reais**; `distribuidora` = ponto de conexão publicado pelo ONS; posição = coordenada do SIGA/ANEEL (a usina sem coordenada no SIGA, ~18%, fica na sede da UF)'],
   alertas: ['`GET /api/alertas/{id}`', '**real** — mesmo classificador; SHAP exato do LightGBM agrupado em rótulos legíveis'],
   excedentes: ['`GET /api/excedentes`', '**real (estimativa)** — excedente previsto por subestação de fronteira do RJ (BDGD × ANEEL × carga da área RJ)'],
   densidade: ['`GET /api/mmgd/densidade`', '**real** — capacidade de MMGD por área de influência do RJ; fora do RJ o calor fica vazio'],
@@ -27,12 +27,12 @@ const SITUACAO_RECURSOS: Record<string, [string, string]> = {
 /** Seção "Dados e situação" de uma tela, com as rotas que ela usa. */
 const situacao = (...chaves: (keyof typeof SITUACAO_RECURSOS)[]) =>
   secao(
-    'Dados e situação (real × mock)',
+    'Dados e situação',
     tabela(
       ['Rota', 'Situação'],
       chaves.map((k) => SITUACAO_RECURSOS[k]),
     ),
-    'Todo registro sintético traz `mock: true` e aparece com o selo **MOCK** no cartão. Sem banco publicado, a API responde 503 com a instrução para rodar `python run_heavywork.py`.',
+    'Todos os recursos vêm da última publicação do `run_heavywork.py` no banco. Sem banco publicado, a API responde 503 com a instrução para rodar `python run_heavywork.py`.',
   )
 
 export const VISAO_GERAL: PaginaDoc = {
@@ -106,7 +106,7 @@ export const MAPA_HIBRIDO: PaginaDoc = {
         'Fundo 100% local',
         'Contorno do Brasil (Natural Earth) e divisas das UFs (IBGE) estão no próprio pacote: o mapa funciona offline e na rede do ONS. Um teste impede a volta de camada de tiles remota.',
       ),
-      aviso('limite', 'Posição das usinas', 'A posição vem do **SIGA/ANEEL** (média das usinas do conjunto, ponderada pela potência). Cerca de 18% das usinas não têm coordenada no SIGA: essas ficam na **sede da UF** e só esses registros saem `mock: true`.'),
+      aviso('limite', 'Posição das usinas', 'A posição vem do **SIGA/ANEEL** (média das usinas do conjunto, ponderada pela potência). Cerca de 18% das usinas não têm coordenada no SIGA: essas ficam na **sede da UF**.'),
     ),
     situacao('riscos', 'excedentes', 'areas', 'densidade'),
   ],
@@ -315,7 +315,7 @@ export const METODOLOGIA: PaginaDoc = {
       lista(
         '**Cinco fontes · três evidências · dois produtos** — o encadeamento do método.',
         '**Produto 1 · Carga supervisionada** e **Produto 2 · Risco de curtailment** — série alvo, modelos, baselines e rótulo.',
-        '**Auditoria da MMGD em 3 camadas · fator de correção** — ver [[auditoria]].',
+        '**Conciliação da MMGD por transformador** (satélite × BDGD × ANEEL) — ver [[auditoria]].',
         '**Patamares**, **Validação**, **Limitações declaradas** e **Fontes técnicas**.',
       ),
       aviso(

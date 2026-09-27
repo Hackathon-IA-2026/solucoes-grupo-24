@@ -222,8 +222,11 @@ def publicar(zip_path: Path, regiao: str, min_tasks: int, max_tasks: int, s3, bu
         "environment": [{"name": "BUNDLE_BUCKET", "value": bucket}, {"name": "BUNDLE_KEY", "value": chave},
                         {"name": "AWS_DEFAULT_REGION", "value": regiao},
                         {"name": "PYTHONUNBUFFERED", "value": "1"},
-                        # único diretório gravável e barato para o cache do protótipo
-                        {"name": "ORACULO_CACHE", "value": "/tmp/oraculo_cache"}],
+                        # Cache do protótipo = o que vai no pacote (data/oraculo_cache, caminho padrão de
+                        # oraculo/config.py; o disco da task é gravável). Antes apontava para /tmp, vazio: a
+                        # Curva do Pato e a Fronteira T–D tentavam reconstruir a base na AWS, sem o dado
+                        # bruto, e falhavam. TTL de 30 dias: o cache é um retrato publicado a cada deploy.
+                        {"name": "ORACULO_CACHE_TTL", "value": str(30 * 24 * 3600)}],
         "awsLogsConfiguration": {"logGroup": grupo, "logStreamPrefix": "api"},
     }
     args = dict(

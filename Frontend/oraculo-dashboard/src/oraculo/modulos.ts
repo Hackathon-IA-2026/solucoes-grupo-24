@@ -3,10 +3,10 @@
  * grupos do menu original (02-PROTOTIPO/web/js/app.js, NAV). `ajuda` é o id da página da
  * documentação embutida (tecla F1, ./documentacao/indice.ts).
  *
- * Visão computacional tem as DUAS soluções do time lado a lado:
- * - "Visão computacional" (protótipo: detector clássico + adaptador YOLO, /api/mapa/vision);
- * - "Visão · auditoria 3 camadas" (pipeline do time: YOLOv8-seg + BDGD + cadastro ANEEL,
- *   Backend/pipeline/auditoria_*.py, /api/auditoria/mmgd).
+ * Visão computacional: "Visão computacional" (protótipo: detector clássico + adaptador YOLO,
+ * /api/mapa/vision). A tela "Visão · auditoria 3 camadas" saiu em 2026-09-27: sem saída real ela só
+ * mostrava o modo mock; a conciliação satélite × BDGD × ANEEL com dado real está no Mapa Híbrido
+ * (botão "MMGD por transformador", /api/conciliacao/mmgd-trafo).
  */
 import { lazy } from 'react'
 import {
@@ -18,9 +18,7 @@ import {
   Eye,
   Layers,
   Link2,
-  MapPin,
-  Satellite,
-  Scissors,
+  MapPin,  Scissors,
   SlidersHorizontal,
   Sun,
   Target,
@@ -123,17 +121,6 @@ export const MODULOS_ORACULO: readonly ModuleDef[] = [
     description: 'Detecção de painéis fotovoltaicos: pipeline, backends e desempenho medido contra verdade fundamental',
     icon: Eye,
     Page: lazy(() => import('./pages/Visao')),
-  },
-  {
-    path: '/auditoria-mmgd',
-    grupo: 'Mapa Inteligente',
-    ajuda: 'auditoria',
-    label: 'Visão · auditoria 3 camadas',
-    titulo: 'Auditoria da MMGD em 3 camadas: satélite × BDGD × ANEEL',
-    icone: 'eye',
-    description: 'Painéis detectados em satélite (YOLOv8-seg) × BDGD × cadastro ANEEL: desempate e fator de correção por mancha',
-    icon: Satellite,
-    Page: lazy(() => import('./pages/AuditoriaMmgd')),
   },
   {
     path: '/classes',
