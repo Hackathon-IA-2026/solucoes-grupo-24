@@ -45,11 +45,10 @@ Stack: Python, pandas, pyarrow, duckdb, geopandas, matplotlib, seaborn, lightgbm
 - Dados grandes em Parquet particionado. `Backend/data/raw` no `.gitignore`.
 - Parâmetros (pesos da loss, datas de corte, caminhos) em `Backend/config/*.yaml`, nunca hardcoded.
 - Antes de downloads longos ou treinos acima de ~10 min: avise e estime o tempo.
-- Commits pequenos e descritivos. Ao fim de cada tarefa, registre o andamento em `docs/STATUS.md`.
+- Commits pequenos e descritivos. Ao fim de cada tarefa, registre o andamento em `docs/STATUS.md`. Quando terminar a tarefa, peça a validação do usuário se tudo funciona como o esperado e se ele validar aí sim você faz commit!
 - Após fazer commit faça imediatamente push para enviar logo as alterações para o time.
 - Respeite os principios DRY! evite ao máximo ter mais de uma cópia do mesmo código!
 - faça comentários dentro do código que explique cada parte do código inclusive inserindo decisões...
-- Após terminar a tarefa faça commit no repositório descrevendo tudo que foi alterado e tudo que foi feito! e após terminar o commit faça pull para subir as alterações para o GitHub imediatamente. (A menos que você esteja trabalhando para ligia).
 
 ## README (modelo da competição)
 

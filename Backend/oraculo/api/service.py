@@ -406,7 +406,8 @@ class Service(MapaMixin, ClmMixin, DocsMixin, FronteiraMixin, BessMixin,
         model_info: dict = {"kind": "regressao_logistica_regularizada",
                             "horizon": horizon, "memory_lag_h": lag}
 
-        for area in areas[:14]:
+        # todas as UFs com constrained-off publicado (antes havia um teto fixo de 14)
+        for area in areas:
             labels = risk.build_labels(coff, area_field, area)
             if len(labels.index) < 72:
                 continue

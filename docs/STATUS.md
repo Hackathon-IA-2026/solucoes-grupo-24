@@ -899,6 +899,10 @@ novos. Até lá o CI falha de propósito em "Faltam no pacote" (o dados.zip do S
   dashboard, e um deploy só de banco passava como "no ar" com a task antiga).
 - GitHub Actions: secrets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` cadastrados; expiram com as
   credenciais do Workshop Studio.
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 ## 2026-09-27 — Preditivo de meses, Fase 1: demanda bruta 1–6 meses à frente ✅
 
 Especificação completa (demanda + MMGD + curva do pato em meses) salva em `docs/oraculo/especificacao/17-previsao-meses-carga-mmgd-pato.md`;
@@ -929,7 +933,16 @@ Não feito (fases 2–5 da spec): MMGD futura por célula, SEAS5/análogos, curv
 Achado à parte: o banco local foi publicado antes do clima atualizado e as 3 curvas do Despacho Preditivo saem `mock`;
 republicar (sem retreinar) resolve — conferido montando o contrato em memória.
 
+<<<<<<< Updated upstream
 ## 2026-09-27 — Preditivo de meses, Fases 2 e 3: MMGD e curva do pato prevista + tela "Previsão de meses" ✅ (em revisão na branch aba-previsao-meses)
+=======
+## 2026-09-27 — Tela Risco: contraste do mapa do Brasil ✅
+
+- `Frontend/oraculo-dashboard/src/oraculo/pages/Risco.tsx`: divisas das UFs passam de `--o-line` (quase igual ao fundo do mapa) para `--o-muted`, com contraste no tema claro e no escuro; UFs sem área modelada preenchidas com `--o-bg-2` (distinto do fundo `--o-panel-2`).
+- O mapa reestiliza ao trocar o tema (observa `data-theme` no `<html>`) e refaz o enquadramento quando o card muda de tamanho (antes, se a aba carregava oculta, o Brasil ficava minúsculo).
+
+## 2026-09-27 — Preditivo de meses, Fases 2 e 3: MMGD e curva do pato prevista + tela "Previsão de meses" ✅ (aguarda validação)
+>>>>>>> Stashed changes
 
 - **Tela:** Operação › **Previsão de meses** (`/previsao-meses`), rota `GET /api/previsao-meses` (`src/api/previsao_meses.py`,
   fora do contrato, só lê `Backend/output/previsao_meses/painel.json`; sem ele, 503 com o comando). Ajuda F1 `previsao-meses`.

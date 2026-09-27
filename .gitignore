@@ -73,3 +73,4 @@ Backend/.cache-tests/
 # regeneráveis a partir do checkpoint e dos dados. Vão para a AWS no pacote de dados do deploy_ecs.py.
 Backend/output/conciliacao/
 Backend/output/visao/*.geojson
+Backend/.aws

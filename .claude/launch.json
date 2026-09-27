@@ -4,14 +4,31 @@
     {
       "name": "backend",
       "runtimeExecutable": "cmd",
-      "runtimeArgs": ["/c", "cd Backend && python main.py"],
+      "runtimeArgs": [
+        "/c",
+        "cd Backend && python main.py"
+      ],
       "port": 8000
     },
     {
       "name": "frontend",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "Frontend/oraculo-dashboard", "run", "dev"],
+      "runtimeArgs": [
+        "--prefix",
+        "Frontend/oraculo-dashboard",
+        "run",
+        "dev"
+      ],
       "port": 5173
+    },
+    {
+      "name": "backend-8010",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "cd Backend && ..\\.venv\\Scripts\\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8010"
+      ],
+      "port": 8010
     }
   ]
 }
