@@ -19,7 +19,7 @@ import { getAreasInfluencia } from '../../data/dataSource'
 import type { AreasInfluencia } from '../../data/types'
 import { TabelaDeteccoes } from '../CenaSatelite'
 import { MapaOsm, type Fundo, type Limites } from '../MapaOsm'
-import { ChipsClasses, PainelSubestacaoBdgd, RedeBdgd } from '../RedeBdgd'
+import { CLASSES_SE, ChipsClasses, PainelSubestacaoBdgd, RedeBdgd } from '../RedeBdgd'
 import { num, pct, signed } from '../format'
 import { BarRow, Chip, Conteudo, Kpi, OCard, Pagina, Proveniencia, StatLines, Vazio, useApi } from '../ui'
 import { PainelVisao } from './Visao'
@@ -418,8 +418,10 @@ function MapaBrasil({
   const [fundo, setFundo] = usePersistido<Fundo>('oraculo.mapaFundo', 'mapa')
   const [verAreas, setVerAreas] = usePersistido('oraculo.mapaAreas', true)
   const [verOns, setVerOns] = usePersistido('oraculo.mapaOns', true)
-  const [hierarquia, setHierarquia] = usePersistido('oraculo.mapaHierarquia', false)
-  const [classesLista, setClassesLista] = usePersistido<string[]>('oraculo.mapaClasses', ['Distribuição plena', 'Distribuição satélite', 'Transformadora pura'])
+  // ao abrir um estado a rede vem completa: hierarquia de alimentação ligada e as quatro
+  // classificações visíveis (inclusive Transporte/manobra); o usuário desliga pelos chips
+  const [hierarquia, setHierarquia] = usePersistido('oraculo.mapaHierarquia', true)
+  const [classesLista, setClassesLista] = usePersistido<string[]>('oraculo.mapaClasses', CLASSES_SE.map((c) => c.chave))
   const classes = useMemo(() => new Set(classesLista), [classesLista])
   const alternarClasse = (c: string) => setClassesLista(classes.has(c) ? classesLista.filter((x) => x !== c) : [...classesLista, c])
   const contagem = useMemo(() => {
