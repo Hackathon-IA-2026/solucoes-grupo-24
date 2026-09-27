@@ -251,7 +251,12 @@ def garantir_versao_no_ar(regiao: str, conta: str, tentativas: int = 3, espera_m
             if no_ar == esperado:
                 print(f"versão nova no ar ({esperado}): {url}")
                 return url
-            deps = ecs.describe_services(cluster="default", services=[SERVICO])["services"][0]["deployments"]
+            try:
+                deps = ecs.describe_services(cluster="default", services=[SERVICO])["services"][0]["deployments"]
+            except Exception as e:  # falha passageira de rede/DNS: tenta de novo em vez de derrubar o deploy
+                print(f"  não consegui consultar o ECS ({type(e).__name__}); tentando de novo")
+                time.sleep(20)
+                continue
             if len(deps) == 1 and deps[0]["rolloutState"] == "COMPLETED":
                 break  # rollout terminou e o site ainda serve outra versão => foi revertido
             time.sleep(20)
