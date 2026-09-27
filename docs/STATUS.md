@@ -806,6 +806,24 @@ Auditoria das abas do dashboard (o que era real × sintético) seguida das corre
 Continua pendente (não dá para resolver só com código): Visão · auditoria 3 camadas (sem imagem da área piloto nem
 `best.pt`), métricas do detector só no banco sintético, Projeção ENE demora >8 min no primeiro acesso.
 
+## Conciliação de MMGD por transformador: ANEEL × BDGD × visão computacional — 2026-09-27
+
+- **O quê:** capacidade de MMGD por transformador MT/BT no Rio (LIGHT) e em Niterói (Enel RJ). BDGD 2025 localiza,
+  ANEEL mede a defasagem desde a data-base (31/12/2025), visão computacional aloca onde há imagem posterior à base.
+  Método e medições em `docs/metodo_conciliacao.md`; números em `docs/reports/relatorio_conciliacao.md`.
+- **Código:** `src/spatial/areas_trafo.py` (área atendida = Voronoi dos UNTRMT, 57.878 trafos), `pipeline/paineis_por_transformador.py`
+  (lógica do Hackaton-Radix com ladrilhos Esri z19 + data da imagem por ladrilho), `src/spatial/conciliacao.py` (etapas 1–7,
+  checagens), `src/spatial/relatorio_conciliacao.py`, config em `config/conciliacao.yaml`.
+- **Saídas:** `data/processed/capacidade_mmgd_trafo.parquet`, `defasagem_municipio.parquet`, `capacidade_aneel_municipio.parquet`,
+  `areas_atendidas_trafo.parquet`; camada `output/conciliacao/camada_mmgd_trafo.json` em `GET /api/conciliacao/mmgd-trafo`
+  (formato do heatmap, fora do contrato) e botão **MMGD por transformador** no Mapa Híbrido.
+- **Resultado:** cobertura BDGD/ANEEL 0,93 nos dois municípios; defasagem 27,5 MW (Rio) e 8,3 MW (Niterói), conservada.
+  Só Icaraí tem imagem (28/01/2026) posterior à BDGD: a visão aloca lá; no Rio (imagem de 05 e 12/2025) todo excesso é resíduo.
+- **Limitação principal:** o `best.pt` (treinado em Google z20) acha ~1 em 6 painéis na Esri z19 (medido: 11/60 a 10 m).
+  O Google, usado na varredura anterior, não publica data de imagem. Próximo passo: fine-tuning em Esri.
+- **Testes:** `tests/test_conciliacao.py` (20: etapas 4, 6 e 7, conservação, nada negativo, nada após data_ref);
+  suíte 210 ok (o `test_tft.py` não coleta neste .venv: falta `pytorch_forecasting`, problema de ambiente anterior).
+
 ## 2026-09-27 — Classes de consumo com dado medido: perfis ANEEL CTR + composição BDGD/SAMP ✅
 
 A página **Classes de consumo** (`/classes`) mostrava perfis horários **desenhados à mão** (`CANONICAL` em

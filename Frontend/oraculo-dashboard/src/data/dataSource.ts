@@ -57,6 +57,8 @@ const ENDPOINTS = {
   saude: '/saude',
   mmgdDensidade: '/mmgd/densidade',
   areasInfluencia: '/areas-influencia',
+  // fora do contrato (Backend/src/api/conciliacao.py): mesma forma do heatmap, por transformador
+  mmgdTrafo: '/conciliacao/mmgd-trafo',
 } as const
 
 /** Erro de leitura com contexto (qual recurso e por quê). */
@@ -211,6 +213,24 @@ export function getDensidadeMmgd(): Promise<DensidadeMmgd> {
     mock: () => import('./mock/mmgd_densidade.json'),
     api: ENDPOINTS.mmgdDensidade,
   })
+}
+
+/**
+ * Camada de MMGD conciliada por transformador MT/BT (ANEEL × BDGD × visão computacional; Backend
+ * src/spatial/conciliacao.py). Mesmo formato do heatmap do contrato, mais a capacidade (kW) que vale
+ * intensidade 1. Fica fora do contrato para não mudar o significado do heatmap atual.
+ * Não há mock desta camada: no modo mock devolve null e a tela a mostra como indisponível
+ * (regra "nunca inventar dados").
+ */
+export const MmgdTrafoSchema = DensidadeMmgdSchema.extend({
+  referenciaKw: z.number().positive(),
+  geradoEm: z.string().min(1),
+})
+export type MmgdTrafo = z.infer<typeof MmgdTrafoSchema>
+
+export async function getMmgdTrafo(): Promise<MmgdTrafo | null> {
+  if (DATA_SOURCE_MODE === 'mock') return null
+  return validar('mmgdTrafo', MmgdTrafoSchema, await buscarApi('mmgdTrafo', ENDPOINTS.mmgdTrafo))
 }
 
 /** Polígonos das áreas de influência das subestações da área piloto (camada do Mapa Híbrido). */

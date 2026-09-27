@@ -39,7 +39,11 @@ PODEM_LER_BRUTO = ("src/ingestion/", "src/processing/", "src/utils/paths.py",
                    "src/utils/banco_analitico.py", "src/utils/config.py",
                    "src/spatial/bdgd.py", "src/spatial/mmgd.py", "src/spatial/construir.py",
                    "pipeline/download_satelite.py", "pipeline/validar_modelo.py",
-                   "pipeline/auditoria_camada1.py", "pipeline/visao_comum.py")
+                   "pipeline/auditoria_camada1.py", "pipeline/visao_comum.py",
+                   # Conciliação de MMGD: as áreas atendidas por transformador leem a BDGD e a malha
+                   # do IBGE; a varredura grava os ladrilhos da Esri em data/raw/satelite/esri.
+                   # A conciliação em si (src/spatial/conciliacao.py) NÃO entra: usa bdgd.py/mmgd.py.
+                   "src/spatial/areas_trafo.py", "pipeline/paineis_por_transformador.py")
 # arquivo_direto(: caminho de um arquivo bruto lido da config (BDGD, ANEEL, IBGE). Sem esta marca,
 # um módulo qualquer leria o bruto sem escrever "data/raw" em lugar nenhum e o teste não veria.
 MARCAS_DO_BRUTO = ("RAW_ONS", "DATA_RAW", "data/raw", "data\\\\raw", "data\\raw", "arquivo_direto(")

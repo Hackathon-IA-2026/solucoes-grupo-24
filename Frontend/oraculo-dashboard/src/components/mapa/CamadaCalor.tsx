@@ -14,7 +14,17 @@ import { corToken } from '../../theme/tokens'
 
 type PontoCalor = [number, number, number]
 
-export function CamadaCalor({ pontos }: { pontos: readonly PontoCalor[] }) {
+/** Raio/desfoque em px e zoom de saturação do leaflet.heat. */
+export interface OpcoesCalor {
+  radius: number
+  blur: number
+  maxZoom: number
+}
+// Padrão: pontos esparsos na escala do Brasil (um por área de influência).
+const PADRAO: OpcoesCalor = { radius: 28, blur: 22, maxZoom: 7 }
+
+/** `opcoes` precisa ser estável (constante de módulo): ele entra nas dependências do efeito. */
+export function CamadaCalor({ pontos, opcoes = PADRAO }: { pontos: readonly PontoCalor[]; opcoes?: OpcoesCalor }) {
   const mapa = useMap()
 
   useEffect(() => {
@@ -27,9 +37,7 @@ export function CamadaCalor({ pontos }: { pontos: readonly PontoCalor[] }) {
       const pico = corToken('--color-mmgd-pico')
       const heat = (L as unknown as { heatLayer: (p: readonly PontoCalor[], o: object) => L.Layer }).heatLayer
       camada = heat(pontos, {
-        radius: 28,
-        blur: 22,
-        maxZoom: 7,
+        ...opcoes,
         minOpacity: 0.15,
         gradient: { 0.2: `${violeta}33`, 0.5: `${violeta}99`, 0.8: violeta, 1: pico },
       })
@@ -39,7 +47,7 @@ export function CamadaCalor({ pontos }: { pontos: readonly PontoCalor[] }) {
       ativo = false
       camada?.remove()
     }
-  }, [mapa, pontos])
+  }, [mapa, pontos, opcoes])
 
   return null
 }

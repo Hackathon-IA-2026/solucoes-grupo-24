@@ -68,3 +68,8 @@ Thumbs.db
 # Open-Meteo), regravado sob demanda, e o cache isolado da suíte de testes
 Backend/data/oraculo_cache/
 Backend/.cache-tests/
+
+# Conciliação de MMGD (src/spatial/conciliacao.py, pipeline/paineis_por_transformador.py): saídas
+# regeneráveis a partir do checkpoint e dos dados. Vão para a AWS no pacote de dados do deploy_ecs.py.
+Backend/output/conciliacao/
+Backend/output/visao/*.geojson
