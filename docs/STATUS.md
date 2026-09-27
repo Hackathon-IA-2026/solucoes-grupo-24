@@ -885,3 +885,17 @@ Varredura de todas as rotas GET em produção (ECS). Achados e correções:
 
 Pendente: rodar `python deploy/deploy_ecs.py` (em Backend/, com as credenciais AWS do workshop) para subir os dados
 novos. Até lá o CI falha de propósito em "Faltam no pacote" (o dados.zip do S3 ainda não tem os dois arquivos).
+
+## Deploy AWS atualizado com dado real — 2026-09-27
+
+- Banco republicado (execução 2): os 8 recursos com dado real, nenhum mock. Processamento e espacialização refeitos;
+  publicação SEM retreinar (modelos e previsões de 2026-09-26). O TFT ainda não foi treinado nesta máquina (a leitura das
+  previsões o trata como opcional); `python run_heavywork.py` completo treina e republica (~50 min no pior caso).
+- Faltavam nesta máquina e foram baixados: BDGD LIGHT/Enel RJ, clima Open-Meteo, SIGA e malha municipal (manifesto).
+- AWS: `/api/areas-influencia` voltou (dava 503 por contrato antigo e derrubava o Mapa Híbrido); a Triangulação passou a
+  rodar na AWS (`pandas`/`pyarrow` no `requirements-api.txt` e `mmgd_empreendimentos.parquet` no pacote de dados).
+- Rollback do ECS: o alarme soma erros da versão nova E da antiga; com a antiga dando 500/503, todo deploy era revertido.
+  `deploy_ecs.py` agora só dá por bom um deployment criado depois do disparo e concluído (antes olhava só o bundle do
+  dashboard, e um deploy só de banco passava como "no ar" com a task antiga).
+- GitHub Actions: secrets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` cadastrados; expiram com as
+  credenciais do Workshop Studio.

@@ -258,13 +258,16 @@ def _entrada_do_dashboard(html: str) -> str | None:
     return m.group(0) if m else None
 
 
-def garantir_versao_no_ar(regiao: str, conta: str, tentativas: int = 3, espera_max: int = 900) -> str:
-    """Só dá o deploy por bom quando o site serve o build NOVO do dashboard. Devolve a URL.
+def garantir_versao_no_ar(regiao: str, conta: str, desde: float, tentativas: int = 3, espera_max: int = 900) -> str:
+    """Só dá o deploy por bom quando o ECS concluiu um deployment NOVO e o site serve o build atual.
 
-    Decisão: 200 em /api-docs não prova nada — o ECS Express REVERTE sozinho o deployment quando o
-    alarme de erros (RollbackAlarm: >1% de 4xx/5xx, sensível com pouco tráfego) dispara, e a versão
-    antiga continua respondendo 200. Por isso comparo o hash do bundle servido com o do dist local e,
-    se o ECS reverteu, forço um novo deployment (até `tentativas`).
+    Decisões:
+    - O ECS Express REVERTE sozinho o deployment quando o alarme de erros (RollbackAlarm: >1% de
+      4xx/5xx, somando a versão nova e a antiga) dispara, e a versão antiga continua respondendo 200.
+    - Comparar só o bundle do dashboard não basta: um deploy que muda só o banco ou o backend tem o
+      mesmo bundle e passaria como "no ar" com a task antiga. Por isso exijo as duas coisas: o único
+      deployment do serviço foi criado depois de `desde` (epoch do disparo) e está COMPLETED, e o site
+      serve o bundle do dist local. Revertido (sobrou só um deployment anterior): reimplanta.
     """
     import boto3
     ecs = boto3.client("ecs", region_name=regiao)
@@ -275,15 +278,8 @@ def garantir_versao_no_ar(regiao: str, conta: str, tentativas: int = 3, espera_m
     esperado = _entrada_do_dashboard((DIST / "index.html").read_text(encoding="utf-8"))
     for tentativa in range(1, tentativas + 1):
         limite = time.time() + espera_max
+        revertido = False
         while time.time() < limite:
-            try:
-                no_ar = _entrada_do_dashboard(urllib.request.urlopen(url, timeout=15).read().decode("utf-8", "replace"))
-            except Exception as e:  # 503 enquanto a task nova sobe é esperado
-                no_ar = None
-                print(f"  aguardando ({type(e).__name__})")
-            if no_ar == esperado:
-                print(f"versão nova no ar ({esperado}): {url}")
-                return url
             try:
                 deps = ecs.describe_services(cluster="default", services=[SERVICO])["services"][0]["deployments"]
             except Exception as e:  # falha passageira de rede/DNS: tenta de novo em vez de derrubar o deploy
@@ -291,9 +287,23 @@ def garantir_versao_no_ar(regiao: str, conta: str, tentativas: int = 3, espera_m
                 time.sleep(20)
                 continue
             if len(deps) == 1 and deps[0]["rolloutState"] == "COMPLETED":
-                break  # rollout terminou e o site ainda serve outra versão => foi revertido
+                if deps[0]["createdAt"].timestamp() < desde:
+                    revertido = True  # só sobrou o deployment de antes do disparo
+                    break
+                try:
+                    no_ar = _entrada_do_dashboard(urllib.request.urlopen(url, timeout=15).read().decode("utf-8", "replace"))
+                except Exception as e:
+                    no_ar = None
+                    print(f"  aguardando o site ({type(e).__name__})")
+                if no_ar == esperado:
+                    print(f"versão nova no ar ({esperado}, deployment {deps[0]['id']}): {url}")
+                    return url
+            else:
+                print(f"  rollout em andamento: {[(d['status'], d['rolloutState']) for d in deps]}")
             time.sleep(20)
-        print(f"tentativa {tentativa}/{tentativas}: o ECS terminou sem a versão nova (rollback?); reimplantando")
+        motivo = "o ECS reverteu (alarme de erros)" if revertido else "tempo esgotado"
+        print(f"tentativa {tentativa}/{tentativas}: {motivo}; reimplantando")
+        desde = time.time()
         ecs.update_service(cluster="default", service=SERVICO, forceNewDeployment=True)
     sys.exit(f"a versão nova ({esperado}) não ficou no ar depois de {tentativas} tentativas")
 
@@ -326,8 +336,9 @@ def main() -> None:
     zipar(pacote, zip_path)
     print(f"zip: {zip_path} ({zip_path.stat().st_size / 1024 / 1024:.0f} MB)")
     if not args.so_empacotar:
+        desde = time.time()
         publicar(zip_path, args.regiao, args.min_tasks, args.max_tasks, s3, bucket, conta)
-        garantir_versao_no_ar(args.regiao, conta)
+        garantir_versao_no_ar(args.regiao, conta, desde)
 
 
 if __name__ == "__main__":
