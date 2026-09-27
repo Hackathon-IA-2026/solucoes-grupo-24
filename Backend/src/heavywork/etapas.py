@@ -8,6 +8,8 @@ Etapas ainda sem implementação ficam declaradas com executar=None: aparecem no
 """
 from __future__ import annotations
 
+from src.analise import episodios as analise_episodios
+from src.analise import historico as analise_historico
 from src.db.sessao import ARQUIVO_SQLITE, url_banco
 from src.heavywork.orquestrador import Etapa
 from src.ingestion import download
@@ -166,6 +168,23 @@ def _prever_curtailment() -> str:
     return f"{modelos_curtailment.prever()}; {relatorio_curtailment.escrever()}"
 
 
+# --------------------------------------------------------------------------- 4b. análises do pitch
+# Peça B (histórico mensal / Figura 1) e Peça C (episódios, lead time, caso real): src/analise/.
+# Entradas: as tabelas que elas leem, as previsões do classificador (lead time e caso real), o
+# código e a config. Não tocam o banco: só docs/reports (e a tabela de episódios).
+def _entradas_analises() -> str:
+    arquivos = [processamento_saidas.SAIDA_CURTAILMENT_MENSAL, processamento_saidas.SAIDA_CAPACIDADE_MMGD,
+                processamento_saidas.SAIDA_CARGA, processamento_saidas.SAIDA_ROTULOS,
+                modelos_curtailment.ARQ_PREVISOES, CONFIG / "analises.yaml",
+                CONFIG / "modelos_curtailment.yaml", CONFIG / "modelos_carga.yaml",
+                *codigo_de("src.analise.historico", RAIZ), *codigo_de("src.analise.episodios", RAIZ)]
+    return de_arquivos(arquivos, RAIZ)
+
+
+def _analisar() -> str:
+    return f"{analise_historico.escrever()}; {analise_episodios.escrever()}"
+
+
 # --------------------------------------------------------------------------- 5. publicação
 # Entradas: as tabelas processadas que a publicação lê, os mocks do dashboard (recursos ainda
 # sem saída real), o código de contrato/banco/publicação, as migrations, a config e o PRÓPRIO
@@ -173,6 +192,7 @@ def _prever_curtailment() -> str:
 def _entradas_publicacao() -> str:
     arquivos = [processamento_saidas.SAIDA_CARGA, processamento_saidas.SAIDA_CAPACIDADE_MMGD,
                 processamento_saidas.SAIDA_CALENDARIO, processamento_saidas.SAIDA_CARGA_AREA,
+                processamento_saidas.SAIDA_USINAS_CADASTRO, processamento_saidas.SAIDA_CLIMA_UF,
                 espacial_saidas.SAIDA_MMGD_AREA_INFLUENCIA, espacial_saidas.SAIDA_MMGD_DIARIA,
                 espacial_saidas.SAIDA_CARGA_AREA_INFLUENCIA, espacial_saidas.SAIDA_AREAS_INFLUENCIA_GEOJSON,
                 CONFIG / "espacial.yaml",
@@ -240,6 +260,11 @@ def montar() -> list[Etapa]:
               saidas=(modelos_curtailment.ARQ_PREVISOES, modelos_curtailment.ARQ_USINAS,
                       relatorio_curtailment.ARQ_MD),
               estimativa=lambda: est["previsao_curtailment"]),
+        Etapa("analises",
+              "Peça B (histórico mensal do corte por razão, Figura 1) e Peça C (episódios, lead time, caso real)",
+              executar=_analisar, entradas=_entradas_analises,
+              saidas=(analise_historico.ARQ_MD, analise_episodios.ARQ_MD),
+              estimativa=lambda: est["analises"]),
         Etapa("publicacao",
               "monta os 6 recursos do contrato e grava no banco",
               executar=publicacao.publicar, entradas=_entradas_publicacao,

@@ -139,3 +139,22 @@ api_carga:
       apelido: carga_programada
       inicio: "2021-03-05"
       areas: [SECO, S, NE, N]
+
+# Tempo (Open-Meteo, modelo ECMWF IFS 0,25°): radiação, vento, temperatura e nuvens nas sedes
+# das UFs (coordenadas de config/publicacao.yaml: posicao_uf, sem cópia). Decisão do Tiago em
+# 2026-09-26: só para os fatores climáticos EXIBIDOS na curva de previsão (tela Despacho
+# Preditivo); NÃO é feature de nenhum modelo. Janela baixada depende do "agora" da publicação:
+#   agora = ultimo_dado -> API de previsão: `dias_passados` para trás e `dias_futuros` à frente
+#                          de hoje; rebaixada a cada execução (a previsão muda);
+#   agora = data fixa   -> API de previsões ARQUIVADAS (historical forecast) de agora − 1 dia a
+#                          agora + 2 dias; não expira (o passado não muda).
+# Uma requisição só (as 27 coordenadas juntas, ~100 kB). JSON vira Parquet na chegada.
+open_meteo:
+  apelido: open_meteo_clima
+  url_previsao: https://api.open-meteo.com/v1/forecast
+  url_historica: https://historical-forecast-api.open-meteo.com/v1/forecast
+  modelo: ecmwf_ifs025
+  variaveis: [shortwave_radiation, wind_speed_10m, temperature_2m, cloud_cover]
+  dias_passados: 7
+  dias_futuros: 3
+  destino: data/raw/open_meteo/clima_uf.parquet

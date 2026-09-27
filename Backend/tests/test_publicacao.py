@@ -144,3 +144,41 @@ def test_versao_do_modelo_muda_com_a_config_de_treino(monkeypatch):
     cfg = mc.cfg()
     monkeypatch.setattr(mc, "cfg", lambda: {**cfg, "lightgbm": {**cfg["lightgbm"], "num_leaves": 7}})
     assert mc.versao_config() != base and base.startswith("cfg-")
+
+
+# --------------------------------------------------------------------------- fatores climáticos
+def _clima(horas, ufs_valores):
+    """Tempo sintético: {uf: (radiação, vento, temperatura, nuvens)} igual em todas as horas,
+    radiação zerada nas horas de noite (antes das 6h)."""
+    linhas = []
+    for t in horas:
+        for uf, (rad, vento, temp, nuv) in ufs_valores.items():
+            linhas.append({"uf": uf, "timestamp": t, "radiacao_w_m2": rad if t.hour >= 6 else 0.0,
+                           "vento_ms": vento, "temperatura_c": temp, "nuvens_pct": nuv})
+    return pd.DataFrame(linhas)
+
+
+def test_fatores_climaticos_ponderados_pela_mmgd_e_radiacao_so_com_sol():
+    from src.publicacao.montar import fatores_climaticos
+    horas = pd.date_range("2026-09-25 00:00", "2026-09-25 23:00", freq="h")
+    clima = _clima(horas, {"MG": (800.0, 2.0, 30.0, 10.0), "SP": (400.0, 6.0, 20.0, 50.0)})
+    pesos = pd.Series({"MG": 300.0, "SP": 100.0})
+    f = fatores_climaticos(clima, pesos, horas[0], horas[-1] + pd.Timedelta("30min"))
+    assert f.radiacao_solar == 700            # (3×800 + 1×400)/4, só nas horas com sol
+    assert f.vento_ms == 3.0 and f.temperatura_c == 27.5 and f.cobertura_nuvens_pct == 20
+
+
+def test_fatores_climaticos_com_buraco_devolvem_none():
+    from src.publicacao.montar import fatores_climaticos
+    horas = pd.date_range("2026-09-25 00:00", "2026-09-25 23:00", freq="h")
+    clima = _clima(horas, {"MG": (800.0, 2.0, 30.0, 10.0)})
+    clima = clima[clima["timestamp"] != horas[5]]          # falta uma hora
+    assert fatores_climaticos(clima, pd.Series({"MG": 1.0}), horas[0], horas[-1]) is None
+    completo = _clima(horas, {"MG": (800.0, 2.0, 30.0, 10.0)})  # UF com peso sem tempo
+    assert fatores_climaticos(completo, pd.Series({"MG": 1.0, "SP": 1.0}), horas[0], horas[-1]) is None
+
+
+def test_pesos_mmgd_sem_cadastros_futuros():
+    from src.publicacao.montar import pesos_mmgd_uf
+    p = pesos_mmgd_uf(CAP, pd.Timestamp("2026-06-01"))
+    assert p.to_dict() == {"MG": 100.0, "SP": 100.0}       # o cadastro de MG de set/2026 não entra

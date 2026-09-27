@@ -26,9 +26,20 @@ from pathlib import Path
 _DLLS_RUNTIME = ("vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll")
 
 
+_JA_CARREGADO = False
+
+
 def carregar_runtime_do_sistema() -> list[str]:
-    """Carrega o runtime do Visual C++ do System32 (só no Windows). Devolve as DLLs carregadas."""
-    if sys.platform != "win32" or "torch" in sys.modules:
+    """Carrega o runtime do Visual C++ do System32 (só no Windows). Devolve as DLLs carregadas.
+
+    PRECISA rodar antes de QUALQUER extensão em C++ (LightGBM, pandas, scikit-learn...): a
+    primeira que pedir `msvcp140.dll` fixa a versão para o processo inteiro, e se for a do
+    Anaconda o torch não inicializa mais (achado no run_heavywork.py: o treino do LightGBM
+    rodava antes do TFT). Por isso a chamada mora no `__init__` dos pacotes `src` e `oraculo`,
+    executado antes de qualquer outro import deles; aqui ela só é repetida por segurança.
+    """
+    global _JA_CARREGADO
+    if sys.platform != "win32" or _JA_CARREGADO or "torch" in sys.modules:
         return []  # fora do Windows não se aplica; torch já importado = tarde demais, nada a fazer
     system32 = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32"
     carregadas = []
@@ -37,6 +48,7 @@ def carregar_runtime_do_sistema() -> list[str]:
         if caminho.exists():
             ctypes.WinDLL(str(caminho))
             carregadas.append(nome)
+    _JA_CARREGADO = True
     return carregadas
 
 

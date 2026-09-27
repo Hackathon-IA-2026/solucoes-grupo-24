@@ -13,6 +13,7 @@ from src.features.carga import CODIGO_PATAMAR
 from src.models import carga as mc
 from src.models import perda_assimetrica as pa
 from src.models import tft
+from src.utils.paths import RAIZ
 from tests.test_modelos_carga import _dados_sinteticos
 
 torch = pa.torch
@@ -137,3 +138,19 @@ def test_prever_recusa_modelo_de_outro_split(treinado):
     mc.cfg()["split"]["fim_treino"] = "2025-02-27 23:30"
     with pytest.raises(RuntimeError, match="outro split"):
         tft.prever(treinado)
+
+
+def test_torch_importa_depois_de_extensoes_cpp_num_processo_novo():
+    """Regressão (run_heavywork.py de 2026-09-26): o LightGBM carregava o msvcp140 antigo do
+    Anaconda antes do TFT e o torch falhava (WinError 1114). Com o runtime do sistema carregado
+    no __init__ de `src`, a ordem do pipeline (LightGBM, scikit-learn, depois torch) funciona."""
+    import subprocess
+    import sys
+
+    codigo = ("import src.models.carga, lightgbm, sklearn\n"
+              "from src.utils.torch_windows import importar_torch\n"
+              "print(importar_torch().ones(2).sum().item())")
+    r = subprocess.run([sys.executable, "-c", codigo], capture_output=True, text=True,
+                       cwd=str(RAIZ))
+    assert r.returncode == 0, r.stderr[-2000:]
+    assert r.stdout.strip() == "2.0"

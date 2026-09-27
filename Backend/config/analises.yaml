@@ -1,0 +1,31 @@
+# Análises para o pitch (prova documental): Peça B (histórico mensal / Figura 1) e Peça C
+# (episódios de corte, lead time do classificador e o caso real). Código: src/analise/.
+# Etapa `analises` do run_heavywork.py. Nada disso fica hardcoded no código.
+
+historico:
+  # Pergunta da Figura 1: "a razão energética (ENE) domina o corte desde este mês?"
+  marco_regime: "2025-04-01"
+  # Cores das razões = as do dashboard (Frontend/.../theme/razao.ts: ENE=chart-1, CNF=chart-2,
+  # REL=chart-3). Trio validado para daltonismo (dataviz validate_palette, 2026-09-26).
+  cores:
+    ENE: "#0891b2"
+    CNF: "#8b5cf6"
+    REL: "#db2777"
+  cor_linha: "#334155"        # séries de contexto (MMGD, carga): tinta neutra, não categórica
+
+episodios:
+  razao: ENE
+  # Duas semi-horas com corte separadas por até `tolerancia_passos` semi-horas sem corte são o
+  # MESMO episódio (uma interrupção de 30 min no meio de uma tarde de corte não é episódio novo).
+  tolerancia_passos: 2
+  # Um episódio só conta como INÍCIO (para o lead time) se a usina ficou pelo menos isto sem
+  # corte antes dele. Início logo depois de outro episódio a persistência já "prevê".
+  folga_minima_passos: 12      # 6 h
+  # Probabilidade a partir da qual o sistema "avisou" (a mesma dos relatórios de precisão/recall).
+  limiar_aviso: 0.5
+
+caso_real:
+  # Dia escolhido AUTOMATICAMENTE no período de teste do classificador (fora da amostra): o de
+  # maior fração de usinas cortadas por ENE ao mesmo tempo (proxy de "restrição total"); empate
+  # desempata pela energia cortada no dia. Horizonte mostrado: o do aviso antecipado.
+  horizonte: "D+1"

@@ -1,6 +1,9 @@
 """Tabelas de cadastro e de recorte espacial que tiram os mocks do dashboard (MVP real, 2026-09-26).
 
-Chamado pela etapa 2 do run_heavywork.py (via tabelas.construir). Saídas em data/processed/:
+Chamado pela etapa 2 do run_heavywork.py (via tabelas.construir). Hoje só `construir_usinas`
+está ligada (tabela "usinas"); MMGD por município e carga por área de carga ficam disponíveis
+para quando uma tela precisar (a densidade de MMGD do mapa já sai de src/spatial). Saídas em
+data/processed/:
 
     usinas_cadastro.csv   usina/conjunto (chave fonte:id_ons): ponto de conexão, agente operador
                           e COORDENADA real (SIGA/ANEEL) — Lista de Riscos e Mapa Híbrido
@@ -27,25 +30,18 @@ import pandas as pd
 
 from src.processing.carga_bruta import ler_carga_verificada
 from src.utils.banco_analitico import conectar
-from src.utils.config import carregar
+from src.processing.saidas import SAIDA_USINAS_CADASTRO as SAIDA_USINAS
+from src.utils.config import arquivo_direto
 from src.utils.joins import codigos_areacarga
-from src.utils.paths import DATA_PROCESSED, RAIZ, RAW_ONS
+from src.utils.paths import DATA_PROCESSED, RAW_ONS
 
-SAIDA_USINAS = DATA_PROCESSED / "usinas_cadastro.csv"
+# Caminho das usinas em src/processing/saidas.py (a publicação lê sem importar este módulo).
 SAIDA_MMGD_MUNICIPIO = DATA_PROCESSED / "mmgd_municipio.csv"
 SAIDA_CARGA_AREAS = DATA_PROCESSED / "carga_areas.csv"
 SAIDAS_CADASTRO = (SAIDA_USINAS, SAIDA_MMGD_MUNICIPIO, SAIDA_CARGA_AREAS)
 
 # bases tm (curtailment) por fonte: as mesmas dos rótulos
 BASES_TM = {"eolica": "coff_eolica_tm", "solar": "coff_solar_tm"}
-
-
-def arquivo_direto(apelido: str):
-    """Caminho de um arquivo direto (ANEEL, IBGE...) lido da config do download (um lugar só)."""
-    for a in carregar("fontes_ons").get("arquivos_diretos", []):
-        if a["apelido"] == apelido:
-            return RAIZ / a["destino"]
-    raise KeyError(f"config/fontes_ons.yaml sem o arquivo direto '{apelido}'")
 
 
 def _parquet_de(apelido: str) -> str:

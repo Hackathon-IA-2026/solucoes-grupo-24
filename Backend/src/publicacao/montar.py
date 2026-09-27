@@ -7,11 +7,12 @@ Origem de cada recurso hoje:
 | recurso    | origem                                                      | mock  |
 |------------|-------------------------------------------------------------|-------|
 | carga      | data/processed: carga_supervisionada + capacidade_mmgd      | false |
-| previsao   | previsões fora da amostra (etapa 4: src/models/carga.py);   | true* |
-|            | fatoresClimaticos ainda do mock (sem fonte meteorológica)   |       |
-| riscos     | classificador ENE/CNF (etapa 4: src/models/curtailment.py); | true* |
-|            | `distribuidora` ainda sem definição (decisão do Luiz);      |       |
-|            | `lat`/`lon` = sede da UF (sem coordenada por usina)         |       |
+| previsao   | previsões fora da amostra (etapa 4: src/models/carga.py);   | false*|
+|            | fatoresClimaticos: Open-Meteo (ECMWF IFS) por UF, ponderado |       |
+|            | pela MMGD cadastrada; mock só se o tempo não cobrir a janela|       |
+| riscos     | classificador ENE/CNF (etapa 4: src/models/curtailment.py); | false*|
+|            | `distribuidora` = ponto de conexão (base tm do ONS);        |       |
+|            | `lat`/`lon` = coordenada do SIGA/ANEEL (usinas_cadastro)    |       |
 | alertas    | mesmo classificador + SHAP exato do LightGBM                | false |
 | excedentes | MMGD por área de influência (BDGD × ANEEL) × fator de geração e carga   | false |
 |            | da área RJ (ONS), persistência sazonal (src/spatial)        |       |
@@ -20,10 +21,10 @@ Origem de cada recurso hoje:
 | mmgd_densidade | capacidade de MMGD por área de influência (src/spatial/construir.py) | false |
 | areas_influencia | polígonos das áreas de influência (GeoJSON) + MMGD e excedente | false |
 |            | de cada uma (src/spatial/camada_mapa.py)                    |       |
-* Registro com qualquer parte mock é mock inteiro: a curva é real, mas os fatores climáticos
-  não, então `mock: true` até existir fonte meteorológica (ou o contrato mudar); o risco é
-  real, mas o campo `distribuidora` não, então `mock: true` até o Luiz definir o que ele
-  mostra (docs/real_vs_mock.md). O dashboard mostra a etiqueta "mock" nesses cards.
+* Registro com qualquer parte mock é mock inteiro: se o tempo baixado não cobre a janela de
+  uma curva, os fatores dela vêm do mock e a curva sai `mock: true`. O risco de
+  uma usina SEM coordenada no SIGA (~18% das usinas) sai na sede da UF e com `mock: true` só
+  naquele registro (docs/real_vs_mock.md). O dashboard mostra a etiqueta "mock" nesses cards.
 
 Os mocks vêm dos MESMOS arquivos que o dashboard usa no modo mock (Frontend/.../mock/*.json):
 uma cópia só. Todo item mock precisa ter "mock": true, senão a publicação falha (regra "nunca
@@ -50,7 +51,8 @@ from src.features.curtailment import rotulo_explicacao
 from src.models import carga as mc
 from src.models import curtailment as mcur
 from src.models import metricas as mt
-from src.processing.saidas import SAIDA_CALENDARIO, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA, SAIDA_CARGA_AREA
+from src.processing.saidas import (SAIDA_CALENDARIO, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA, SAIDA_CARGA_AREA,
+                                   SAIDA_CLIMA_UF, SAIDA_USINAS_CADASTRO)
 from src.spatial import camada_mapa
 from src.spatial import excedentes as ex
 from src.spatial.saidas import (SAIDA_AREAS_INFLUENCIA_GEOJSON, SAIDA_CARGA_AREA_INFLUENCIA,
@@ -62,17 +64,12 @@ from src.utils.tempo import FUSO, PASSO, para_utc
 # Recursos ainda servidos do mock do dashboard. Vazio desde a Fase 6 (excedentes e densidade de
 # MMGD passaram a sair de src/spatial); o mecanismo fica para o próximo recurso sem fonte real.
 RECURSOS_MOCK: tuple[str, ...] = ()
-# Sem fonte meteorológica, os fatores climáticos da curva vêm do mock -> curva inteira mock=True.
-# Vira True quando houver ERA5/previsão numérica (e a curva passa a mock=False sozinha).
-FATORES_CLIMATICOS_REAIS = False
-# O contrato exige `distribuidora` no risco, mas o que ele deve mostrar para usinas da rede
-# básica ainda não foi definido (decisão pendente do Luiz, docs/FASES.md). Até lá o campo leva
-# este texto e o risco inteiro sai mock=True. Ao definir: preencher de verdade e trocar para None.
-DISTRIBUIDORA_PENDENTE: str | None = "a definir"
-# Não há coordenada por usina no que o projeto ingere (as bases do ONS não trazem; a do SIGA/ANEEL
-# ainda não entra). O Mapa Híbrido recebe a SEDE DA UF (config/publicacao.yaml: posicao_uf), uma
-# aproximação -> risco mock=True enquanto isto for False. Ao ingerir a coordenada real, trocar.
-POSICAO_USINA_REAL = False
+# Campo `distribuidora` do risco (decisão do Tiago, 2026-09-26): usinas eólicas e solares do
+# constrained-off se conectam à rede básica, sem distribuidora; o campo mostra o PONTO DE CONEXÃO
+# publicado pelo ONS (nom_pontoconexao da base tm), com este prefixo. Posição no mapa: coordenada
+# do SIGA/ANEEL (média das usinas do conjunto, ponderada pela potência); sem ela, a sede da UF
+# (config/publicacao.yaml: posicao_uf) e o registro sai mock=True.
+PREFIXO_CONEXAO = "Conexão: "
 FONTES_CONTRATO = {"eolica": "Eólica", "solar": "Solar FV"}
 
 
@@ -142,8 +139,44 @@ def _rampa(p50: list[float], janela_horas: float) -> float:
     return max(p50[i + k] - p50[i] for i in range(len(p50) - k))
 
 
-def curvas_previsao(prev: pd.DataFrame, agora: pd.Timestamp, fatores: dict[str, dict]) -> list[PrevisaoCurva]:
+def pesos_mmgd_uf(capacidade: pd.DataFrame, agora: pd.Timestamp) -> pd.Series:
+    """Peso de cada UF = MMGD cadastrada (ANEEL) até o agora (sem cadastros futuros), em MW."""
+    cap = capacidade.assign(data=pd.to_datetime(capacidade["data"]))
+    cap = cap[cap["data"] <= agora]
+    return cap.sort_values("data").groupby("uf")["potencia_acumulada_mw"].last()
+
+
+def fatores_climaticos(clima: pd.DataFrame, pesos: pd.Series, inicio: pd.Timestamp,
+                       fim: pd.Timestamp) -> FatoresClimaticos | None:
+    """Fatores climáticos de uma curva: tempo na janela [inicio, fim], média das UFs ponderada
+    pela MMGD cadastrada em cada uma (onde está a geração que a curva "desconta").
+
+    - radiação: média só das horas com sol (radiação média > 0): a média de 24 h, com a noite,
+      não diz nada sobre a MMGD; vento, temperatura e nuvens: média da janela inteira.
+    - Devolve None (e a curva cai no mock, com mock=True) se faltar alguma hora da janela ou
+      alguma UF com peso: fator calculado com buraco seria dado inventado por omissão.
+    """
+    horas = pd.date_range(inicio.floor("h"), fim.floor("h"), freq="h")
+    c = clima[clima["timestamp"].isin(horas) & clima["uf"].isin(pesos.index)]
+    if len(c) != len(horas) * len(pesos) or c.isna().any().any():
+        return None
+    w = c["uf"].map(pesos)
+    cols = ["radiacao_w_m2", "vento_ms", "temperatura_c", "nuvens_pct"]
+    por_hora = c[cols].mul(w, axis=0).groupby(c["timestamp"]).sum().div(w.groupby(c["timestamp"]).sum(), axis=0)
+    sol = por_hora["radiacao_w_m2"] > 0
+    return FatoresClimaticos(
+        radiacao_solar=round(float(por_hora.loc[sol, "radiacao_w_m2"].mean()) if sol.any() else 0.0),
+        vento_ms=round(float(por_hora["vento_ms"].mean()), 1),
+        temperatura_c=round(float(por_hora["temperatura_c"].mean()), 1),
+        cobertura_nuvens_pct=round(float(por_hora["nuvens_pct"].mean())))
+
+
+def curvas_previsao(prev: pd.DataFrame, agora: pd.Timestamp, fatores: dict[str, dict],
+                    clima: pd.DataFrame | None = None, pesos_uf: pd.Series | None = None) -> list[PrevisaoCurva]:
     """As 3 curvas do Despacho Preditivo no "agora" (série publicada, modelo da config).
+
+    Fatores climáticos: do tempo real (`clima` + `pesos_uf`, ver `fatores_climaticos`) quando ele
+    cobre a janela da curva; senão, os do mock (`fatores`) e a curva sai mock=True.
 
     Curva do horizonte h (em passos): as N semi-horas que TERMINAM em agora + h; cada ponto é a
     previsão emitida h antes do próprio alvo (modelo direto, janela deslizante). Assim toda
@@ -155,6 +188,7 @@ def curvas_previsao(prev: pd.DataFrame, agora: pd.Timestamp, fatores: dict[str, 
     n, pub, modelo = c["curva"]["pontos"], c["serie_publicada"], c["curva"]["modelo"]
     janela = c["curva"]["janela_rampa_horas"]
     sel = prev[(prev["serie"] == pub) & (prev["modelo"] == modelo)]
+    fatores_reais: dict[str, FatoresClimaticos] = {}
     curvas = []
     for nome_h, h in c["horizontes"].items():
         fim = agora + h * PASSO
@@ -164,13 +198,17 @@ def curvas_previsao(prev: pd.DataFrame, agora: pd.Timestamp, fatores: dict[str, 
             raise LookupError(f"curva {nome_h}: {len(g)} de {n} pontos até {fim} (rode run_heavywork.py)")
         if (g["emissao"] > agora).any():  # invariante do replay; nunca deveria acontecer
             raise RuntimeError(f"curva {nome_h}: previsão emitida depois do agora ({agora})")
+        if clima is not None:
+            f = fatores_climaticos(clima, pesos_uf, g["alvo"].min(), g["alvo"].max())
+            if f is not None:
+                fatores_reais[nome_h] = f
         pontos = [PontoPrevisao(timestamp=_utc(r.alvo), p10=round(r.p10, 1), p50=round(r.p50, 1),
                                 p90=round(r.p90, 1)) for r in g.itertuples()]
         curvas.append(PrevisaoCurva(
-            mock=not FATORES_CLIMATICOS_REAIS, horizonte=nome_h, pontos=pontos,
+            mock=nome_h not in fatores_reais, horizonte=nome_h, pontos=pontos,
             rampa_projetada_mw=round(_rampa([p.p50 for p in pontos], janela), 1),
             janela_rampa_horas=janela,
-            fatores_climaticos=FatoresClimaticos.model_validate(fatores[nome_h])))
+            fatores_climaticos=fatores_reais.get(nome_h) or FatoresClimaticos.model_validate(fatores[nome_h])))
     return curvas
 
 
@@ -254,6 +292,7 @@ def riscos_e_alertas(agora: pd.Timestamp) -> tuple[list[RiscoUsina], list[Alerta
     melhores = (p.sort_values("montante", ascending=False).drop_duplicates("chave")
                 .head(pc["top_usinas"]))
     usinas = pd.read_parquet(mcur.ARQ_USINAS).set_index("chave")
+    cadastro = pd.read_csv(SAIDA_USINAS_CADASTRO).set_index("chave")
     posicao_uf = carregar("publicacao")["posicao_uf"]
     cal = pd.read_csv(SAIDA_CALENDARIO, usecols=["timestamp", "faixa_curtailment"], parse_dates=["timestamp"])
     faixa = cal.set_index("timestamp")["faixa_curtailment"]
@@ -263,13 +302,21 @@ def riscos_e_alertas(agora: pd.Timestamp) -> tuple[list[RiscoUsina], list[Alerta
     for row, contrib in zip(melhores.itertuples(), contribs):
         u = usinas.loc[row.chave]
         prob_pct = round(100 * float(row.prob), 1)
-        if u["uf"] not in posicao_uf:  # UF nova sem posição: falha aqui, não um ponto no oceano
-            raise KeyError(f"config/publicacao.yaml: posicao_uf sem a UF {u['uf']!r}")
-        lat, lon = posicao_uf[u["uf"]]
+        cad = cadastro.loc[row.chave] if row.chave in cadastro.index else None
+        coord_real = cad is not None and pd.notna(cad["lat"]) and pd.notna(cad["lon"])
+        if coord_real:
+            lat, lon = float(cad["lat"]), float(cad["lon"])
+        else:
+            if u["uf"] not in posicao_uf:  # UF nova sem posição: falha aqui, não um ponto no oceano
+                raise KeyError(f"config/publicacao.yaml: posicao_uf sem a UF {u['uf']!r}")
+            lat, lon = posicao_uf[u["uf"]]
+        # Sem ponto de conexão no cadastro não há o que mostrar: publicação falha (nunca inventa).
+        if cad is None or pd.isna(cad["ponto_conexao"]):
+            raise LookupError(f"{row.chave} sem ponto de conexão em {SAIDA_USINAS_CADASTRO.name}")
         risco = RiscoUsina(
-            mock=DISTRIBUIDORA_PENDENTE is not None or not POSICAO_USINA_REAL,
+            mock=not coord_real,
             id=_id_risco(row.chave), nome=u["nom_usina"], uf=u["uf"], lat=lat, lon=lon,
-            distribuidora=DISTRIBUIDORA_PENDENTE or "", fonte=FONTES_CONTRATO[u["fonte"]],
+            distribuidora=PREFIXO_CONEXAO + str(cad["ponto_conexao"]), fonte=FONTES_CONTRATO[u["fonte"]],
             razao=row.razao, probabilidade_pct=prob_pct, montante_mw=round(float(row.montante), 1),
             horizonte=row.horizonte, severidade=_severidade(prob_pct, pc["severidade"]),
             acao_recomendada=pc["acao"][row.razao].format(faixa=faixa[row.alvo]))
@@ -358,13 +405,15 @@ def montar_contrato() -> tuple[dict, datetime]:
     agora = pd.Timestamp(carga.timestamp_utc).tz_convert(FUSO).tz_localize(None)
     prev = mc.ler_previsoes()
     fatores = {c["horizonte"]: c["fatoresClimaticos"] for c in ler_mock("previsao")}
+    clima = pd.read_csv(SAIDA_CLIMA_UF, parse_dates=["timestamp"]) if SAIDA_CLIMA_UF.exists() else None
+    pesos_uf = pesos_mmgd_uf(pd.read_csv(SAIDA_CAPACIDADE_MMGD), agora)
     riscos, alertas = riscos_e_alertas(agora)
     pico = pico_excedentes(agora)
     recursos = {
         "riscos": [r.para_json() for r in riscos],
         "alertas": [a.para_json() for a in alertas],
         "carga": carga.para_json(),
-        "previsao": [c.para_json() for c in curvas_previsao(prev, agora, fatores)],
+        "previsao": [c.para_json() for c in curvas_previsao(prev, agora, fatores, clima, pesos_uf)],
         "validacao": metricas_validacao(prev, agora, download.status_fontes(cfg["status_fontes"]),
                                         mc.metadados_treino()).para_json(),
         "excedentes": [e.para_json() for e in excedentes_tso_dso(pico)],

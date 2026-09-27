@@ -12,6 +12,7 @@ etapas:
   previsao_tft: true
   previsao_carga: true
   previsao_curtailment: true
+  analises: true
   publicacao: true
 
 # Etapas para refazer mesmo sem mudança nas entradas, ex.: [processamento].
@@ -29,4 +30,5 @@ estimativas:
   treino_tft: "~15 min (estimado em 2026-09-26: ~2,5 min fixos de datasets e calibração + 12 épocas × 300 lotes em CPU)"
   previsao_tft: "~5 min (estimado: ~110 mil janelas de 48 passos, 5 séries)"
   previsao_carga: "~30 s (medido em 2026-09-26: 22 s)"
+  analises: "~3 min (medido em 2026-09-26: histórico ~20 s; episódios e lead time sobre 16 M rótulos)"
   previsao_curtailment: "~6 min (estimado: ~10 M previsões + relatório)"

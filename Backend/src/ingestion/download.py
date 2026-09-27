@@ -53,6 +53,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urlencode
 
 
 import pandas as pd
@@ -616,21 +617,92 @@ def processar_arquivos_diretos(man: Manifesto, apelidos: list[str] | None = None
         if motivo is None:
             continue
         log.info("%s: baixando (%s)", a["apelido"], motivo)
-        dest = RAIZ / a["destino"]
-        try:
-            nbytes, conteudo = baixar_arquivo(a["url"], dest)
-            man.registrar(chave, {
-                "conjunto": a["apelido"], "arquivo": dest.name, "url": a["url"], "status": "ok",
-                "bytes": nbytes, "conteudo": conteudo, "linhas": contar_linhas(dest),
-                "caminho": str(dest.relative_to(RAIZ)),
-                "consolidado": True,
-                "baixado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            })
-            log.info("%s: %s baixado", a["apelido"], dest.name)
-        except Exception as e:
-            man.registrar(chave, {"conjunto": a["apelido"], "arquivo": dest.name,
-                                  "status": f"erro: {e}"[:300]})
-            log.error("%s falhou: %s", a["apelido"], e)
+        _baixar_unico(man, chave, a, baixar_arquivo)
+
+
+def _baixar_unico(man: Manifesto, chave: str, a: dict, baixar) -> None:
+    """Baixa um arquivo único com `baixar(url, destino) -> (bytes, sha256)` e registra no
+    manifesto (sucesso ou erro). Um lugar só para arquivos diretos e Open-Meteo: o registro
+    (campos, hash do conteúdo, erro sem derrubar a ingestão) nunca diverge entre as fontes."""
+    dest = RAIZ / a["destino"]
+    try:
+        nbytes, conteudo = baixar(a["url"], dest)
+        man.registrar(chave, {
+            "conjunto": a["apelido"], "arquivo": dest.name, "url": a["url"], "status": "ok",
+            "bytes": nbytes, "conteudo": conteudo, "linhas": contar_linhas(dest),
+            "caminho": str(dest.relative_to(RAIZ)),
+            "consolidado": True,
+            "baixado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        })
+        log.info("%s: %s baixado", a["apelido"], dest.name)
+    except Exception as e:
+        man.registrar(chave, {"conjunto": a["apelido"], "arquivo": dest.name,
+                              "status": f"erro: {e}"[:300]})
+        log.error("%s falhou: %s", a["apelido"], e)
+
+
+# --------------------------------------------------------------------------- Open-Meteo (tempo)
+def fonte_open_meteo(agora_cfg, pontos: dict[str, list[float]]) -> dict:
+    """Arquivo "direto" do Open-Meteo para o agora da publicação (config/fontes_ons.yaml).
+
+    Devolve o mesmo formato de um item de `arquivos_diretos` ({apelido, url, destino,
+    atualizar_apos_dias}) mais a ordem das UFs na URL: a decisão de rebaixar reaproveita
+    `precisa_baixar_direto` (URL mudou -> rebaixa; no modo ultimo_dado a previsão vence a cada
+    execução, atualizar_apos_dias = 0).
+    """
+    om = CFG["open_meteo"]
+    ufs = sorted(pontos)
+    q = {"latitude": ",".join(str(pontos[u][0]) for u in ufs),
+         "longitude": ",".join(str(pontos[u][1]) for u in ufs),
+         "hourly": ",".join(om["variaveis"]), "models": om["modelo"],
+         "wind_speed_unit": "ms", "timezone": "UTC"}
+    if str(agora_cfg) == "ultimo_dado":
+        q |= {"past_days": om["dias_passados"], "forecast_days": om["dias_futuros"]}
+        url, expira = om["url_previsao"], 0
+    else:
+        t = pd.Timestamp(agora_cfg).tz_convert("UTC")
+        q |= {"start_date": (t - pd.Timedelta(days=1)).date().isoformat(),
+              "end_date": (t + pd.Timedelta(days=2)).date().isoformat()}
+        url, expira = om["url_historica"], None
+    return {"apelido": om["apelido"], "url": f"{url}?{urlencode(q)}", "destino": om["destino"],
+            "atualizar_apos_dias": expira, "ufs": ufs}
+
+
+def open_meteo_para_tabela(resposta, ufs: list[str]) -> pd.DataFrame:
+    """JSON do Open-Meteo (uma entrada por coordenada, na ordem pedida) -> tabela longa por UF."""
+    itens = resposta if isinstance(resposta, list) else [resposta]
+    if len(itens) != len(ufs):
+        raise ValueError(f"Open-Meteo devolveu {len(itens)} pontos para {len(ufs)} UFs")
+    partes = []
+    for uf, item in zip(ufs, itens):
+        h = item["hourly"]
+        partes.append(pd.DataFrame({"uf": uf, "timestamp_utc": pd.to_datetime(h["time"], utc=True),
+                                    **{v: h[v] for v in CFG["open_meteo"]["variaveis"]}}))
+    return pd.concat(partes, ignore_index=True)
+
+
+def processar_open_meteo(man: Manifesto) -> None:
+    """Baixa o tempo das UFs para a janela do agora da publicação (ver `fonte_open_meteo`)."""
+    pub = carregar("publicacao")
+    a = fonte_open_meteo(pub["agora"], pub["posicao_uf"])
+    chave = chave_direta(a)
+    motivo = precisa_baixar_direto(a, man.get(chave))
+    if motivo is None:
+        return
+    log.info("%s: baixando (%s)", a["apelido"], motivo)
+
+    def _baixar(url: str, destino: Path) -> tuple[int, str]:
+        # JSON -> Parquet na chegada (data/raw só tem Parquet); o hash é o do JSON baixado.
+        bruto = destino.with_suffix(".json")
+        _, conteudo = baixar_arquivo(url, bruto)
+        tabela = open_meteo_para_tabela(json.loads(bruto.read_text(encoding="utf-8")), a["ufs"])
+        parcial = destino.with_name(destino.name + ".part")
+        tabela.to_parquet(parcial, index=False)
+        parcial.replace(destino)
+        bruto.unlink()
+        return destino.stat().st_size, conteudo
+
+    _baixar_unico(man, chave, a, _baixar)
 
 
 # --------------------------------------------------------------------------- relatórios
@@ -684,6 +756,7 @@ def executar(conjuntos: list[str] | None = None, so_ckan: bool = False, so_api: 
             processar_arquivos_diretos(man, diretos or None)
         elif not so_api and not so_ckan and not conjuntos:
             processar_arquivos_diretos(man)
+            processar_open_meteo(man)
         for apelido in recompactar:
             consolidar_id_ons(apelido, man, recompactar=True)
         san = gravar_relatorios(man)
@@ -727,12 +800,14 @@ def erros_de_download() -> list[str]:
 def conjuntos_declarados() -> set[str]:
     """Todos os apelidos que a ingestão baixa, lidos de config/fontes_ons.yaml.
 
-    Três blocos declaram fontes: `conjuntos` (CKAN do ONS), `arquivos_diretos` (ANEEL, IBGE)
-    e `api_carga.endpoints` (API de carga). Fonte nova em qualquer um deles aparece aqui.
+    Quatro blocos declaram fontes: `conjuntos` (CKAN do ONS), `arquivos_diretos` (ANEEL, IBGE),
+    `api_carga.endpoints` (API de carga) e `open_meteo` (tempo). Fonte nova em qualquer um deles
+    aparece aqui.
     """
     return ({c["apelido"] for c in CFG["conjuntos"]}
             | {a["apelido"] for a in CFG.get("arquivos_diretos", [])}
-            | {e["apelido"] for e in CFG["api_carga"]["endpoints"]})
+            | {e["apelido"] for e in CFG["api_carga"]["endpoints"]}
+            | ({CFG["open_meteo"]["apelido"]} if "open_meteo" in CFG else set()))
 
 
 def validar_grupos_fontes(grupos: dict[str, list[str]]) -> None:

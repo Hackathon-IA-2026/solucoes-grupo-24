@@ -16,9 +16,16 @@ SAIDA_CARGA = DATA_PROCESSED / "carga_supervisionada.csv"
 SAIDA_ROTULOS = DATA_PROCESSED / "rotulos_curtailment.parquet"
 SAIDA_CAPACIDADE_MMGD = DATA_PROCESSED / "capacidade_mmgd.csv"
 SAIDA_CARGA_AREA = DATA_PROCESSED / "carga_area.csv"
+SAIDA_CURTAILMENT_MENSAL = DATA_PROCESSED / "curtailment_mensal.csv"  # Peça B (Figura 1)
+# Cadastro das usinas/conjuntos do constrained-off: ponto de conexão, agente e coordenada do SIGA
+# (src/processing/cadastro.py). Lista de Riscos: campo `distribuidora` e posição no mapa.
+SAIDA_USINAS_CADASTRO = DATA_PROCESSED / "usinas_cadastro.csv"
+# Tempo por UF (Open-Meteo, ECMWF IFS), horário local do projeto: fatores climáticos da curva.
+SAIDA_CLIMA_UF = DATA_PROCESSED / "clima_uf.csv"
 # Arquivos que a etapa de processamento precisa deixar prontos (o run_heavywork.py refaz a
 # etapa se algum sumir, mesmo que as entradas não tenham mudado).
-SAIDAS = (SAIDA_CALENDARIO, SAIDA_CARGA, SAIDA_ROTULOS, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA_AREA)
+SAIDAS = (SAIDA_CALENDARIO, SAIDA_CARGA, SAIDA_ROTULOS, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA_AREA,
+          SAIDA_CURTAILMENT_MENSAL, SAIDA_USINAS_CADASTRO, SAIDA_CLIMA_UF)
 
 # Apelido (config/fontes_ons.yaml) do cadastro de MMGD da ANEEL, lido pelo processamento
 # (capacidade_mmgd) e pela espacialização (src/spatial/mmgd.py). Fica aqui, e não em tabelas.py,

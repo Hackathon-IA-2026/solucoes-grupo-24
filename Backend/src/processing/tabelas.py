@@ -12,6 +12,11 @@ Saídas (data/processed/):
     capacidade_mmgd.csv          UF × data: potência de MMGD cadastrada na ANEEL (diária e acumulada)
     carga_area.csv               área de carga da área piloto (config/espacial.yaml) × 30 min:
                                  carga_global e mmgd_estimada (base dos excedentes por área de influência)
+    curtailment_mensal.csv       mês × fonte × subsistema × razão (ENE, CNF, REL): energia cortada
+                                 (GWh) e semi-horas com corte (Peça B: histórico / Figura 1)
+    usinas_cadastro.csv          usina/conjunto: ponto de conexão, agente e coordenada do SIGA
+                                 (src/processing/cadastro.py)
+    clima_uf.csv                 UF × hora: radiação, vento, temperatura, nuvens (Open-Meteo)
 
 Um resumo de cobertura de cada tabela vai para docs/reports/cobertura_tabelas.csv.
 """
@@ -22,14 +27,15 @@ import pandas as pd
 from src.features.calendario import montar_calendario
 # Leitor ÚNICO da carga verificada (DRY): subsistema, área piloto e áreas de carga (cadastro.py)
 # saem da mesma função, com o mesmo fuso, a mesma regra de duplicata e de carga <= 0.
+from src.processing import cadastro
 from src.processing.carga_bruta import ler_carga_verificada
 from src.utils.banco_analitico import conectar
 from src.utils.config import arquivo_direto, carregar, razoes_curtailment
 from src.utils.joins import cruzar_subsistema_area
 from src.processing.saidas import (APELIDO_ANEEL_MMGD, SAIDA_CALENDARIO, SAIDA_CAPACIDADE_MMGD, SAIDA_CARGA, SAIDA_CARGA_AREA,
-                                   SAIDA_ROTULOS)
-from src.utils.paths import DATA_PROCESSED, DOCS_REPORTS, RAW_ONS, ensure
-from src.utils.tempo import de_local_ons
+                                   SAIDA_CLIMA_UF, SAIDA_CURTAILMENT_MENSAL, SAIDA_ROTULOS)
+from src.utils.paths import DATA_PROCESSED, DOCS_REPORTS, RAIZ, RAW_ONS, ensure
+from src.utils.tempo import de_local_ons, de_utc
 
 CFG = carregar("processamento")
 # Caminhos das saídas (SAIDA_*, SAIDAS) ficam em src/processing/saidas.py: quem só lê as
@@ -220,6 +226,60 @@ def construir_rotulos() -> pd.DataFrame:
     return resumo
 
 
+# --------------------------------------------------------------------------- histórico mensal
+def construir_curtailment_mensal() -> pd.DataFrame:
+    """Energia cortada por mês × fonte × subsistema × razão, com as TRÊS razões (Peça B).
+
+    Decisões:
+    - Mesmo SELECT dos rótulos (`_sql_rotulos_fonte`): a regra de corte total (GNRa), de rateio
+      entre razões e de duplicatas é uma só no projeto. A diferença é que aqui a REL fica sempre
+      (os rótulos só a trazem com incluir_rel=true): a pergunta da Figura 1 é a PARTICIPAÇÃO de
+      cada razão, e sem a REL o total seria menor que o real.
+    - Energia = MW médio da semi-hora × 0,5 h. Corte desconhecido (restrição sem medida) fica
+      fora da soma e é contado em `semihoras_sem_medida`: não vira zero em silêncio.
+    - Mesmo início dos rótulos (curtailment.inicio_rotulos) e sem o mês corrente incompleto
+      filtrado aqui: quem desenha decide (o relatório marca o último mês como parcial).
+    """
+    inicio = CFG["curtailment"]["inicio_rotulos"]
+    uniao = (f"{_sql_rotulos_fonte('coff_eolica_tm', 'eolica')} UNION ALL BY NAME "
+             f"{_sql_rotulos_fonte('coff_solar_tm', 'solar')}")
+    partes = " UNION ALL ".join(
+        f"""SELECT mes, fonte, subsistema, '{r}' AS razao,
+                   sum(corte_MW_{r}) * 0.5 / 1000 AS energia_cortada_gwh,
+                   count(*) FILTER (WHERE flag_{r}) AS semihoras_com_corte,
+                   count(*) FILTER (WHERE flag_{r} AND corte_MW_{r} IS NULL) AS semihoras_sem_medida,
+                   count(DISTINCT chave) AS usinas_na_base
+            FROM base GROUP BY mes, fonte, subsistema""" for r in ("ENE", "CNF", "REL"))
+    con = conectar()
+    df = con.execute(f"""WITH base AS (SELECT *, date_trunc('month', timestamp)::DATE AS mes
+                                       FROM ({uniao}) WHERE timestamp >= '{inicio}')
+                         {partes} ORDER BY mes, fonte, subsistema, razao""").df()
+    con.close()
+    df.to_csv(SAIDA_CURTAILMENT_MENSAL, index=False, float_format="%.4f")
+    return df
+
+
+# --------------------------------------------------------------------------- tempo (Open-Meteo)
+def construir_clima() -> pd.DataFrame:
+    """Tempo horário por UF (Open-Meteo, ECMWF IFS) no horário local do projeto.
+
+    Só troca o fuso (UTC -> UTC-3, a mesma conversão de todas as tabelas: src/utils/tempo.py)
+    e os nomes das colunas. Uso: fatores climáticos EXIBIDOS na curva de previsão (decisão do
+    Tiago, 2026-09-26); não entra em modelo nenhum.
+    """
+    bruto = pd.read_parquet(RAIZ / carregar("fontes_ons")["open_meteo"]["destino"])
+    out = pd.DataFrame({
+        "uf": bruto["uf"],
+        "timestamp": de_utc(bruto["timestamp_utc"]),
+        "radiacao_w_m2": bruto["shortwave_radiation"],
+        "vento_ms": bruto["wind_speed_10m"],
+        "temperatura_c": bruto["temperature_2m"],
+        "nuvens_pct": bruto["cloud_cover"],
+    }).sort_values(["uf", "timestamp"])
+    out.to_csv(SAIDA_CLIMA_UF, index=False)
+    return out
+
+
 # --------------------------------------------------------------------------- capacidade MMGD
 
 
@@ -271,7 +331,8 @@ def cobertura(nome: str, df: pd.DataFrame, grupo: str | None) -> pd.DataFrame:
     return pd.DataFrame(linhas)
 
 
-TABELAS = ("calendario", "carga", "rotulos", "capacidade_mmgd", "carga_area")
+TABELAS = ("calendario", "carga", "rotulos", "capacidade_mmgd", "carga_area", "curtailment_mensal", "usinas",
+           "clima")
 
 
 def construir(tabelas=TABELAS) -> pd.DataFrame:
@@ -293,6 +354,15 @@ def construir(tabelas=TABELAS) -> pd.DataFrame:
         cob.append(cobertura("capacidade_mmgd", cap.rename(columns={"data": "timestamp"}), None))
     if "carga_area" in tabelas:
         cob.append(cobertura("carga_area", construir_carga_area(), "area"))
+    if "curtailment_mensal" in tabelas:
+        cm = construir_curtailment_mensal()
+        cob.append(cobertura("curtailment_mensal", cm.rename(columns={"mes": "timestamp"}), "fonte"))
+    if "clima" in tabelas:
+        cob.append(cobertura("clima_uf", construir_clima(), None))
+    if "usinas" in tabelas:
+        us = cadastro.construir_usinas()  # cadastro sem tempo: cobertura só com a contagem
+        cob.append(pd.DataFrame([{"tabela": "usinas_cadastro", "grupo": f, "linhas": int(n),
+                                  "inicio": None, "fim": None} for f, n in us["fonte"].value_counts().items()]))
     cob = pd.concat(cob)
     arq = DOCS_REPORTS / "cobertura_tabelas.csv"
     if arq.exists():  # atualiza só as tabelas reconstruídas

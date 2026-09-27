@@ -263,3 +263,29 @@ def test_troca_interrompida_devolve_o_ano_antigo(tmp_path, monkeypatch):
     assert sorted(p.name for p in final.iterdir()) == ["ano=2025", "ano=2026"]
     assert (final / "ano=2025" / "id_ons=U1").exists()
     assert not final.with_name("x.__velho").exists()
+
+
+# --------------------------------------------------------------------------- Open-Meteo
+def test_open_meteo_modo_ultimo_dado_e_data_fixa():
+    from urllib.parse import parse_qs, urlparse
+
+    from src.ingestion import download
+    pontos = {"SP": [-23.55, -46.63], "BA": [-12.97, -38.5]}
+    a = download.fonte_open_meteo("ultimo_dado", pontos)
+    q = parse_qs(urlparse(a["url"]).query)
+    assert a["ufs"] == ["BA", "SP"] and q["latitude"] == ["-12.97,-23.55"]
+    assert "past_days" in q and a["atualizar_apos_dias"] == 0          # previsão: vence a cada execução
+    b = download.fonte_open_meteo("2026-03-10T13:00:00-03:00", pontos)
+    q = parse_qs(urlparse(b["url"]).query)
+    assert b["url"].startswith(download.CFG["open_meteo"]["url_historica"])
+    assert q["start_date"] == ["2026-03-09"] and q["end_date"] == ["2026-03-12"]
+    assert b["atualizar_apos_dias"] is None                               # passado não expira
+
+
+def test_open_meteo_recusa_resposta_com_numero_errado_de_pontos():
+    from src.ingestion import download
+    item = {"hourly": {"time": ["2026-09-25T00:00"], **{v: [1.0] for v in download.CFG["open_meteo"]["variaveis"]}}}
+    t = download.open_meteo_para_tabela([item, item], ["BA", "SP"])
+    assert list(t["uf"]) == ["BA", "SP"] and str(t["timestamp_utc"].dt.tz) == "UTC"
+    with pytest.raises(ValueError, match="2 UFs"):
+        download.open_meteo_para_tabela([item], ["BA", "SP"])

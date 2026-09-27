@@ -13,7 +13,7 @@ arquivo_export: output/contrato.json
 # de config/fontes_ons.yaml precisa estar em exatamente um grupo, e só eles: o run_heavywork.py
 # confere isso ANTES da primeira etapa (download.validar_grupos_fontes) e o teste
 # test_status_fontes_cobre_todas_as_fontes_declaradas também. Fonte nunca some da tela.
-# Só entram fontes que o projeto de fato ingere (ERA5 e satélite ainda não).
+# Só entram fontes que o projeto de fato ingere (satélite ainda não).
 status_fontes:
   "ONS — API de Carga Verificada": [carga_verificada, carga_programada]
   "ONS — Dados Abertos (constrained-off)": [coff_eolica_tm, coff_solar_tm, coff_eolica_detail, coff_solar_detail]
@@ -25,6 +25,7 @@ status_fontes:
   "IBGE — Malha municipal": [ibge_malha_municipios]
   "ANEEL — BDGD (Light e Enel RJ)": [bdgd_light, bdgd_enel_rj]
   "IBGE — Malhas do RJ": [ibge_malha_rj, ibge_malha_municipios_rj]
+  "Open-Meteo — ECMWF IFS (tempo nas UFs)": [open_meteo_clima]
 
 # Posição exibida no Mapa Híbrido para cada usina da Lista de Riscos: a SEDE (capital) da UF da
 # usina, [lat, lon] em WGS84. Aproximação, porque o projeto ainda não ingere coordenada por usina
