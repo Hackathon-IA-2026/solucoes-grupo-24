@@ -11,7 +11,7 @@
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useRef } from 'react'
 import L from 'leaflet'
-import { GeoJSON, MapContainer } from 'react-leaflet'
+import { GeoJSON, MapContainer, useMap } from 'react-leaflet'
 import ufsGeo from '../../data/geo/ufs.geo.json'
 import { Api, type Envelope } from '../api'
 import { lineChart } from '../charts'
@@ -142,8 +142,12 @@ function Mapa({ areas, selArea, onSel }: { areas: Dado[]; selArea: string; onSel
     const el = caixa.current
     const a = uf ? estado.current.porUf.get(uf) : undefined
     const sel = uf !== undefined && uf === estado.current.selArea
-    const linha = corDe(el, '--o-line', '#3a4150')
-    if (!a) return { color: linha, weight: 0.7, fillColor: corDe(el, '--o-panel-2', '#20242c'), fillOpacity: 0.55 }
+    // Divisas em --o-muted (não --o-line): --o-line é quase igual ao fundo do mapa (--o-panel-2)
+    // nos dois temas e as UFs sem área modelada sumiam. --o-muted tem contraste no claro e no escuro.
+    const linha = corDe(el, '--o-muted', '#7f8db0')
+    // UF sem área modelada: preenchimento em --o-bg-2 (difere do fundo --o-panel-2) e opaco,
+    // para o contorno do Brasil continuar legível mesmo sem cor de severidade.
+    if (!a) return { color: linha, weight: 0.8, fillColor: corDe(el, '--o-bg-2', '#101832'), fillOpacity: 0.9 }
     const cor = corDe(el, `--o-${sevColor(a.severity)}`, '#f0b030')
     return {
       color: sel ? corDe(el, '--o-teal', '#4fd1c5') : linha,
@@ -162,6 +166,13 @@ function Mapa({ areas, selArea, onSel }: { areas: Dado[]; selArea: string; onSel
       if (uf === selArea) (l as L.Path).bringToFront()
     })
   }, [selArea, porUf]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // as cores vêm das variáveis do tema: ao trocar claro/escuro (data-theme no <html>) reestiliza
+  useEffect(() => {
+    const obs = new MutationObserver(() => camada.current?.setStyle((f) => estilo(f?.properties?.uf)))
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => obs.disconnect()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div ref={caixa} className="mapa-brasil" style={{ height: 380 }}>
@@ -190,9 +201,31 @@ function Mapa({ areas, selArea, onSel }: { areas: Dado[]; selArea: string; onSel
             })
           }}
         />
+        <Reenquadrar />
       </MapContainer>
     </div>
   )
+}
+
+/**
+ * O MapContainer calcula o zoom de `bounds` uma vez, ao nascer. Se o card ainda não tinha tamanho
+ * (aba em segundo plano, layout em transição) o Brasil ficava minúsculo. Refaz o enquadramento
+ * sempre que o contêiner muda de tamanho (e ganha largura > 0).
+ */
+function Reenquadrar() {
+  const map = useMap()
+  useEffect(() => {
+    const el = map.getContainer()
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => {
+      if (el.clientWidth === 0 || el.clientHeight === 0) return
+      map.invalidateSize()
+      map.fitBounds(LIMITES_UFS, { animate: false })
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [map])
+  return null
 }
 
 function Eventos({ events, selArea, onSel }: { events: Dado[]; selArea: string; onSel: (uf: string) => void }) {

@@ -133,12 +133,40 @@ def load_balanco(year: int | None = None, *, refresh: bool = False,
     return frame, reports
 
 
+# Fontes de constrained-off lidas pelo risco. Decisao: solar E eolica. Antes so a
+# fotovoltaica entrava, e as UFs cujo corte e so eolico (MA, RS, SC) ficavam sem area
+# modelada na tela de Risco, embora o ONS publique o corte delas.
+COFF_SOURCES: tuple[str, ...] = ("coff_fv", "coff_eol")
+
+
 def load_coff(year: int | None = None, months: list[int] | None = None, *,
-              source: str = "coff_fv", refresh: bool = False
+              sources: tuple[str, ...] = COFF_SOURCES, refresh: bool = False
               ) -> tuple[Frame, list[IngestReport]]:
-    """Constrained-off por usina, semi-horario. Concatena varios meses."""
+    """Constrained-off por usina, semi-horario, de todas as `sources`, varios meses.
+
+    Cada linha leva a coluna `fonte` (chave do catalogo): nas bases tm a chave da
+    usina e composta fonte + id, porque um mesmo id/nome pode existir nas duas fontes.
+    """
     year = year or _default_year()
     months = months or [8, 7]
+    frames: list[Frame] = []
+    reports: list[IngestReport] = []
+    for source in sources:
+        f, r = _load_coff_source(source, year, months, refresh)
+        frames.extend(f)
+        reports.extend(r)
+
+    if not frames:
+        f = synthetic.coff_frame()
+        reports.append(IngestReport(catalog.CURATED[sources[0]]["package"],
+                                    "gerador determinístico", "demo", rows=len(f)))
+        return f, reports
+    return _concat(frames), reports
+
+
+def _load_coff_source(source: str, year: int, months: list[int], refresh: bool
+                      ) -> tuple[list[Frame], list[IngestReport]]:
+    """Meses de UMA fonte de constrained-off, cada frame marcado com `fonte`."""
     spec = catalog.CURATED[source]
     frames: list[Frame] = []
     reports: list[IngestReport] = []
@@ -168,17 +196,11 @@ def load_coff(year: int | None = None, months: list[int] | None = None, *,
             spec["package"], name, url, res.fetched_at, len(f),
             res.bytes_read, res.mode, spec["lag_note"]
         )
-        frames.append(f)
+        frames.append(f.add_column("fonte", np.full(len(f), source)))
         reports.append(IngestReport(spec["package"], name, res.mode, len(f),
                                     res.bytes_read, r.discarded_bad_time,
                                     r.discarded_short_line))
-
-    if not frames:
-        f = synthetic.coff_frame()
-        reports.append(IngestReport(spec["package"], "gerador determinístico",
-                                    "demo", rows=len(f)))
-        return f, reports
-    return _concat(frames), reports
+    return frames, reports
 
 
 def _concat(frames: list[Frame]) -> Frame:

@@ -90,7 +90,15 @@ def build_labels(coff: Frame, area_field: str, area: str) -> CurtailmentLabels:
     np.add.at(counts, pos, 1.0)
     counts[counts == 0] = 1.0
     # Passo semi-horario: soma de usinas, media temporal dentro da hora.
-    n_plants = max(1, len(np.unique(sel["nom_usina"]))) if "nom_usina" in sel else 1
+    # Usina = fonte + nome: com solar e eolica juntas, o mesmo nome nas duas fontes
+    # sao duas usinas (chave composta das bases tm).
+    if "nom_usina" in sel:
+        chave = sel["nom_usina"].astype(str)
+        if "fonte" in sel:
+            chave = np.char.add(np.char.add(sel["fonte"].astype(str), "|"), chave)
+        n_plants = max(1, len(np.unique(chave)))
+    else:
+        n_plants = 1
     corte = corte / np.maximum(counts / n_plants, 1.0)
     dispo = dispo / np.maximum(counts / n_plants, 1.0)
 

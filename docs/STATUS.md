@@ -899,3 +899,9 @@ novos. Até lá o CI falha de propósito em "Faltam no pacote" (o dados.zip do S
   dashboard, e um deploy só de banco passava como "no ar" com a task antiga).
 - GitHub Actions: secrets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` cadastrados; expiram com as
   credenciais do Workshop Studio.
+
+## 2026-09-27 — Tela Risco: contraste do mapa e UFs com corte eólico ✅
+
+- `Frontend/.../oraculo/pages/Risco.tsx`: divisas das UFs em `--o-muted` (antes `--o-line`, quase igual ao fundo) e UFs sem área em `--o-bg-2`; reestiliza ao trocar o tema e refaz o enquadramento quando o card muda de tamanho.
+- `Backend/oraculo/pipeline/ingest.py`: `load_coff` lê constrained-off solar **e eólico** (antes só o solar), com coluna `fonte`; `risk.build_labels` conta usinas por fonte + nome (chave composta). Removido o teto fixo de 14 áreas em `service._compute_risk`.
+- Resultado: o mapa passa de 10 para 13 UFs (entram MA, RS, SC). As outras 14 UFs não aparecem em nenhuma base de constrained-off do ONS (2021-10 a 2026-09): ficam cinza por falta de dado na fonte.
