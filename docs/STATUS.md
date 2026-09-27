@@ -857,3 +857,31 @@ dava 35 % de rural ao Sudeste (energia faturada no RJ: 0,4 %). Agora tudo na pá
 
 Pendente: o prior regional do Mapa · perfis por subestação (`service_mapa._regional_mix`) ainda usa o NNLS sobre os
 perfis estilizados de `classes.py`; os perfis do CTR são nacionais (o arquivo não traz subsistema).
+
+## 2026-09-27 — Produção: Triangulação com "No module named 'pandas'" e dados defasados ✅ (código) / 🟡 (dados)
+
+Varredura de todas as rotas GET em produção (ECS). Achados e correções:
+
+- **`/api/triangulation` → 500 `No module named 'pandas'`.** O modo real lê `data/processed/mmgd_empreendimentos.parquet`
+  com pandas (import dentro da função), mas a imagem instala só `Backend/deploy/requirements-api.txt`, que não tinha
+  `pandas` nem `pyarrow`. Localmente passava porque o ambiente de desenvolvimento tem o pyproject inteiro.
+  Adicionados `pandas>=2.2,<3` (2.x é o testado) e `pyarrow`. A tela Classes de consumo (`oraculo/profiles/medidos.py`,
+  recém-entrada) tinha o mesmo problema.
+- **Arquivos que a API lê e não iam para produção:** `mmgd_empreendimentos.parquet` (Triangulação) e
+  `perfis_classe_ctr.csv` (Classes de consumo) entraram em `DADOS` do `deploy_ecs.py` e no Dockerfile/.dockerignore.
+  O empacotamento agora falha com instrução se faltar algum item, em vez de publicar página quebrada.
+- **Deploy de dados agora MESCLA com o que está no S3** (antes substituía): cada pessoa gera partes diferentes
+  (esta máquina não tem `output/auditoria` nem `output/conciliacao`, que produção serve); o deploy local de quem não
+  tem uma parte a apagava de produção. Local sobrescreve; o que só existe no S3 é mantido.
+- **`/api/areas-influencia` → 503** "execução 1 publicada com um contrato anterior": o banco no S3 é a execução 1;
+  o local é a 11. Resolve com o deploy local (envia o banco novo).
+- `pandas` voltou a ser import tardio em `medidos.py`: `tests/test_db_api.py::test_servico_web_nao_carrega_a_parte_pesada`
+  estava falhando na main.
+- A dica de erro `INTERNAL` não manda mais "execute POST /api/ingest" (só vale para falta de dado).
+- Teste novo `tests/test_deploy_deps.py`: análise estática (ast) dos imports alcançáveis a partir de `main.py` e
+  `oraculo/`, inclusive dentro de funções; falha se algum pacote de terceiros não estiver no requirements de deploy.
+  Validado: sem `pandas` no arquivo, ele acusa exatamente o bug.
+- Verificado num venv limpo só com `requirements-api.txt`: 35 rotas, Triangulação e Classes ok.
+
+Pendente: rodar `python deploy/deploy_ecs.py` (em Backend/, com as credenciais AWS do workshop) para subir os dados
+novos. Até lá o CI falha de propósito em "Faltam no pacote" (o dados.zip do S3 ainda não tem os dois arquivos).

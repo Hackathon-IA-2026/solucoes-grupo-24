@@ -10,6 +10,8 @@
 !Backend/oraculo.db
 !Backend/output
 !Backend/data/oraculo_cache
+!Backend/data/processed/mmgd_empreendimentos.parquet
+!Backend/data/processed/perfis_classe_ctr.csv
 !Backend/deploy/requirements-api.txt
 !Frontend/oraculo-dashboard
 Frontend/oraculo-dashboard/node_modules

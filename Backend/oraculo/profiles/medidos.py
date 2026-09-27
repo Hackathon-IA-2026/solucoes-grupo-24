@@ -30,7 +30,6 @@ from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 from src.utils.config import carregar
 from src.utils.paths import RAIZ
@@ -60,6 +59,10 @@ def _ler(caminho: str, mtime: float) -> dict:
 
     O `mtime` entra na chave do cache: reconstruir a tabela invalida sozinho.
     """
+    # pandas só aqui (import tardio): o serviço web não carrega pandas na subida
+    # (tests/test_db_api.py::test_servico_web_nao_carrega_a_parte_pesada).
+    import pandas as pd
+
     t = pd.read_csv(caminho)
     out = {}
     for classe, g in t.groupby("classe", sort=False):

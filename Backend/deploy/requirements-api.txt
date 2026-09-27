@@ -14,4 +14,11 @@ httpx
 numpy
 scipy
 pillow
+# Triangulação (modo real) lê data/processed/mmgd_empreendimentos.parquet com pandas
+# (oraculo/api/service.py::_triangulation_real). Faltar aqui derrubou /api/triangulation em
+# produção com "No module named 'pandas'" (2026-09-27); tests/test_deploy_deps.py agora
+# garante que todo import alcançável pela API esteja listado.
+# pandas 2.x: é o testado no desenvolvimento (o 3.0 muda o dtype de texto e o copy-on-write).
+pandas>=2.2,<3
+pyarrow
 # PostgreSQL só se DATABASE_URL apontar para um (no Workshop Studio o RDS é bloqueado: SQLite).

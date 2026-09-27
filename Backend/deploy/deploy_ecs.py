@@ -47,12 +47,18 @@ PORTA = 8000
 # Dados que NÃO estão no git (.gitignore): banco publicado pelo run_heavywork.py, saídas da visão
 # e cache do protótipo. Vão para o S3 num zip só; o deploy local os envia e o CI (GitHub Actions),
 # que só tem o código, os baixa de lá. Para atualizar os dados na demo: rodar o deploy LOCAL.
-DADOS = ["oraculo.db", "output", "data/oraculo_cache"]
+# mmgd_empreendimentos.parquet: tabela real da Triangulação (BDGD x ANEEL, src/spatial/saidas.py);
+# sem ela /api/triangulation responde "tabela ainda não gerada" em produção.
+# perfis_classe_ctr.csv: formas horárias medidas (ANEEL CTR) da tela Classes de consumo
+# (config/perfis_classe.yaml, oraculo/profiles/medidos.py).
+DADOS = ["oraculo.db", "output", "data/oraculo_cache",
+         "data/processed/mmgd_empreendimentos.parquet", "data/processed/perfis_classe_ctr.csv"]
 CHAVE_DADOS = "dados/dados.zip"
 
-# O que a API lê em runtime (mesma lista branca do Dockerfile.dockerignore). Como não há limite de
-# 250 MB aqui (isso era do Lambda), o cache real do protótipo entra: a demo não depende da rede do ONS.
-COPIAR = ["main.py", "alembic.ini", "config", "migrations", "src", "oraculo", *DADOS]
+# O que a API lê em runtime (mesma lista branca do Dockerfile.dockerignore): código (do checkout) +
+# DADOS (da pasta montada por sincronizar_dados). Como não há limite de 250 MB aqui (isso era do
+# Lambda), o cache real do protótipo entra: a demo não depende da rede do ONS.
+CODIGO = ["main.py", "alembic.ini", "config", "migrations", "src", "oraculo"]
 
 # Roles próprias (o workshop só bloqueia anexar policy a roles WS*/cdk-*/CodeEditor).
 POLICY_EXEC = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
@@ -71,8 +77,9 @@ cd /app/Backend && PYTHONPATH=/app exec python -m uvicorn main:app --host 0.0.0.
 """
 
 
-def montar_pacote(destino: Path) -> None:
-    """Instala as deps para Linux x86_64 (o Fargate), copia o código e o build do dashboard."""
+def montar_pacote(destino: Path, base_dados: Path) -> None:
+    """Instala as deps para Linux x86_64 (o Fargate), copia o código, os DADOS (de `base_dados`,
+    ver sincronizar_dados) e o build do dashboard."""
     if not DIST.exists():
         sys.exit(f"Falta o build do dashboard: rode `npm run build` em {DIST.parent} primeiro.")
     deps = [l.strip() for l in REQ_API.read_text(encoding="utf-8").splitlines()
@@ -85,8 +92,14 @@ def montar_pacote(destino: Path) -> None:
          "--platform", "manylinux_2_28_x86_64", *deps],
         check=True)
     raiz = destino / "Backend"
-    for rel in COPIAR:
-        origem = BACKEND / rel
+    # Dado ausente = página quebrada em produção. No CI isso acontece quando o dados.zip do S3 é de
+    # antes de um item novo em DADOS: falha aqui, com a instrução, em vez de publicar sem ele.
+    itens = [(BACKEND / rel, rel) for rel in CODIGO] + [(base_dados / rel, rel) for rel in DADOS]
+    faltando = [rel for origem, rel in itens if not origem.exists()]
+    if faltando:
+        sys.exit(f"Faltam no pacote: {', '.join(faltando)}. Rode o deploy LOCAL (máquina com os dados, "
+                 f"`python deploy/deploy_ecs.py` em Backend/) para reenviar dados/dados.zip ao S3.")
+    for origem, rel in itens:
         alvo = raiz / rel
         if origem.is_dir():
             shutil.copytree(origem, alvo, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
@@ -120,23 +133,43 @@ def _bucket(s3, conta: str, regiao: str) -> str:
     return bucket
 
 
-def sincronizar_dados(s3, bucket: str) -> None:
-    """Máquina com o banco (deploy local): envia os dados ao S3. Sem o banco (CI): baixa e extrai."""
-    if (BACKEND / "oraculo.db").exists():
-        tmp = Path(tempfile.gettempdir()) / "oraculo_dados.zip"
-        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
-            for rel in DADOS:
-                origem = BACKEND / rel
-                arquivos = [f for f in origem.rglob("*") if f.is_file()] if origem.is_dir() else [origem]
-                for f in arquivos:
-                    z.write(f, f.relative_to(BACKEND).as_posix())
-        print(f"enviando dados ({tmp.stat().st_size / 1024 / 1024:.0f} MB) para s3://{bucket}/{CHAVE_DADOS}")
-        s3.upload_file(str(tmp), bucket, CHAVE_DADOS)
-        return
-    print(f"oraculo.db não está no checkout: baixando dados de s3://{bucket}/{CHAVE_DADOS}")
-    tmp = Path(tempfile.gettempdir()) / "oraculo_dados.zip"
-    s3.download_file(bucket, CHAVE_DADOS, str(tmp))  # falha clara se ninguém fez o deploy local antes
-    zipfile.ZipFile(tmp).extractall(BACKEND)
+def sincronizar_dados(s3, bucket: str, pasta: Path) -> Path:
+    """Monta em `pasta` os DADOS que vão para produção e devolve essa pasta.
+
+    Sempre parte do dados.zip que já está no S3 (o que produção serve hoje). Na máquina com o banco
+    (deploy local), os arquivos locais de DADOS SOBRESCREVEM os do S3 e o resultado volta para o S3.
+    Decisão: MESCLAR, não substituir. Cada pessoa do time gera partes diferentes (uma tem a visão
+    computacional em output/, outra o banco novo); substituir fazia o deploy de quem não tem uma
+    das partes apagá-la de produção. Custo: arquivo apagado localmente continua no S3 (remova à mão).
+    Sem o banco (CI): só baixa e extrai.
+    """
+    from botocore.exceptions import ClientError
+    pasta.mkdir(parents=True, exist_ok=True)
+    tmp = pasta.parent / "oraculo_dados.zip"
+    try:
+        s3.download_file(bucket, CHAVE_DADOS, str(tmp))
+        zipfile.ZipFile(tmp).extractall(pasta)
+        print(f"dados de produção (s3://{bucket}/{CHAVE_DADOS}) extraídos como base")
+    except ClientError as e:
+        if not (BACKEND / "oraculo.db").exists():
+            raise  # CI sem dados no S3: falha clara, alguém precisa fazer o deploy local antes
+        print(f"sem dados no S3 ainda ({e.response['Error']['Code']}): só os locais")
+    if not (BACKEND / "oraculo.db").exists():
+        return pasta
+    for rel in DADOS:
+        origem = BACKEND / rel
+        if not origem.exists():
+            print(f"  aviso: {rel} não existe nesta máquina; mantém a versão do S3 (se houver)")
+            continue
+        arquivos = [f for f in origem.rglob("*") if f.is_file()] if origem.is_dir() else [origem]
+        for f in arquivos:
+            alvo = pasta / f.relative_to(BACKEND)
+            alvo.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(f, alvo)
+    zipar(pasta, tmp)
+    print(f"enviando dados ({tmp.stat().st_size / 1024 / 1024:.0f} MB) para s3://{bucket}/{CHAVE_DADOS}")
+    s3.upload_file(str(tmp), bucket, CHAVE_DADOS)
+    return pasta
 
 
 def _role(iam, nome: str, servico: str, policy_arn: str | None = None, inline: dict | None = None) -> str:
@@ -275,18 +308,20 @@ def main() -> None:
     ap.add_argument("--max-tasks", type=int, default=4)
     args = ap.parse_args()
 
+    if args.saida.exists():
+        shutil.rmtree(args.saida)
     s3 = bucket = conta = None
+    base_dados = BACKEND  # --so-empacotar: usa só os dados desta máquina
     if not args.so_empacotar:
         import boto3
         conta = boto3.client("sts", region_name=args.regiao).get_caller_identity()["Account"]
         s3 = boto3.client("s3", region_name=args.regiao)
         bucket = _bucket(s3, conta, args.regiao)
-        sincronizar_dados(s3, bucket)  # antes de empacotar: no CI é daqui que vem o banco
+        # Antes de empacotar: no CI é daqui que vem o banco; no local, mescla com o que está no ar.
+        base_dados = sincronizar_dados(s3, bucket, args.saida / "dados")
 
-    if args.saida.exists():
-        shutil.rmtree(args.saida)
     pacote = args.saida / "pacote"
-    montar_pacote(pacote)
+    montar_pacote(pacote, base_dados)
     zip_path = args.saida / f"{SERVICO}.zip"
     zipar(pacote, zip_path)
     print(f"zip: {zip_path} ({zip_path.stat().st_size / 1024 / 1024:.0f} MB)")

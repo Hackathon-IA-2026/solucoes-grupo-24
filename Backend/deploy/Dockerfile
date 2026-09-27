@@ -38,6 +38,10 @@ COPY Backend/oraculo.db ./oraculo.db
 COPY Backend/output ./output
 # Cache real do protótipo (dados do ONS já baixados): a demo não depende da rede do ONS.
 COPY Backend/data/oraculo_cache ./data/oraculo_cache
+# Tabelas processadas que a API lê (mesma lista de DADOS do deploy_ecs.py): Triangulação (BDGD x
+# ANEEL, oraculo/api/service.py) e formas horárias medidas das Classes de consumo (ANEEL CTR).
+COPY Backend/data/processed/mmgd_empreendimentos.parquet ./data/processed/mmgd_empreendimentos.parquet
+COPY Backend/data/processed/perfis_classe_ctr.csv ./data/processed/perfis_classe_ctr.csv
 COPY --from=front /app/Frontend/oraculo-dashboard/dist /app/Frontend/oraculo-dashboard/dist
 
 EXPOSE 8000

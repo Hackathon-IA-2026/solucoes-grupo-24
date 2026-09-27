@@ -33,8 +33,11 @@ def _wrap(data) -> Response:
 
 def _fail(exc: Exception) -> Response:
     code = "INSUFFICIENT_DATA" if isinstance(exc, (ValueError, LookupError)) else "INTERNAL"
+    # A dica de ingestão só vale para falta de dado. Um erro interno (ex.: biblioteca ausente
+    # no servidor) não se resolve com /api/ingest, e a dica antiga mandava o usuário para lá.
     hint = ("Execute POST /api/ingest ou verifique a conectividade com o "
-            "Portal de Dados Abertos do ONS.")
+            "Portal de Dados Abertos do ONS." if code == "INSUFFICIENT_DATA" else
+            "Erro interno do servidor: veja os logs do serviço (não é falta de dado do ONS).")
     return _json(envelope.error(code, str(exc)[:400], hint),
                  envelope.status_for(code))
 
