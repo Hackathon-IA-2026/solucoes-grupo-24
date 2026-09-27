@@ -15,6 +15,8 @@ from src.heavywork.orquestrador import Etapa
 from src.ingestion import download
 from src.models import carga as modelos_carga
 from src.models import curtailment as modelos_curtailment
+from src.models import demanda_meses as modelos_demanda_meses
+from src.models import pato_meses as modelos_pato_meses
 from src.models import relatorio_carga, relatorio_curtailment
 # O TFT (src.models.tft) NÃO é importado aqui: ele carrega o torch, pesado. As funções abaixo o
 # importam só quando a etapa roda; as impressões digitais usam só caminhos de mc (carga.py).
@@ -160,6 +162,26 @@ def _entradas_previsao_curtailment() -> str:
                                    *codigo_de("src.models.relatorio_curtailment", RAIZ)], RAIZ)])
 
 
+# --------------------------------------------------------------------------- 4a. demanda de meses
+# Fase 1 da especificação do preditivo (docs/oraculo/especificacao/17-previsao-meses-carga-mmgd-pato.md): demanda bruta
+# para meses à frente. Entradas: carga e calendário processados, config e código. A temperatura
+# ERA5 vem do cache do Open-Meteo (oraculo/tempo/clima.py), fora da impressão digital.
+def _entradas_demanda_meses() -> str:
+    return de_arquivos([processamento_saidas.SAIDA_CARGA, processamento_saidas.SAIDA_CALENDARIO,
+                        CONFIG / "demanda_meses.yaml",
+                        *codigo_de("src.models.demanda_meses", RAIZ),
+                        *codigo_de("src.models.relatorio_demanda_meses", RAIZ)], RAIZ)
+
+
+# Fases 2 e 3 (MMGD e curva do pato de meses): depende da demanda de meses (backtest e métricas),
+# da capacidade de MMGD e da base da Fronteira (MMGD por município, em data/oraculo_cache).
+def _entradas_pato_meses() -> str:
+    return de_objeto([_entradas_demanda_meses(),
+                      de_arquivos([modelos_demanda_meses.caminho("backtest"), modelos_demanda_meses.caminho("metricas"),
+                                   processamento_saidas.SAIDA_CAPACIDADE_MMGD, CONFIG / "pato_meses.yaml",
+                                   *codigo_de("src.models.pato_meses", RAIZ)], RAIZ.parent)])
+
+
 def _prever_carga() -> str:
     return f"{modelos_carga.prever()}; {relatorio_carga.escrever()}"
 
@@ -254,6 +276,17 @@ def montar() -> list[Etapa]:
               executar=_prever_carga, entradas=_entradas_previsao_carga,
               saidas=(modelos_carga.ARQ_PREVISOES, relatorio_carga.ARQ_MD),
               estimativa=lambda: est["previsao_carga"]),
+        Etapa("demanda_meses",
+              "demanda bruta para 1–6 meses (nível × sazonal × perfil + temperatura ERA5), backtest com origem móvel + relatório",
+              executar=modelos_demanda_meses.executar, entradas=_entradas_demanda_meses,
+              saidas=(modelos_demanda_meses.caminho("backtest"), modelos_demanda_meses.caminho("previsao"),
+                      modelos_demanda_meses.caminho("relatorio")),
+              estimativa=lambda: est["demanda_meses"]),
+        Etapa("pato_meses",
+              "MMGD física por célula e curva do pato prevista para 1–6 meses (anos-análogos ERA5), backtest + painel da tela Previsão de meses",
+              executar=modelos_pato_meses.executar, entradas=_entradas_pato_meses,
+              saidas=(modelos_pato_meses.caminho("painel"), modelos_pato_meses.caminho("previsao_pato")),
+              estimativa=lambda: est["pato_meses"]),
         Etapa("previsao_curtailment",
               "risco de curtailment fora da amostra de cada usina e semi-hora + relatório do backtest",
               executar=_prever_curtailment, entradas=_entradas_previsao_curtailment,

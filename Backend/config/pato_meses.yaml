@@ -1,0 +1,98 @@
+# MMGD e curva do pato prevista para MESES à frente — Fases 2 e 3 de
+# docs/oraculo/especificacao/17-previsao-meses-carga-mmgd-pato.md. Código: src/models/mmgd_meses.py (Fase 2) e
+# src/models/pato_meses.py (Fase 3). A demanda vem de config/demanda_meses.yaml (Fase 1).
+
+# ------------------------------------------------------------------ A. capacidade por célula
+celulas:
+  # Células de ~2,5° (oraculo/tempo/pato.clusters, sobre a MMGD por município da base da
+  # Fronteira T–D = cadastro ANEEL). Células menores que `min_mw` vão para a vizinha do mesmo
+  # subsistema (potência preservada). 500 MW -> 31 células: limita as chamadas ao ERA5.
+  graus: 2.5
+  min_mw: 500
+  # A distribuição ESPACIAL é a do cadastro atual; o nível no tempo segue o cadastro acumulado
+  # do subsistema (capacidade_mmgd.csv, só passado). Premissa declarada no relatório.
+
+capacidade:
+  # Os últimos meses do cadastro são sub-registrados (mesma premissa de oraculo/config.py
+  # ENE["defasagem_cadastro_meses"]): a projeção parte de (emissão − defasagem).
+  defasagem_cadastro_meses: 3
+  # Taxa histórica = crescimento do cadastro nos 12 meses que terminam no ponto de partida.
+  janela_taxa_meses: 12
+  # Cenários da previsão para a frente (eixo, não ruído: nunca se misturam nos quantis).
+  #   referencia -> taxa do PLAN 2026-2030 2ª RQ (MMGD em GW, ENE["plan"]["mmgd_gw"])
+  #   baixo      -> taxa do PAR/PEL 2025 (dez/2025 -> fim de 2029, ENE["parpel"])
+  #   alto       -> taxa histórica do cadastro (últimos 12 meses)
+  # No backtest só a taxa histórica (PLAN e PAR/PEL são posteriores ao início do teste).
+  cenarios: [baixo, referencia, alto]
+
+# ------------------------------------------------------------------ B. tempo
+tempo:
+  # Fuso fixo UTC−3 (sem o horário de verão que existiu até 2019), igual ao do projeto.
+  fuso: America/Bahia
+  # ERA5 das células: base da calibração do PR, dos anos-análogos e do "tempo perfeito".
+  inicio_era5: "2019-01-01"
+  # Anos-análogos: cada ano do ERA5 (a partir deste) vira um membro do ensemble com a
+  # sequência horária REAL daquele ano (preserva dias nublados em sequência e a correlação
+  # temperatura × radiação). Só entram datas análogas anteriores à emissão.
+  primeiro_ano_analogo: 2019
+  # Condicionamento pelo SEAS5 (só na previsão para a frente): peso de cada ano-análogo pela
+  # distância entre a anomalia mensal dele e a anomalia do SEAS5 (temperatura e radiação),
+  # ambas contra a climatologia ERA5 dos anos-análogos. `sigma_fator` × desvio-padrão das
+  # anomalias dos análogos = largura do núcleo gaussiano (condicionamento suave: o SEAS5 não
+  # tem hindcast aqui para corrigir viés).
+  seas5:
+    usar: true
+    url: https://seasonal-api.open-meteo.com/v1/seasonal
+    modelo: ecmwf_seas5
+    dias: 210
+    sigma_fator: 1.0
+
+# ------------------------------------------------------------------ D. geração
+geracao:
+  # Deslocamento Open-Meteo -> ONS (a radiação rotulada h é a média da hora anterior; o ONS
+  # rotula pelo início): mesma constante do painel do pato (oraculo/tempo/pato.SHIFT).
+  # PR por subsistema recalibrado em cada emissão: soma da MMGD do ONS ÷ soma da geração
+  # física com PR = 1 nos `janela_pr_meses` anteriores (ERA5 + cadastro da época).
+  janela_pr_meses: 12
+  # Resíduo relativo ONS ÷ física (tempo perfeito) só nas horas com geração física acima
+  # desta fração da capacidade (à noite a razão não tem sentido).
+  fracao_min_residuo: 0.02
+
+# ------------------------------------------------------------------ F. curva do pato
+pato:
+  # Patamares do CLAUDE.md (não os da especificação, 10–15h / 17–21h): mínima diurna 09–16h
+  # (barriga = mínimo da carga líquida nela) e ponta noturna 19–22h. Horas [início, fim).
+  barriga_horas: [9, 16]
+  ponta_horas: [19, 22]
+  # Grades de quantis usadas como amostras equiprováveis dos resíduos (demanda e MMGD).
+  grade_demanda: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  grade_mmgd: [0.1, 0.3, 0.5, 0.7, 0.9]
+  # Risco de carga líquida mínima: P(barriga do dia < limiar). Sem limiar de inflexibilidade
+  # oficial por subsistema, o limiar é o quantil `limiar_quantil` da barriga diária observada
+  # nos 12 meses antes da emissão (dado, não número inventado).
+  limiar_quantil: 0.05
+
+# Calibração conformal (CQR) das bandas P10–P90 (demanda e carga líquida): alargamento aditivo
+# por horizonte = quantil (nominal) do escore max(P10 − y, y − P90) nas últimas
+# `emissoes` emissões anteriores, só com alvos já ocorridos na emissão.
+conformal:
+  emissoes: 12
+  cobertura: 0.8
+
+backtest:
+  primeira_emissao: "2025-07-01"
+  horizonte_meses: 6
+  calibracao_emissoes: 12
+
+saidas:
+  celulas: data/processed/mmgd_celulas.csv
+  capacidade: data/processed/mmgd_capacidade_celula.parquet
+  backtest_mmgd: data/modelos/pato_meses/backtest_mmgd.parquet
+  backtest_pato: data/modelos/pato_meses/backtest_pato.parquet
+  previsao_mmgd: data/processed/previsao_mmgd_meses.parquet
+  previsao_pato: data/processed/previsao_carga_liquida_meses.parquet
+  metricas_pato: data/processed/metricas_pato_meses.parquet
+  # JSON compacto lido pela rota GET /api/previsao-meses (tela Operação › Previsão de meses)
+  painel: output/previsao_meses/painel.json
+  relatorio: docs/reports/pato_meses.md
+  metricas: docs/reports/metricas_pato_meses.csv

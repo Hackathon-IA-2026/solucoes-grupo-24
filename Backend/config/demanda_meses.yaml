@@ -1,0 +1,70 @@
+# Previsão da DEMANDA BRUTA (carga global) para meses à frente — Fase 1 da especificação
+# docs/oraculo/especificacao/17-previsao-meses-carga-mmgd-pato.md. Código: src/models/demanda_meses.py.
+#
+# Decisão da especificação (§2): para horizontes longos NÃO se prevê a carga supervisionada
+# direto. Prevê-se a demanda bruta D(t) (consumo: calendário e temperatura) e, nas fases
+# seguintes, a MMGD G(t) separada; a curva do pato é L = D − G.
+
+# Coluna de data/processed/carga_supervisionada.csv usada como demanda bruta (carga global
+# depois da consistência do processamento).
+alvo: carga_global_consistida
+
+# Séries modeladas. SIN = soma dos 4 subsistemas, só nas horas em que os 4 existem, e é
+# modelado DIRETO (somar previsões de subsistema não dá o quantil do SIN).
+series: [SE, S, NE, N, SIN]
+
+# Início do histórico usado (antes disso só serve para nada: o perfil usa `perfil_anos`).
+inicio_dados: "2019-01-01"
+
+# Anos de histórico (contados para trás a partir da emissão) usados no perfil horário, no
+# índice sazonal mensal, na climatologia de temperatura e na sensibilidade à temperatura.
+perfil_anos: 3
+
+# Crescimento anual no BACKTEST: razão entre a média dos últimos 12 meses antes da emissão e
+# a dos 12 meses anteriores (só passado). O PLAN 2026-2030 2ª RQ foi publicado em 07/08/2026,
+# DEPOIS do início do teste: usá-lo no backtest seria vazamento. Ele só entra na previsão
+# para a frente (`previsao.tendencia: plan`).
+crescimento_janela_meses: 12
+
+# Backtest cronológico com origem móvel: uma emissão no 1º dia de cada mês, prevendo os
+# `horizonte_meses` meses seguintes (mês 1 = o mês que começa na emissão). O teste começa em
+# `primeira_emissao` e cobre mais de 12 meses (todas as estações).
+backtest:
+  primeira_emissao: "2025-07-01"
+  horizonte_meses: 6
+  # Banda P10–P90: quantis do erro relativo (real ÷ P50) por horizonte e hora do dia, medidos
+  # nas últimas `calibracao_emissoes` emissões cujos alvos terminaram ANTES da emissão
+  # corrente (só passado). As emissões anteriores ao teste existem só para isso.
+  calibracao_emissoes: 12
+
+quantis: [0.1, 0.5, 0.9]
+
+# Calibração conformal (CQR) da banda: alargamento por série × horizonte = quantil `cobertura`
+# do escore max(P10 − y, y − P90) nas últimas `emissoes` emissões (só alvos já ocorridos).
+# Motivo: no 1º backtest a banda só dos quantis do erro relativo cobria 56–73%, não 80%.
+conformal:
+  emissoes: 12
+  cobertura: 0.8
+
+# Variantes do modelo (as duas vão para o backtest):
+#   era5  -> sensibilidade à temperatura com a temperatura OBSERVADA (ERA5) nos alvos:
+#            "tempo perfeito", mede o teto do que o tempo previsto pode dar (Fase 1 da spec)
+#   clim  -> sem tempo (anomalia = 0, temperatura climatológica): é o que se tem para meses à
+#            frente enquanto o SEAS5 não entra (Fase 2); é a variante da previsão para a frente
+variantes: [era5, clim]
+
+# Previsão para a frente, emitida logo depois do último dado.
+previsao:
+  horizonte_meses: 6
+  variante: clim
+  # plan -> nível pela trajetória do PLAN 2026-2030 2ª RQ (oraculo/config.py ENE["plan"],
+  #         carga global do SIN; a mesma TAXA vale para os subsistemas, premissa declarada)
+  # historico -> mesma taxa do backtest
+  tendencia: plan
+
+# Saídas (relativas a Backend/, exceto o relatório, relativo à raiz do repositório).
+saidas:
+  backtest: data/modelos/demanda_meses/backtest.parquet
+  previsao: data/processed/previsao_demanda_meses.parquet
+  relatorio: docs/reports/demanda_meses.md
+  metricas: docs/reports/metricas_demanda_meses.csv

@@ -161,8 +161,12 @@ def historical_forecast(points: list[dict], models: list[str], start: str,
 
 
 def era5(points: list[dict], start: str, end: str, hourly: str = HOURLY,
-         ttl: float = 30 * 86400) -> dict:
+         ttl: float = 30 * 86400, tz: str | None = None) -> dict:
+    """ERA5 horario. `tz` troca o fuso da resposta (padrao TZ); o preditivo de meses usa
+    "America/Bahia" (UTC-3 fixo, sem o horario de verao que o Brasil teve ate 2019)."""
     extra = {"start_date": start, "end_date": end}
+    if tz:
+        extra["timezone"] = tz
     return _chunked(ARCHIVE, points, extra, ttl, None, hourly)
 
 

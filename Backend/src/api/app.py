@@ -40,6 +40,7 @@ from src.utils.config import carregar
 from src.utils.paths import RAIZ
 from src.api.auditoria import rotas_auditoria
 from src.api.conciliacao import rotas_conciliacao
+from src.api.previsao_meses import rotas_previsao_meses
 
 INSTRUCAO = "rode `python run_heavywork.py` em Backend/ para publicar os dados no banco"
 
@@ -136,6 +137,7 @@ def criar_app(dashboard_dist: Path | None = None) -> FastAPI:
     app.include_router(_rotas(), prefix=cfg["prefixo"])
     app.include_router(rotas_auditoria(), prefix=cfg["prefixo"])
     app.include_router(rotas_conciliacao(), prefix=cfg["prefixo"])
+    app.include_router(rotas_previsao_meses(), prefix=cfg["prefixo"])
     _incluir_prototipo(app)
     dist = dashboard_dist if dashboard_dist is not None else RAIZ / cfg["dashboard_dist"]
     _servir_dashboard(app, dist.resolve(), cfg["prefixo"])

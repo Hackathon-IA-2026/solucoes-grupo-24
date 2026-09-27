@@ -265,4 +265,36 @@ export const PATO: PaginaDoc = {
   ],
 }
 
-export const PAGINAS_OPERACAO: PaginaDoc[] = [OPERACAO, RISCO, PATO]
+export const PREVISAO_MESES: PaginaDoc = {
+  id: 'previsao-meses',
+  titulo: 'Previsão de meses: demanda, MMGD e curva do pato',
+  grupo: GRUPO,
+  resumo: 'Demanda, geração da MMGD e carga líquida (curva do pato) para 1 a 6 meses, por subsistema e cenário de capacidade, com a validação do backtest.',
+  pergunta: 'Nos próximos meses, quão funda fica a barriga do meio-dia e quão íngreme a rampa até a ponta, e com que risco a carga líquida cai abaixo do mínimo recente?',
+  rotas: ['GET /api/previsao-meses'],
+  secoes: [
+    secao(
+      'Como ler',
+      lista(
+        '**Chips** — série (SIN ou subsistema), cenário de capacidade da MMGD (baixo = PAR/PEL 2025, referência = PLAN 2026-2030, alto = ritmo do cadastro) e mês.',
+        '**Curva do pato prevista** — dia médio do mês: demanda, MMGD e carga líquida (P50) com a banda P10–P90 da carga líquida. Faixas: mínima diurna 09–16h e ponta noturna 19–22h.',
+        '**Barriga e rampa mês a mês** — evolução da barriga (P10–P90) e da rampa.',
+        '**Risco de carga líquida mínima** — fração dos dias previstos com barriga abaixo do P5 da barriga observada nos 12 meses anteriores (sem limiar oficial de inflexibilidade por subsistema).',
+        '**Validação** — backtest com origem móvel mensal: skill sobre o sazonal ingênuo, cobertura das bandas, erro da MMGD por hora do dia e os critérios de aceite da especificação.',
+      ),
+    ),
+    secao(
+      'Método',
+      passos(
+        '**Demanda bruta** (carga global): nível dos últimos 12 meses × crescimento × índice sazonal × perfil mês × dia-tipo × hora + sensibilidade à temperatura (β por mês e hora).',
+        '**MMGD**: modelo físico por célula de ~2,5° (cadastro ANEEL por município), PR recalibrado contra a MMGD do ONS nos 12 meses anteriores, capacidade projetada pelo cenário.',
+        '**Membros**: cada ano-análogo do ERA5 dá a sequência horária real de radiação e temperatura; o mesmo membro alimenta demanda e MMGD.',
+        '**Banda**: quantis sobre os membros, alargados por calibração conformal medida nas emissões anteriores.',
+      ),
+      formula('L(t) = D(t) − G(t)'),
+      aviso('premissa', 'Meses à frente não têm previsão de tempo', 'A banda é a variabilidade climática dos anos-análogos. O condicionamento pelo SEAS5 e o FourCastNet 3 estão na especificação, ainda não implementados.'),
+    ),
+  ],
+}
+
+export const PAGINAS_OPERACAO: PaginaDoc[] = [OPERACAO, RISCO, PATO, PREVISAO_MESES]

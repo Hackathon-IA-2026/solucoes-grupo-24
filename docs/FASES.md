@@ -128,6 +128,14 @@ Método completo em `docs/metodo_espacial.md`.
 - [x] Contrato do Mapa Híbrido: recurso `areas_influencia` (GeoJSON, contrato v4 aditivo, pedido do Tiago) + camada no dashboard — 👤 Luiz revisar
 - [ ] Melhorar o excedente: fator de geração por área de influência (irradiância) e perfil de carga intradiário por classe
 
+## Preditivo de meses (spec `docs/oraculo/especificacao/17-previsao-meses-carga-mmgd-pato.md`) 🟡 — tela Operação › Previsão de meses
+
+- [x] Fase 1: demanda bruta 1–6 meses (`src/models/demanda_meses.py`, etapa `demanda_meses`), backtest com skill sobre o sazonal ingênuo nas 5 séries (`docs/reports/demanda_meses.md`) (2026-09-27)
+- [x] Fase 2: MMGD futura por célula (cadastro + cenários) com anos-análogos do ERA5; erro por hora medido (2026-09-27) — [ ] condicionamento SEAS5
+- [x] Fase 3: curva do pato prevista (ensemble conjunto, CQR), rota fora do contrato e tela (2026-09-27) — [ ] 👤 entrar no contrato
+- [ ] Fase 4: FourCastNet 3 (precisa de GPU)
+- [ ] Fase 5: fator de capacidade pela visão computacional com imagem real
+
 ## Fase 7 — Entrega ⬜
 
 - [x] Figura 1 (vinda da Peça B da Fase 1): `docs/reports/figura1_curtailment_mensal.png`

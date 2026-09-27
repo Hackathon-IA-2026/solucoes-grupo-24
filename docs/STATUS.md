@@ -899,3 +899,56 @@ novos. Até lá o CI falha de propósito em "Faltam no pacote" (o dados.zip do S
   dashboard, e um deploy só de banco passava como "no ar" com a task antiga).
 - GitHub Actions: secrets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` cadastrados; expiram com as
   credenciais do Workshop Studio.
+## 2026-09-27 — Preditivo de meses, Fase 1: demanda bruta 1–6 meses à frente ✅
+
+Especificação completa (demanda + MMGD + curva do pato em meses) salva em `docs/oraculo/especificacao/17-previsao-meses-carga-mmgd-pato.md`;
+esta entrega é a **Fase 1** dela.
+
+- **Alvo:** demanda bruta = `carga_global_consistida` (não a supervisionada: a MMGD será prevista à parte e a curva do
+  pato é D − G), horária, SE/S/NE/N/SIN (SIN modelado direto).
+- **Modelo** (`src/models/demanda_meses.py`, config `config/demanda_meses.yaml`): nível dos últimos 12 meses ×
+  crescimento × índice sazonal mensal (2×12 MA) × perfil mês × dia-tipo × hora (3 anos, feriado = domingo) +
+  β(mês, hora) × anomalia de temperatura ERA5 (reuso de `oraculo/tempo/clima.weather_for_area`). Variantes `era5`
+  ("tempo perfeito") e `clim` (sem tempo, a publicável para meses).
+- **Backtest:** origem móvel mensal desde 2025-07-01 (15 emissões de teste, horizontes 1–6 meses); crescimento só
+  histórico no backtest (o PLAN saiu em 08/2026, seria vazamento); banda P10–P90 pelos quantis do erro relativo das
+  12 emissões anteriores, só com alvos já ocorridos.
+- **Resultado** (`docs/reports/demanda_meses.md`): skill sobre o sazonal ingênuo, variante sem tempo, média dos
+  horizontes: SE +0,29, S +0,20, NE +0,17, N +0,11, SIN +0,26 (critério da Fase 1 atendido nas 5). Com ERA5: SIN +0,31.
+  MAPE do SIN 3,4% (sem tempo). Cobertura da banda: 56–73% só com os quantis do erro relativo; com a calibração
+  conformal (CQR, `conformal` na config) passou a 66–79% (média dos horizontes).
+- **Previsão para a frente** (`data/processed/previsao_demanda_meses.parquet`): emitida em 2026-09-26, até 2027-03-25,
+  crescimento pela taxa do PLAN 2026-2030 2ª RQ. SIN P50: 85,3 GWmed (fim de set) → 93,3 (fev/27).
+- **Pipeline:** etapa `demanda_meses` no `run_heavywork.py` (~45 s, ligada em `config/heavywork.yaml`).
+- **Testes:** `tests/test_demanda_meses.py` (5: vazamento temporal perturbando demanda e temperatura depois da emissão,
+  baselines só com passado, banda só com erro já conhecido, fator do PLAN). Achou e corrigiu um bug de resolução de
+  datetime no fator do PLAN. `test_heavywork` e `test_estrutura` ok.
+
+Não feito (fases 2–5 da spec): MMGD futura por célula, SEAS5/análogos, curva do pato prevista, contrato/API/tela
+(mudança de schema: perguntar antes), FourCastNet 3 (sem GPU/`earth2studio`), fator da visão computacional.
+Achado à parte: o banco local foi publicado antes do clima atualizado e as 3 curvas do Despacho Preditivo saem `mock`;
+republicar (sem retreinar) resolve — conferido montando o contrato em memória.
+
+## 2026-09-27 — Preditivo de meses, Fases 2 e 3: MMGD e curva do pato prevista + tela "Previsão de meses" ✅ (em revisão na branch aba-previsao-meses)
+
+- **Tela:** Operação › **Previsão de meses** (`/previsao-meses`), rota `GET /api/previsao-meses` (`src/api/previsao_meses.py`,
+  fora do contrato, só lê `Backend/output/previsao_meses/painel.json`; sem ele, 503 com o comando). Ajuda F1 `previsao-meses`.
+- **Modelo** (`src/models/pato_meses.py`, config `config/pato_meses.yaml`): MMGD física (`oraculo/tempo/pato.pv_mw`) em 31 células
+  de ~2,5° (base da Fronteira T–D), ERA5 horário das células 2019→2026 em UTC−3 fixo (`clima.era5` ganhou `tz`); capacidade
+  pelo cadastro do subsistema projetado de E − 3 meses (backtest: taxa histórica; para a frente: cenários baixo = PAR/PEL,
+  referência = PLAN, alto = cadastro); PR recalibrado por emissão contra a MMGD do ONS. Membros = anos-análogos do ERA5
+  (o mesmo membro dá temperatura à demanda e radiação à MMGD); L = D − G; bandas por CQR.
+- **Backtest** (mesmas emissões da Fase 1, `docs/reports/pato_meses.md`): skill na barriga SE +0,23, S +0,23, NE +0,23,
+  N −0,36, SIN +0,24 (critério ≥ 3 de 4 ✅); cobertura P10–P90 da carga líquida 75–82% nas 5 séries (critério ✅);
+  MMGD do SIN: MAE 899 MW (análogos) × 642 MW (tempo perfeito) × 949 MW (sazonal ingênuo). O N vai mal (uma célula só).
+- **Previsão para a frente** (emissão 2026-09-26, até 2027-03): SIN, referência: barriga P50 57,5 GW (set) → 63,6 GW (fev).
+- **Pipeline:** etapa `pato_meses` registrada no `run_heavywork.py` (NÃO rodada por ele nesta sessão; rodada direto:
+  `python -m src.models.pato_meses`, 5,7 min na 1ª vez por causa do download do ERA5).
+- **Testes:** `tests/test_pato_meses.py` (4: membros só com tempo anterior à emissão, capacidade sem cadastro futuro, PR só
+  com a janela anterior, barriga/ponta diárias) + os da Fase 1; `test_db_api` (serviço web sem pandas), `test_deploy_deps`,
+  `test_heavywork`, `test_estrutura`: 42 ok. Dashboard: build ok, testes da ajuda F1 ok. Tela conferida no navegador
+  (servidor próprio na porta 8010, config `backend-8010` em `.claude/launch.json`).
+- **Especificação** movida para `docs/oraculo/especificacao/17-previsao-meses-carga-mmgd-pato.md` (continua a série 01–16).
+
+Pendente: condicionamento pelo SEAS5 (API testada, não usado), FourCastNet 3 (sem GPU), fator da visão computacional
+(Fase 5), entrada no contrato (`CurvaPatoPrevista`: perguntar antes), deploy na AWS (o `output/` já vai no pacote).
