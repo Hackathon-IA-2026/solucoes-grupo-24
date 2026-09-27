@@ -600,7 +600,7 @@ function DetalheCorpo({ d }: { d: Dado }) {
     <>
       <OCard
         title={'Detalhe · ' + (s.name || '') + ' (' + (s.uf || '') + ')'}
-        hint={num(s.frontier_mva) + ' MVA de fronteira · raio ' + num(s.radius_km, 2) + ' km · morfologia ' + (d.urban_hint ?? '')}
+        hint={num(s.frontier_mva) + ' MVA de fronteira · raio ' + num(s.radius_km, 2) + ' km' + (lc.real ? '' : ' · morfologia ' + (d.urban_hint ?? ''))}
         note={(d.notes || []).join(' ') || undefined}
       >
         <div className="grid g2" style={{ gap: 12 }}>
@@ -666,7 +666,8 @@ function DetalheCorpo({ d }: { d: Dado }) {
               pares={[
                 // vision.detector é o descritor do backend ({name, kind, runtime, …}), não um texto
                 ['Detector', (vis.detector && (vis.detector.name || vis.detector.kind)) || '—'],
-                ['Ladrilhos analisados', num(vis.tiles) + (Array.isArray(vis.tile_grid) ? ' (' + vis.tile_grid.join(' × ') + ')' : '')],
+                // tile_grid é a lista dos ladrilhos (um objeto por ladrilho), não as dimensões da grade
+                ['Ladrilhos analisados', num(vis.tiles)],
                 ['Detecções brutas → mantidas', num(vis.raw_count) + ' → ' + num(vis.kept_count)],
                 ['Duplicatas removidas na costura', num(vis.duplicates_removed)],
                 ['Área de painel (calibrada)', num(vis.total_area_m2, 1) + ' m²'],
