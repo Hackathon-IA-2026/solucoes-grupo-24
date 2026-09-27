@@ -23,6 +23,7 @@ from ..models.baselines import persistence, seasonal_naive
 from ..models.quantile import QuantileModel
 from ..ons import cache, catalog, ckan
 from ..pipeline import ingest
+from ..tempo import clima
 from ..triangulation import evidence
 from ..validation import backtest, metrics
 from .service_clm import ClmMixin
@@ -46,6 +47,8 @@ class AreaState:
     features: builder.FeatureMatrix
     gaps: int = 0
     models: dict[str, QuantileModel] = field(default_factory=dict)
+    # Proveniencia do tempo observado (ERA5/Open-Meteo) do grupo "clima".
+    weather_prov: dict = field(default_factory=dict)
 
 
 class Service(MapaMixin, ClmMixin, DocsMixin, FronteiraMixin, BessMixin,
@@ -60,7 +63,11 @@ class Service(MapaMixin, ClmMixin, DocsMixin, FronteiraMixin, BessMixin,
         self.bundle: ingest.Bundle | None = None
         self.areas: dict[str, AreaState] = {}
         self._catalog: list[dict] | None = None
-        self._risk_cache: dict | None = None
+        # Um modelo de risco por horizonte (a memoria de restricao muda com ele).
+        self._risk_cache: dict[str, dict] = {}
+        # Tempo observado por area (sub)sistema, reaproveitado entre carga e risco.
+        self._weather: dict[str, tuple[dict | None, dict]] = {}
+        self._triang_cache: dict | None = None
 
     # ------------------------------------------------------------- setup
     def ensure(self, *, force_demo: bool = False, refresh: bool = False) -> None:
@@ -69,7 +76,9 @@ class Service(MapaMixin, ClmMixin, DocsMixin, FronteiraMixin, BessMixin,
                 return
             self.bundle = ingest.load_bundle(refresh=refresh, force_demo=force_demo)
             self.areas.clear()
-            self._risk_cache = None
+            self._risk_cache = {}
+            self._weather = {}
+            self._triang_cache = None
             for area in ("SIN", "SE", "S", "NE", "N"):
                 st = self._build_area(area)
                 if st is not None:
@@ -86,20 +95,43 @@ class Service(MapaMixin, ClmMixin, DocsMixin, FronteiraMixin, BessMixin,
             return None
         est = mmgd.estimate(ts, load, area)
         dec = decomposition.decompose(ts, load, est.mmgd_mw, area)
+        weather, wprov = self._weather_for(ts, area)
         fm = builder.build(
             ts, area=area, target=load, mmgd=est.mmgd_mw,
             ger_eolica=ser.get("ger_eolica"),
             margem_controlavel=ser.get("margem_controlavel"),
             intercambio=ser.get("intercambio"),
+            weather=weather,
         )
         gaps = int(ser.get("_gaps", np.array([0]))[0])
-        return AreaState(area, ts, ser, est, dec, fm, gaps)
+        return AreaState(area, ts, ser, est, dec, fm, gaps, weather_prov=wprov)
+
+    def _weather_for(self, index: np.ndarray, area: str) -> tuple[dict | None, dict]:
+        """Tempo observado (ERA5) na grade de `index`; None no modo demo/offline.
+
+        No modo demo o resto do bundle ja e sintetico e rotulado; buscar tempo
+        real para ele misturaria as duas coisas. Sem rede, weather_for_area
+        devolve None e o grupo clima sai do modelo (nada inventado).
+        """
+        if self.bundle is None or self.bundle.mode == "demo":
+            return None, {"dataset": "Open-Meteo · ERA5", "mode": "demo",
+                          "lag_note": "modo demonstrativo: grupo clima fora do modelo"}
+        key = "%s|%s|%s|%d" % (area, index[0], index[-1], len(index))
+        if key not in self._weather:
+            self._weather[key] = clima.weather_for_area(index, area)
+        return self._weather[key]
 
     def mode(self) -> str:
         return self.bundle.mode if self.bundle else "demo"
 
     def provenance(self) -> list[dict]:
-        return self.bundle.provenance() if self.bundle else []
+        out = self.bundle.provenance() if self.bundle else []
+        # O tempo observado do grupo "clima" tambem e dado de entrada: entra no
+        # envelope de proveniencia como os arquivos do ONS.
+        st = self.areas.get(config.DEFAULT_AREA)
+        if st is not None and st.weather_prov:
+            out = list(out) + [dict(st.weather_prov)]
+        return out
 
     def notes(self) -> list[str]:
         out = [config.DISCLAIMER]
@@ -111,6 +143,9 @@ class Service(MapaMixin, ClmMixin, DocsMixin, FronteiraMixin, BessMixin,
         if st is not None and st.mmgd_est.method == "envelope":
             out.append("MMGD estimada pelo método do envelope: valor "
                        "conservador (piso), não valor central.")
+        if st is not None and not any(n.startswith("clima.") for n in st.features.names):
+            out.append("Sem tempo observado (Open-Meteo/ERA5 indisponível): os "
+                       "modelos rodam sem o grupo de variáveis climáticas.")
         return out
 
     def _area(self, area: str) -> AreaState:
@@ -338,11 +373,11 @@ class Service(MapaMixin, ClmMixin, DocsMixin, FronteiraMixin, BessMixin,
     def risk_payload(self, horizon: str = "d1", level: str = "estado",
                      min_probability: float = 0.0) -> dict:
         self.ensure()
-        if self._risk_cache is not None:
-            payload = self._risk_cache
-        else:
-            payload = self._compute_risk()
-            self._risk_cache = payload
+        if horizon not in config.HORIZONS:
+            horizon = "d1"
+        if horizon not in self._risk_cache:
+            self._risk_cache[horizon] = self._compute_risk(horizon)
+        payload = self._risk_cache[horizon]
         out = dict(payload)
         out["horizon"] = horizon
         out["level"] = level
@@ -350,8 +385,17 @@ class Service(MapaMixin, ClmMixin, DocsMixin, FronteiraMixin, BessMixin,
                          if e["probability"] >= min_probability]
         return out
 
-    def _compute_risk(self) -> dict:
+    def _compute_risk(self, horizon: str = "d1") -> dict:
+        """Classificador de ocorrencia de restricao, por area, para um horizonte.
+
+        O horizonte define o que o operador sabe no momento da previsao: a
+        memoria de restricao (`regime.hist_restricao`) termina `lag` horas
+        antes do instante alvo (config.HORIZONS: 30min -> 1 h, 3h -> 3 h,
+        D+1 -> 24 h). Horizonte curto = informacao mais recente = modelo e
+        AUC diferentes. Antes o horizonte so trocava o rotulo da resposta.
+        """
         assert self.bundle is not None
+        lag = int(config.HORIZONS[horizon])
         coff = self.bundle.coff
         area_field = "id_estado" if "id_estado" in coff else "id_subsistema"
         areas = [a for a in coff.unique(area_field).tolist() if a]
@@ -359,7 +403,8 @@ class Service(MapaMixin, ClmMixin, DocsMixin, FronteiraMixin, BessMixin,
 
         rows: list[dict] = []
         events: list[dict] = []
-        model_info: dict = {"kind": "regressao_logistica_regularizada"}
+        model_info: dict = {"kind": "regressao_logistica_regularizada",
+                            "horizon": horizon, "memory_lag_h": lag}
 
         for area in areas[:14]:
             labels = risk.build_labels(coff, area_field, area)
@@ -369,11 +414,18 @@ class Service(MapaMixin, ClmMixin, DocsMixin, FronteiraMixin, BessMixin,
             # SEM VAZAMENTO: nao se passa `target=corte_mw`, senao a defasagem
             # de 1 h do proprio rotulo entraria como variavel e o modelo
             # "acertaria" lendo a resposta. A memoria operativa legitima e a
-            # historia de restricao com defasagem de 24 h ou mais, que o
-            # operador de fato conhece ao prever D+1.
-            fm = builder.build(labels.index, area=_subsystem_of(area))
-            hist = risk.occurrence_memory(y, min_lag=24, window=7 * 24)
-            fm = builder.append_column(fm, "regime.hist_restricao_24h", hist)
+            # historia de restricao defasada pelo HORIZONTE (`lag` horas):
+            # e o que o operador de fato conhece ao emitir a previsao.
+            ss = _subsystem_of(area)
+            weather, _ = self._weather_for(labels.index, ss)
+            fm = builder.build(labels.index, area=ss, weather=weather)
+            hist = risk.occurrence_memory(y, min_lag=lag, window=7 * 24)
+            fm = builder.append_column(fm, "regime.hist_restricao_%dh" % lag, hist)
+            # Estado recente: fracao das 3 ultimas horas CONHECIDAS na emissao
+            # (terminam `lag` h antes do alvo). E o sinal de persistencia que
+            # separa o 30 min (corte em curso) do D+1 (so o historico).
+            recent = risk.occurrence_memory(y, min_lag=lag, window=3)
+            fm = builder.append_column(fm, "regime.restricao_recente_%dh" % lag, recent)
             # Restringe a janela solar: fora dela a resposta e trivial e
             # inflaria o AUC sem informar nada ao operador.
             ghi = fm.X[:, fm.names.index("solar.ghi_norm")]
@@ -485,7 +537,71 @@ class Service(MapaMixin, ClmMixin, DocsMixin, FronteiraMixin, BessMixin,
 
     # -------------------------------------------------------- triangulation
     def triangulation_payload(self) -> dict:
+        """Desempate das tres camadas de evidencia da MMGD.
+
+        Modo real: empreendimentos do pipeline espacial (BDGD 2025 da LIGHT e da
+        Enel RJ x cadastro de MMGD da ANEEL, src/spatial/mmgd.py), uma linha por
+        CEG, com a camada 1 (satelite) declarada ausente. Modo demo: o gerador
+        deterministico, rotulado como tal. Sem a tabela real (espacializacao
+        ainda nao rodada) -> LookupError com o comando, nunca o gerador.
+        """
         self.ensure()
+        if self.mode() == "demo":
+            return self._triangulation_demo()
+        if self._triang_cache is None:
+            self._triang_cache = self._triangulation_real()
+        return self._triang_cache
+
+    def _triangulation_real(self) -> dict:
+        import pandas as pd
+
+        from src.spatial.saidas import SAIDA_MMGD_EMPREENDIMENTOS as ARQ
+        if not ARQ.exists():
+            raise LookupError("tabela de empreendimentos de MMGD ainda não gerada: rode "
+                              "`python -m src.spatial.construir` em Backend/ (ou o "
+                              "run_heavywork, etapa espacial)")
+        df = pd.read_parquet(ARQ)
+        units = evidence.units_from_empreendimentos(df)
+        agg = evidence.aggregate(units)
+        for a in agg:
+            # Capacidade implicada pela carga e por subsistema; aqui a area e a
+            # distribuidora, sem serie de carga propria: nao se aplica.
+            a["declared_config_mwp"] = None
+            a["implied_capacity_mwp"] = None
+            a["implied_over_declared"] = None
+        ref = sorted(str(v)[:10] for v in df["data_bdgd"].dropna().unique())
+        dmax = str(df["data"].max())[:10]
+        prov = [{"dataset": "BDGD · %s" % ", ".join(sorted(df["distribuidora"].unique())),
+                 "resource": "unidades geradoras de MMGD (UGBT/UGMT/UGAT), data de referência %s"
+                             % ", ".join(ref),
+                 "mode": "cache", "rows": int((df["categoria"] != "lag_sistema").sum()),
+                 "lag_note": "Base anual: o que entrou depois da data de referência "
+                             "aparece como defasagem de sistema."},
+                {"dataset": "ANEEL · empreendimentos de micro e minigeração distribuída",
+                 "resource": "cadastro até %s" % dmax, "mode": "cache",
+                 "rows": int((df["categoria"] != "bdgd_sem_homologacao").sum()),
+                 "lag_note": "Cruzamento pelo código do empreendimento (CEG_GD = "
+                             "CodEmpreendimento), src/spatial/mmgd.py."}]
+        return {
+            "areas": agg,
+            "layers": [dict(l, observed=(l["layer"] != 1)) for l in evidence.LAYERS],
+            "layer1_available": False,
+            "matrix": evidence.matrix_cells_two_layers(),
+            "classes": {k: {"label": evidence.CLASS_LABELS[k],
+                            "note": evidence.CLASS_NOTES[k],
+                            "counts": evidence.counts_in_correction(k)}
+                        for k in evidence.CLASSES},
+            "sample": [u.to_dict() for u in evidence.sample_units(units)],
+            "units_total": len(units),
+            "provenance": prov,
+            "note": ("Dado real: %d empreendimentos de MMGD da LIGHT e da Enel RJ, BDGD × "
+                     "cadastro da ANEEL. A camada 1 (satélite) ainda não cobre a área: "
+                     "o desempate usa topologia × cadastro, e nenhuma detecção é "
+                     "presumida. A auditoria por satélite está na aba \"Visão · "
+                     "auditoria 3 camadas\"." % len(units)),
+        }
+
+    def _triangulation_demo(self) -> dict:
         areas = sorted(self.areas.keys() - {"SIN"}) or ["SE", "S", "NE", "N"]
         units = evidence.demo_units(areas)
         agg = evidence.aggregate(units)
@@ -500,16 +616,18 @@ class Service(MapaMixin, ClmMixin, DocsMixin, FronteiraMixin, BessMixin,
             )
         return {
             "areas": agg,
-            "layers": evidence.LAYERS,
+            "layers": [dict(l, observed=True) for l in evidence.LAYERS],
+            "layer1_available": True,
             "matrix": evidence.matrix_cells(),
             "classes": {k: {"label": evidence.CLASS_LABELS[k],
                             "note": evidence.CLASS_NOTES[k],
                             "counts": evidence.counts_in_correction(k)}
                         for k in evidence.CLASSES},
             "sample": [u.to_dict() for u in units[:40]],
-            "note": ("Conjunto demonstrativo com os campos e as cadências "
-                     "reais. A lógica de desempate é a de produção; as bases "
-                     "BDGD e de satélite estão pendentes de aquisição."),
+            "units_total": len(units),
+            "note": ("%s — conjunto demonstrativo com os campos e as cadências "
+                     "reais; nenhuma unidade corresponde a um empreendimento."
+                     % config.DEMO_BANNER),
         }
 
     # ---------------------------------------------------------- provenance
@@ -529,7 +647,9 @@ class Service(MapaMixin, ClmMixin, DocsMixin, FronteiraMixin, BessMixin,
         b = ingest.load_bundle(year=year, months=months, refresh=force)
         self.bundle = b
         self.areas.clear()
-        self._risk_cache = None
+        self._risk_cache = {}
+        self._weather = {}
+        self._triang_cache = None
         for area in ("SIN", "SE", "S", "NE", "N"):
             st = self._build_area(area)
             if st is not None:

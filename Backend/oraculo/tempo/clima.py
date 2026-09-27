@@ -28,6 +28,8 @@ import json
 import ssl
 import time
 
+import numpy as np
+
 from .. import config
 from ..bess import fontes as BF
 
@@ -104,20 +106,21 @@ def _get(url: str, params: dict, ttl: float) -> dict:
     return body
 
 
-def _points_params(points: list[dict]) -> dict:
+def _points_params(points: list[dict], hourly: str = HOURLY) -> dict:
     return {"latitude": ",".join("%.3f" % p["lat"] for p in points),
             "longitude": ",".join("%.3f" % p["lon"] for p in points),
-            "hourly": HOURLY, "timezone": TZ}
+            "hourly": hourly, "timezone": TZ}
 
 
-def _unpack(body, points: list[dict], models: list[str] | None) -> dict:
+def _unpack(body, points: list[dict], models: list[str] | None,
+            hourly: str = HOURLY) -> dict:
     """Resposta multi-local -> {modelo: {var: [n_pontos][n_horas]}, 'time': [...]}"""
     items = body if isinstance(body, list) else [body]
     out: dict = {"time": items[0]["hourly"]["time"]}
     keys = models or ["_"]
     for m in keys:
         out[m] = {}
-        for var in HOURLY.split(","):
+        for var in hourly.split(","):
             col = var if models is None or len(keys) == 1 else "%s_%s" % (var, m)
             if col not in items[0]["hourly"]:
                 col = var
@@ -129,13 +132,13 @@ CHUNK = 30
 
 
 def _chunked(url: str, points: list[dict], extra: dict, ttl: float,
-             models: list[str] | None) -> dict:
+             models: list[str] | None, hourly: str = HOURLY) -> dict:
     """Divide os pontos em lotes (o servico recusa requisicoes grandes) e junta."""
     merged: dict | None = None
     for i in range(0, len(points), CHUNK):
         part = points[i:i + CHUNK]
-        body = _get(url, dict(_points_params(part), **extra), ttl)
-        u = _unpack(body, part, models)
+        body = _get(url, dict(_points_params(part, hourly), **extra), ttl)
+        u = _unpack(body, part, models, hourly)
         if merged is None:
             merged = u
             continue
@@ -157,6 +160,80 @@ def historical_forecast(points: list[dict], models: list[str], start: str,
     return _chunked(HISTORICAL, points, extra, 30 * 86400, models)
 
 
-def era5(points: list[dict], start: str, end: str) -> dict:
+def era5(points: list[dict], start: str, end: str, hourly: str = HOURLY,
+         ttl: float = 30 * 86400) -> dict:
     extra = {"start_date": start, "end_date": end}
-    return _chunked(ARCHIVE, points, extra, 30 * 86400, None)
+    return _chunked(ARCHIVE, points, extra, ttl, None, hourly)
+
+
+# ------------------------------------------------- clima dos modelos de carga
+# Variaveis que entram na matriz de projeto (grupo "clima" de
+# features/builder.py): temperatura e ponto de orvalho, que dao o indice de
+# desconforto (ar condicionado).
+HOURLY_CARGA = "temperature_2m,dew_point_2m"
+# Dias finais re-baixados com validade curta: o arquivo do Open-Meteo completa
+# os dias recentes com a analise operacional do ECMWF e troca pelo ERA5 quando
+# ele sai (~5 dias depois). O bloco antigo nao muda mais e fica 30 dias em cache.
+RECENT_DAYS = 10
+
+
+def weather_for_area(index: np.ndarray, area: str) -> tuple[dict | None, dict]:
+    """Temperatura e ponto de orvalho REAIS na grade horaria `index` da area.
+
+    Media ponderada (populacao) das capitais de config.WEATHER_POINTS, da
+    reanalise ERA5 pelo arquivo do Open-Meteo (dias recentes: analise
+    operacional do ECMWF, mesma rota). Substitui o proxy sintetico que o
+    builder usava: o grupo "clima" dos modelos passa a ser observado.
+
+    Devolve (tempo, proveniencia). Sem rede e sem cache -> (None, prov com o
+    erro): o builder entao deixa o grupo clima de FORA em vez de inventar.
+    """
+    index = np.asarray(index, dtype="datetime64[s]")
+    pts = config.WEATHER_POINTS.get(area) or config.WEATHER_POINTS["SIN"]
+    prov = {"dataset": "Open-Meteo · ERA5 (reanálise) · temperatura e ponto de orvalho",
+            "resource": "%s: %s" % (area, ", ".join(p["nome"] for p in pts)),
+            "mode": "live", "rows": 0, "url": ARCHIVE}
+    if len(index) == 0:
+        return None, dict(prov, mode="demo", lag_note="série vazia")
+    start = index.min().astype("datetime64[D]")
+    end = index.max().astype("datetime64[D]")
+    today = np.datetime64(time.strftime("%Y-%m-%d"), "D")
+    # Corte ancorado no fim do mes anterior a (hoje - RECENT_DAYS): a chave do
+    # cache do bloco antigo so muda uma vez por mes, em vez de todo dia.
+    month0 = (today - np.timedelta64(RECENT_DAYS, "D")).astype("datetime64[M]")
+    cut = min(end, month0.astype("datetime64[D]") - np.timedelta64(1, "D"))
+    blocks = []
+    try:
+        if cut >= start:
+            blocks.append(era5(pts, str(start), str(cut), HOURLY_CARGA))
+        if end > cut:
+            blocks.append(era5(pts, str(max(start, cut + np.timedelta64(1, "D"))),
+                               str(end), HOURLY_CARGA, ttl=3 * 3600))
+    except Exception as exc:  # rede/servico: sem tempo real, sem grupo clima
+        return None, dict(prov, mode="demo", lag_note="sem tempo real: %s" % str(exc)[:160])
+
+    w = np.array([p["peso"] for p in pts], dtype="f8")
+    w = w / w.sum()
+    times, temp, dew = [], [], []
+    for b in blocks:
+        times += b["time"]
+        # [n_pontos][n_horas] -> media ponderada por hora (None -> NaN)
+        t = np.array(b["_"]["temperature_2m"], dtype="f8")
+        d = np.array(b["_"]["dew_point_2m"], dtype="f8")
+        temp.append(np.nansum(t * w[:, None], axis=0) / np.sum(np.isfinite(t) * w[:, None], axis=0))
+        dew.append(np.nansum(d * w[:, None], axis=0) / np.sum(np.isfinite(d) * w[:, None], axis=0))
+    tt = np.array(times, dtype="datetime64[s]")
+    temp_all, dew_all = np.concatenate(temp), np.concatenate(dew)
+    # Alinha a grade horaria da serie (horario de Brasilia, mesmo fuso pedido
+    # ao servico); hora ausente fica NaN e o builder a trata como invalida.
+    pos = {int(v): i for i, v in enumerate(tt.astype("i8"))}
+    idx = np.array([pos.get(int(v), -1) for v in index.astype("i8")])
+    ok = idx >= 0
+    out_t = np.full(len(index), np.nan)
+    out_d = np.full(len(index), np.nan)
+    out_t[ok] = temp_all[idx[ok]]
+    out_d[ok] = dew_all[idx[ok]]
+    prov["rows"] = int(ok.sum())
+    prov["lag_note"] = ("ERA5 até %s; dias seguintes pela análise operacional "
+                        "do ECMWF (mesma rota do Open-Meteo)." % cut)
+    return {"temperature": out_t, "dewpoint": out_d}, prov

@@ -157,10 +157,61 @@ def test_skill_positivo_quando_modelo_ganha():
 def test_matriz_de_projeto_tem_grupos_nomeados(sin_state):
     fm = sin_state["fm"]
     groups = {n.split(".")[0] for n in fm.names}
-    for g in ("calendario", "fourier", "solar", "clima", "defasagem"):
+    for g in ("calendario", "fourier", "solar", "defasagem"):
         assert g in groups
     assert fm.n == len(fm.index)
     assert fm.valid.sum() > 0
+
+
+def test_sem_tempo_observado_o_grupo_clima_fica_de_fora(sin_state):
+    # Regra "nunca inventar dados": sem tempo real (fixture sem `weather`) o
+    # builder nao gera temperatura sintetica; o grupo clima simplesmente some.
+    assert not any(n.startswith("clima.") for n in sin_state["fm"].names)
+
+
+def test_tempo_observado_entra_no_grupo_clima(sin_state):
+    from oraculo.features import builder
+    ts = sin_state["ts"]
+    temp = np.full(len(ts), 25.0)
+    temp[5] = np.nan                       # buraco do servico -> media, linha valida
+    fm = builder.build(ts, area="SE", weather={"temperature": temp,
+                                               "dewpoint": temp - 5.0})
+    assert "clima.temperatura" in fm.names
+    col = fm.X[:, fm.names.index("clima.temperatura")]
+    assert np.isfinite(col).all() and col[5] == pytest.approx(25.0 / 40.0)
+
+
+def test_tempo_por_area_alinha_na_grade_e_pondera_por_populacao(monkeypatch):
+    from oraculo.tempo import clima
+    pts = config.WEATHER_POINTS["S"]
+    idx = np.arange(np.datetime64("2020-01-01T00:00:00"), np.datetime64("2020-01-01T04:00:00"),
+                    np.timedelta64(1, "h")).astype("datetime64[s]")
+
+    def fake_era5(points, start, end, hourly=clima.HOURLY, ttl=0):
+        # Resposta no formato de _unpack: 3 horas (a ultima hora da grade falta).
+        horas = ["2020-01-01T00:00", "2020-01-01T01:00", "2020-01-01T02:00"]
+        temps = [[10.0 + i] * 3 for i in range(len(points))]
+        return {"time": horas, "_": {"temperature_2m": temps, "dew_point_2m": temps}}
+
+    monkeypatch.setattr(clima, "era5", fake_era5)
+    w, prov = clima.weather_for_area(idx, "S")
+    pesos = np.array([p["peso"] for p in pts])
+    esperado = float(np.sum((10.0 + np.arange(len(pts))) * pesos) / pesos.sum())
+    assert w["temperature"][0] == pytest.approx(esperado)
+    assert np.isnan(w["temperature"][3])   # hora sem tempo nao e inventada
+    assert prov["mode"] == "live" and prov["rows"] == 3
+
+
+def test_tempo_indisponivel_devolve_none_sem_inventar(monkeypatch):
+    from oraculo.tempo import clima
+
+    def falha(*a, **k):
+        raise ConnectionError("offline")
+
+    monkeypatch.setattr(clima, "era5", falha)
+    idx = np.array(["2020-01-01T00:00:00"], dtype="datetime64[s]")
+    w, prov = clima.weather_for_area(idx, "SE")
+    assert w is None and prov["mode"] == "demo"
 
 
 def test_patamares_cobrem_as_faixas_configuradas(sin_state):

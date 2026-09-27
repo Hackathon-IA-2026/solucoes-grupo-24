@@ -42,6 +42,8 @@ class MapaMixin:
     # O PNG de 768x768 com ruido de sensor nao comprime: ~1 MB por imagem.
     # Vale guardar os bytes em memoria em vez de redesenhar a cada clique.
     _png_cache: dict[str, bytes] = {}
+    # Composicao do subsistema (NNLS sobre a curva real) por subsistema: prior regional.
+    _regional: dict[str, dict] = {}
 
     # ------------------------------------------------------------ registro
     def registry_ensure(self, *, refresh: bool = False) -> registry.Registry:
@@ -63,6 +65,50 @@ class MapaMixin:
                        "load": st.decomposition.carga_supervisionada}
         return out
 
+    # ------------------------------------------------------------ dado real
+    def _real_profile(self, prof: mapper.SubstationProfile) -> mapper.SubstationProfile:
+        """Composicao e MMGD reais (fronteira T-D) no lugar das da amostra sintetica.
+
+        No modo demo, ou com a base da fronteira ainda em construcao, o perfil
+        fica o da amostra sintetica, com `real: false` e a nota dizendo por que.
+        """
+        from .service_fronteira import BaseNotReady
+        if self.mode() == "demo" or self._fr_demo():
+            return self._flag_synthetic(prof, "modo demonstrativo")
+        try:
+            fr = self.fronteira_detail_payload(prof.substation.sub_id, compare=False)
+        except BaseNotReady:
+            return self._flag_synthetic(prof, "base BDGD/ANEEL da fronteira T–D em construção")
+        except LookupError:
+            return self._flag_synthetic(prof, "SE fora da base da fronteira T–D")
+        return mapper.with_frontier(prof, fr, sin_ratio=self._sin_mmgd_ratio(),
+                                    regional=self._regional_mix(prof.substation.subsystem))
+
+    @staticmethod
+    def _flag_synthetic(prof: mapper.SubstationProfile, motivo: str) -> mapper.SubstationProfile:
+        prof.load_class["real"] = False
+        prof.mmgd["real"] = False
+        prof.notes = ["SEM DADO REAL (%s): composição e MMGD abaixo vêm da amostra "
+                      "SINTÉTICA de ortoimagem — só demonstração." % motivo] + list(prof.notes)
+        return prof
+
+    def _sin_mmgd_ratio(self) -> float:
+        """MMGD instalada / carga media do SIN: a referencia do nivel de penetracao."""
+        self.ensure()
+        st = self.areas.get(config.DEFAULT_AREA)
+        load = float(np.nanmean(st.decomposition.carga_supervisionada)) if st else 0.0
+        return config.capacity_of("SIN") / load if load > 0 else 0.0
+
+    def _regional_mix(self, subsystem: str) -> dict | None:
+        if subsystem not in self._regional:
+            ser = self._subsystem_series().get(subsystem)
+            if not ser:
+                return None
+            mix = C.decompose(ser["index"], ser["load"])
+            d = mix.to_dict()
+            type(self)._regional[subsystem] = {k: d[k] for k in ("weights", "dominant", "label", "r2")}
+        return self._regional[subsystem]
+
     # ------------------------------------------------------------ lista
     def substations_payload(self, *, uf: str = "", subsystem: str = "",
                             frontier_only: bool = True, limit: int = 24,
@@ -82,9 +128,9 @@ class MapaMixin:
                 prof = self._profiles.get(s.sub_id)
                 if prof is None:
                     ser = series.get(s.subsystem) or {}
-                    prof = mapper.analyse(
+                    prof = self._real_profile(mapper.analyse(
                         s, subsystem_index=ser.get("index"),
-                        subsystem_load=ser.get("load"), det=det)
+                        subsystem_load=ser.get("load"), det=det))
                     type(self)._profiles[s.sub_id] = prof
                 profiles.append(prof)
                 rows.append(prof.row())
@@ -106,14 +152,19 @@ class MapaMixin:
             "registry_mode": reg.mode,
             "pipeline": [
                 "subestação georreferenciada (ONS · conjunto `subestacao`)",
-                "área de influência pela capacidade de fronteira "
-                "(ONS · `capacidade-transformacao`)",
-                "amostra de ortoimagem em 0,30 m/pixel",
-                "detecção de painéis por visão computacional",
-                "densidade kWp/km² → indicador de penetração de MMGD",
-                "morfologia construída + prior de carga do subsistema → "
-                "composição por classe (NNLS)",
+                "SEDs da BDGD associadas à SE de fronteira (correlação T–D)",
+                "energia faturada por classe (BDGD MT/AT + SAMP BT) → "
+                "composição por classe de consumo",
+                "cadastro de MMGD da ANEEL nas SEDs ÷ carga média da SE, "
+                "relativo ao SIN → nível de penetração",
+                "curva de carga do subsistema (ONS) → prior regional e desvio",
+                "visão computacional: só amostra sintética de demonstração do "
+                "detector (não entra nos números)",
             ],
+            "penetration_rel_bins": [
+                {"level": n, "from_rel": lo, "to_rel": None if hi == float("inf") else hi}
+                for n, lo, hi in mapper.PENETRATION_REL_BINS],
+            "sin_mmgd_ratio": round(self._sin_mmgd_ratio(), 4) if analyse else None,
             "penetration_bins": [
                 {"level": n, "from_kwp_km2": lo,
                  "to_kwp_km2": None if hi == float("inf") else hi}
@@ -133,8 +184,8 @@ class MapaMixin:
         if prof is None:
             series = self._subsystem_series()
             ser = series.get(sub.subsystem) or {}
-            prof = mapper.analyse(sub, subsystem_index=ser.get("index"),
-                                  subsystem_load=ser.get("load"))
+            prof = self._real_profile(mapper.analyse(
+                sub, subsystem_index=ser.get("index"), subsystem_load=ser.get("load")))
             type(self)._profiles[sub_id] = prof
         out = prof.to_dict()
         out["clm"] = mapper.clm_hint(prof)

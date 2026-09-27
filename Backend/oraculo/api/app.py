@@ -144,8 +144,12 @@ async def validation_route(request: Request) -> Response:
 
 
 async def triangulation_route(request: Request) -> Response:
+    # Proveniencia propria: no modo real o dado e BDGD x ANEEL, nao o bundle do ONS.
     try:
-        return _wrap(SERVICE.triangulation_payload())
+        data = dict(SERVICE.triangulation_payload())
+        prov = data.pop("provenance", None) or SERVICE.provenance()
+        return _json(envelope.ok(data, mode=SERVICE.mode(), provenance=prov,
+                                 notes=SERVICE.notes()))
     except Exception as exc:
         return _fail(exc)
 

@@ -472,3 +472,43 @@ def test_abas_anteriores_seguem_funcionando(client, route):
     body = r.json()
     assert body["ok"] is True
     assert isinstance(body["provenance"], list)
+
+
+# ================================================= perfil com dado real (fronteira T-D)
+def _perfil_sintetico():
+    sub = registry.Substation("F", "F", "RJ", "RJ", "SE", "x", -22.9, -43.2,
+                              500.0, frontier_mva=600.0)
+    return mapper.analyse(sub, scene_px=256, with_evaluation=False)
+
+
+def test_perfil_real_troca_composicao_e_mmgd_pelos_da_fronteira():
+    fr = {"n_sed": 3, "dominant": "industrial", "measured_share": 0.6,
+          "weights": {"residencial": 0.2, "comercial": 0.2, "industrial": 0.55, "rural": 0.05},
+          "gd_kw": 50_000.0, "mw_avg": 50.0, "gd_n": 900, "gd_direct_share": 0.4}
+    regional = {"weights": {"residencial": 0.5, "comercial": 0.3, "industrial": 0.15, "rural": 0.05},
+                "dominant": "residencial", "label": "Residencial", "r2": 0.9}
+    p = mapper.with_frontier(_perfil_sintetico(), fr, sin_ratio=0.5, regional=regional)
+    assert p.load_class["real"] and p.load_class["dominant"] == "industrial"
+    assert p.load_class["weights"]["industrial"] == pytest.approx(0.55)
+    assert p.load_class["confidence"] == pytest.approx(0.6)
+    # desvio = L1/2 entre a SE e o subsistema
+    assert p.load_class["deviation_from_regional"] == pytest.approx(0.4)
+    # 50 MW de MMGD / 50 MW de carga = 1,0 = 2x a razao do SIN (0,5) -> alta
+    assert p.mmgd["relative_to_sin"] == pytest.approx(2.0)
+    assert p.mmgd["level"] == "alta" and p.mmgd["kwp_total"] == pytest.approx(50_000.0)
+    assert p.row()["real"] is True
+
+
+def test_se_sem_sed_associada_fica_sem_dado_e_nao_herda_o_sintetico():
+    p = mapper.with_frontier(_perfil_sintetico(), {"n_sed": 0, "dominant": ""}, sin_ratio=0.5)
+    assert p.load_class["label"] == "Sem dado" and p.load_class["dominant"] is None
+    assert p.mmgd["level"] is None and p.mmgd["kwp_total"] is None
+    assert mapper.aggregate([p])["by_class"] == {"sem dado": 1}
+    hint = mapper.clm_hint(p)                 # nao quebra com pesos None
+    assert hint["composicao_classe"] == {}
+
+
+def test_niveis_relativos_ao_sin():
+    assert mapper._rel_level(0.2) == "baixa"
+    assert mapper._rel_level(1.0) == "média"
+    assert mapper._rel_level(1.5) == "alta"

@@ -774,3 +774,34 @@ estão intactos.
   quem tem o banco) os envia ao S3 (`dados/dados.zip`); o CI os baixa de lá. Novos dados na demo = deploy local.
 - `deploy_ecs.py`: agora distingue criar de atualizar (describe explícito) e força novo deployment das tasks, porque o pacote
   novo só é baixado quando a task reinicia.
+
+## 2026-09-26 — Protótipo sem dado inventado: clima real, horizonte do risco, Triangulação e Mapa reais ✅
+
+Auditoria das abas do dashboard (o que era real × sintético) seguida das correções no pacote `Backend/oraculo`:
+
+- **Clima dos modelos** (Despacho preditivo, Risco e excedentes, Validação do método): o grupo de variáveis
+  `clima` usava temperatura **sintética** (`synthetic_weather`, ruído aleatório) sem avisar na tela. Agora vem da
+  reanálise ERA5 (Open-Meteo, dias recentes pela análise operacional do ECMWF), média das capitais de cada
+  subsistema ponderada pela população (`WEATHER_POINTS` em `oraculo/config.py`; `tempo/clima.py::weather_for_area`).
+  Entra na proveniência. Sem rede e sem cache o grupo sai do modelo — o proxy sintético foi removido.
+- **Risco e excedentes**: o seletor de horizonte só trocava o rótulo (o modelo era calculado uma vez). Agora é um
+  modelo por horizonte: a memória de restrição termina `config.HORIZONS[h]` horas antes do alvo, mais o estado
+  das 3 últimas horas conhecidas na emissão. AUC mediana 0,94 (30 min) × 0,90 (D+1), ordem das áreas muda.
+- **Triangulação**: as unidades eram aleatórias (`demo_units`). Agora são os **193 229 empreendimentos reais** de
+  MMGD da LIGHT e da Enel RJ (BDGD 2025 × cadastro ANEEL, `src/spatial/mmgd.py`), gravados pela espacialização em
+  `data/processed/mmgd_empreendimentos.parquet` (`por_empreendimento`). A camada 1 (satélite) ainda não cobre a
+  área: `detected=None` ("não observado", nunca "não detectado") e a matriz vira BDGD × ANEEL, com a classe nova
+  `cadastral`. Resultado: 24 704 empreendimentos em defasagem de sistema, 30 só na BDGD; fator de correção 1,16
+  (Enel RJ) e 1,20 (LIGHT). O gerador só roda no modo demo.
+- **Mapa · perfis por subestação** (e o cartão CLM por SE): composição e nível de MMGD vinham de ortoimagem
+  **sintética**. Agora: composição pela energia faturada (BDGD MT/AT + SAMP BT) das SEDs associadas pela
+  correlação fronteira T–D; MMGD pelo cadastro ANEEL nessas SEDs; nível = (MMGD ÷ carga média da SE) relativo à
+  mesma razão no SIN (0,54). SE sem SED associada = "Sem dado". A amostra sintética fica só como demonstração do
+  detector, rotulada (`mapper.with_frontier`, `service_mapa._real_profile`).
+- Ajuda F1 (operação, mapa, triangulação) e texto da Fronteira atualizados. Testes novos em `tests_oraculo`
+  (clima, horizonte, desempate sem satélite, perfil real) e `tests/test_espacial.py`. `tests_oraculo`: 538 ok;
+  `tests/`: as 6 falhas de `test_modelos_*` (access violation do LightGBM) e o `test_tft` (sem torch) já
+  existiam no HEAD, sem relação com esta tarefa.
+
+Continua pendente (não dá para resolver só com código): Visão · auditoria 3 camadas (sem imagem da área piloto nem
+`best.pt`), métricas do detector só no banco sintético, Projeção ENE demora >8 min no primeiro acesso.

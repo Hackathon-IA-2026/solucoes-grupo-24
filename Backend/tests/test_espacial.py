@@ -108,6 +108,17 @@ def test_desempate_categorias_e_rateio_do_lag_conserva_potencia():
     assert homol.groupby("ceg")["pot_kw"].sum().to_dict() == pytest.approx({"GD1": 10, "GD2": 30, "GD3": 8, "GD4": 4})
 
 
+def test_por_empreendimento_tem_um_ceg_por_linha_e_lag_sem_area():
+    bd = _bd([("GD1", "X:A", "c1", "100", 1.0)])
+    an = _an([("GD1", "100", 10.0, "2025-01-01"), ("GD3", "100", 8.0, "2026-03-01")])
+    trafos = pd.DataFrame({"area_id": ["X:C"], "MUN": ["200"], "POT_NOM": [75.0]})
+    u = mmgd.ratear_lag(mmgd.desempatar(bd, an), trafos).assign(distribuidora="X", data_bdgd=pd.Timestamp("2025-12-31"))
+    e = mmgd.por_empreendimento(u).set_index("ceg")
+    assert sorted(e.index) == ["GD1", "GD3"]
+    assert e.loc["GD1", "area_id"] == "X:A" and pd.isna(e.loc["GD3", "area_id"])
+    assert e.loc["GD3", "categoria"] == "lag_sistema"
+
+
 def test_capacidade_levada_a_fronteira_conserva_potencia():
     u = pd.DataFrame({"area_id": ["S", "S", "S", "P"], "area_fronteira": ["P", "Q", np.nan, np.nan],
                       "pot_kw": [30.0, 10.0, 8.0, 5.0]})  # S é satélite de P e Q; a 3ª linha é lag

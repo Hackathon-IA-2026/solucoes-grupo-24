@@ -97,7 +97,7 @@ export const MAPA: PaginaDoc = {
           ['**Subestações de fronteira**', 'no estado, e quantas foram analisadas'],
           ['**Classe dominante no estado**', 'classe predominante no conjunto analisado, com a distribuição'],
           ['**Penetração de MMGD**', 'distribuição dos três níveis'],
-          ['**Qualidade da detecção**', 'F1 médio do detector nas amostras: a classificação vale o que vale o detector'],
+          ['**MMGD cadastrada nas SEs**', 'soma do cadastro da ANEEL nas SEDs associadas às SEs de fronteira do estado (sem a base real: F1 do detector no banco sintético)'],
         ],
       ),
       sub('Área de influência (sem BDGD)'),
@@ -105,10 +105,22 @@ export const MAPA: PaginaDoc = {
       'Dimensionada pela capacidade que **desce** para a distribuição, não pela total. Mediana do raio nas 522: 3,34 km (âncora da escala do alimentador em [[clm]]).',
       sub('Pergunta 1 — perfil de consumo'),
       lista(
-        '**Evidência local (75%)** — morfologia dos telhados na amostra, **ponderada por área**: residencial até 220 m², comercial 220–1.200 m², industrial acima de 1.200 m².',
-        '**Prior regional (25%)** — decomposição da curva do subsistema nos perfis canônicos ([[classes]]). O que se reporta é o **desvio da área em relação ao subsistema**: onde esta área difere da média regional.',
+        '**Dado real** — energia faturada por classe das subestações de distribuição associadas à SE pela correlação fronteira T–D ([[fronteira]]): BDGD (MT/AT, por unidade consumidora) + SAMP (BT, rateado por município). A "confiança" exibida é a parcela da energia medida por UC.',
+        '**Desvio em relação ao subsistema** — distância entre essa composição e a da curva de carga do subsistema decomposta nos perfis canônicos ([[classes]]): onde a área difere da média regional.',
+        'SE sem nenhuma SED associada aparece como **Sem dado** — nunca com um número da amostra sintética.',
       ),
       sub('Pergunta 2 — presença de GD'),
+      formula('razão = MMGD cadastrada nas SEDs (ANEEL) ÷ carga média da SE        nível = razão ÷ (43,5 GWp ÷ carga média do SIN)'),
+      tabela(
+        ['Nível', '× a razão do SIN'],
+        [
+          ['Baixa', '< 0,5'],
+          ['Média', '0,5 a 1,5'],
+          ['Alta', '> 1,5'],
+        ],
+      ),
+      'Comparar com a carga, e não com a área, deixa SEs de porte diferente comparáveis: nenhuma base pública traz a área efetivamente servida. Sem a base real da fronteira (modo demo ou base em construção), a tela cai para o indicador da amostra sintética abaixo, com o aviso na faixa do topo.',
+      sub('Indicador da amostra sintética (só demonstração do detector)'),
       codigo(
         [
           'pixel → lat/lon (geo-transformação local plana)',
@@ -133,7 +145,7 @@ export const MAPA: PaginaDoc = {
       ),
       sub('Detalhe da subestação de fronteira'),
       lista(
-        '**Desempenho do detector nesta amostra** — precisão, revocação, F1 e IoU nesta cena (medições do detector contra a verdade fundamental da ortoimagem sintética).',
+        '**Desempenho do detector nesta amostra** — precisão, revocação, F1 e IoU nesta cena (medições do detector contra a verdade fundamental da ortoimagem sintética). Não entra na composição nem na MMGD.',
         '**Desvio em relação ao subsistema** — composição local × prior regional.',
         '**Insumo proposto ao Modelo de Carga Composta** — composição por classe, fração de motor (residencial 0,22 · comercial 0,38 · industrial 0,62 · rural 0,55), MMGD, sinalização de GD e confiança. **Não são parâmetros prontos para simulação** (campo `aviso`).',
         '**Detecções georreferenciadas** — lat/lon, área e confiança de cada detecção.',
@@ -146,10 +158,10 @@ export const MAPA: PaginaDoc = {
         'limite',
         'Limites',
         lista(
-          '**R1** — a cena amostrada das subestações de fronteira é ortoimagem sintética; a detecção em imagem real está em [[visao]].',
+          '**R1** — a cena amostrada das subestações de fronteira é ortoimagem sintética e só demonstra o detector; os números da SE vêm da BDGD e da ANEEL. A detecção em imagem real está em [[visao]].',
           '**R2** — subestação de distribuição exige BDGD: só o RJ tem a rede real.',
           '**R3** — não existe curva de carga por subestação em dado aberto; a decomposição roda por subsistema.',
-          '**R4** — industrial vem só da morfologia.',
+          '**R4** — a associação SED → SE é inferida (modelo gravitacional, [[fronteira]]); a composição herda essa incerteza.',
           '**R5** — variância de amostragem alta onde as edificações são poucas e grandes (`sample_adequacy`).',
           'Excedente: fator de geração único na área RJ e perfil de carga plano no mês; algumas subestações que exportam na medição não aparecem com excedente na previsão.',
         ),

@@ -209,20 +209,40 @@ function Corpo({ body, selId, setSel, detalhe }: { body: Envelope; selId: string
     <>
       <div className="note-strip">
         Entrada: <strong>lista de subestações georreferenciadas</strong> do conjunto <span className="mono">subestacao</span> do ONS — {num(rr.unique_substations)} subestações,{' '}
-        {num(rr.frontier_substations)} com transformação de fronteira com a distribuição. Saída, por subestação: composição por classe de consumo e nível de penetração de MMGD.
+        {num(rr.frontier_substations)} com transformação de fronteira com a distribuição. Saída, por subestação: composição por classe de consumo e nível de penetração de MMGD.{' '}
+        {sm.real ? (
+          <>
+            <strong>Dado real:</strong> composição pela energia faturada (BDGD MT/AT + SAMP BT) das subestações de distribuição associadas a cada SE; MMGD pelo cadastro
+            da ANEEL nessas SEDs.
+          </>
+        ) : (
+          <>
+            <strong>Sem a base real da fronteira T–D:</strong> os perfis abaixo vêm da amostra sintética de ortoimagem (demonstração).
+          </>
+        )}
       </div>
 
       <div className="grid g4" style={{ marginBottom: 14 }}>
         <Kpi label="Subestações de fronteira" value={num(d.total)} foot={'no estado · ' + num(d.returned) + ' analisadas'} accent="teal" />
         <Kpi label="Classe dominante no estado" value={topLabel(sm.by_class)} foot={spread(sm.by_class)} accent="navy" />
         <Kpi label="Penetração de MMGD" value={topLabel(sm.by_mmgd_level)} foot={spread(sm.by_mmgd_level)} accent="amber" />
-        <Kpi
-          label="Qualidade da detecção"
-          value={num(sm.detector_f1_mean, 3)}
-          unit="F1"
-          foot={'IoU de máscara ' + num(sm.detector_mask_iou_mean, 3) + ' · medido contra verdade fundamental'}
-          accent="green"
-        />
+        {sm.real ? (
+          <Kpi
+            label="MMGD cadastrada nas SEs"
+            value={num((sm.total_kwp || 0) / 1000, 1)}
+            unit="MW"
+            foot={'cadastro ANEEL · no SIN a MMGD é ' + num(d.sin_mmgd_ratio, 2) + '× a carga média'}
+            accent="green"
+          />
+        ) : (
+          <Kpi
+            label="Qualidade da detecção"
+            value={num(sm.detector_f1_mean, 3)}
+            unit="F1"
+            foot={'IoU de máscara ' + num(sm.detector_mask_iou_mean, 3) + ' · banco de ensaio sintético'}
+            accent="green"
+          />
+        )}
       </div>
 
       <div className="grid g-1-2" style={{ marginBottom: 14 }}>
@@ -249,12 +269,15 @@ function Corpo({ body, selId, setSel, detalhe }: { body: Envelope; selId: string
                     <td className="small">
                       {r.class_label || '—'}
                       <br />
-                      <span className="faint">conf. {pct(r.class_confidence, 0)}</span>
+                      <span className="faint">
+                        {r.real ? 'medido ' : 'conf. '}
+                        {pct(r.class_confidence, 0)}
+                      </span>
                     </td>
                     <td>
                       <LevelChip lv={r.mmgd_level} />
                       <br />
-                      <span className="small faint mono">{num(r.mmgd_kwp_per_km2)} kWp/km²</span>
+                      <span className="small faint mono">{mmgdTexto(r)}</span>
                     </td>
                   </tr>
                 ))}
@@ -282,6 +305,39 @@ function Corpo({ body, selId, setSel, detalhe }: { body: Envelope; selId: string
             ))}
           </ol>
         </OCard>
+        {sm.real ? (
+          <OCard
+            title="Faixas do indicador de MMGD"
+            note={
+              'Razão MMGD cadastrada ÷ carga média da SE, em múltiplos da mesma razão no SIN (' +
+              num(d.sin_mmgd_ratio, 3) +
+              ': 43,5 GWp de MMGD ÷ carga média supervisionada do SIN). Comparável entre SEs de porte diferente; nenhuma base pública traz a área servida.'
+            }
+          >
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nível</th>
+                    <th className="num">de (× SIN)</th>
+                    <th className="num">até</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(d.penetration_rel_bins || []).map((b: Dado, i: number) => (
+                    <tr key={i}>
+                      <td>
+                        <LevelChip lv={b.level} />
+                      </td>
+                      <td className="num">{num(b.from_rel, 1)}</td>
+                      <td className="num">{b.to_rel === null ? '—' : num(b.to_rel, 1)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </OCard>
+        ) : (
         <OCard
           title="Faixas do indicador de MMGD"
           note="Ancoragem: unidade com MMGD tem tipicamente 5 kWp; densidade construída urbana de 800 a 2.000 telhados por km²; penetração média brasileira da ordem de 3% das unidades consumidoras."
@@ -319,6 +375,7 @@ function Corpo({ body, selId, setSel, detalhe }: { body: Envelope; selId: string
             ))}
           </div>
         </OCard>
+        )}
       </div>
       <SecaoVisao />
       <Proveniencia body={body} />
@@ -427,7 +484,7 @@ function MapaBrasil({
                 <br />
                 classe: {r.class_label || r.class_dominant || '—'}
                 <br />
-                MMGD: {r.mmgd_level || '—'} · {num(r.mmgd_kwp_per_km2)} kWp/km²
+                MMGD: {r.mmgd_level || '—'} · {mmgdTexto(r)}
               </Tooltip>
             </CircleMarker>
           )
@@ -518,6 +575,13 @@ function CamadaUfs({ uf, onUf }: { uf: string; onUf: (u: string) => void }) {
   )
 }
 
+/** MMGD de uma linha: real = MW cadastrados e razão relativa ao SIN; sintético = kWp/km² da amostra. */
+function mmgdTexto(r: Dado): string {
+  if (!r.real) return num(r.mmgd_kwp_per_km2) + ' kWp/km² (amostra sintética)'
+  if (r.mmgd_kwp === null || r.mmgd_kwp === undefined) return 'sem SED associada'
+  return num(r.mmgd_kwp / 1000, 1) + ' MW · ' + num(r.mmgd_relative_to_sin, 2) + '× SIN'
+}
+
 function nivelCor(lv: string | null | undefined): string {
   return color((lv && LEVEL_COLORS[lv]) || 'muted')
 }
@@ -543,14 +607,40 @@ function DetalheCorpo({ d }: { d: Dado }) {
           <div>
             <div className="okpi-label">1 · Perfil predominante de consumo</div>
             <div style={{ fontSize: 17, fontWeight: 650, margin: '4px 0 8px' }}>
-              {lc.label} <span className="small muted">confiança {pct(lc.confidence, 0)}</span>
+              {lc.label}{' '}
+              <span className="small muted">
+                {lc.real ? 'energia medida por UC ' + pct(lc.confidence, 0) : 'confiança ' + pct(lc.confidence, 0) + ' · amostra sintética'}
+              </span>
             </div>
             <WeightBars weights={lc.weights} />
             <div className="okpi-label" style={{ marginTop: 14 }}>
               2 · Presença de geração distribuída
             </div>
+            {m.real ? (
+              <>
+                <div style={{ fontSize: 17, fontWeight: 650, margin: '4px 0 8px' }}>
+                  <LevelChip lv={m.level} /> {m.kwp_total === null || m.kwp_total === undefined ? 'sem dado' : num(m.kwp_total / 1000, 1) + ' MW'}{' '}
+                  <span className="small muted">cadastro ANEEL</span>
+                </div>
+                <StatLines
+                  pares={[
+                    ['Empreendimentos', num(m.gd_n)],
+                    ['Carga média da SE', num(m.mw_avg, 1) + ' MW'],
+                    ['MMGD ÷ carga média', num(m.ratio_to_load, 3)],
+                    ['Mesma razão no SIN', num(m.ratio_to_load_sin, 3)],
+                    ['Relativo ao SIN', num(m.relative_to_sin, 2) + '×'],
+                    ['Localizada direto pela BDGD', pct(m.direct_share, 1)],
+                    ['Tipo III na UF', num(m.tipo3_mw_uf, 1) + ' MW (' + num(m.tipo3_count_uf) + ' usinas)'],
+                  ]}
+                />
+                <div className="small faint" style={{ marginTop: 6 }}>
+                  {m.source}. {m.confidence_note ? 'Confiança = ' + m.confidence_note + '.' : ''}
+                </div>
+              </>
+            ) : (
+              <>
             <div style={{ fontSize: 17, fontWeight: 650, margin: '4px 0 8px' }}>
-              <LevelChip lv={m.level} /> {num(m.kwp_per_km2)} <span className="small muted">kWp/km² · confiança {pct(m.confidence, 0)}</span>
+              <LevelChip lv={m.level} /> {num(m.kwp_per_km2)} <span className="small muted">kWp/km² · confiança {pct(m.confidence, 0)} · amostra sintética</span>
             </div>
             <StatLines
               pares={[
@@ -564,6 +654,8 @@ function DetalheCorpo({ d }: { d: Dado }) {
                 ['Tipo III na UF', num(m.tipo3_mw_uf, 1) + ' MW (' + num(m.tipo3_count_uf) + ' usinas)'],
               ]}
             />
+              </>
+            )}
           </div>
           <div>
             <div className="okpi-label">3 · Visão computacional · amostra sintética (demonstração)</div>
@@ -609,6 +701,17 @@ function DetalheCorpo({ d }: { d: Dado }) {
           />
         </OCard>
         <OCard title="Desvio em relação ao subsistema" note={lc.prior_role || undefined}>
+          {lc.real ? (
+            <StatLines
+              pares={[
+                ['Desvio da média regional', num(lc.deviation_from_regional, 3)],
+                ['Classe do subsistema (curva ONS)', (lc.regional_prior || {}).label || '—'],
+                ['R² do ajuste do subsistema', num((lc.regional_prior || {}).r2, 3)],
+                ['Classe desta SE (energia faturada)', lc.label || '—'],
+                ['Fonte', lc.source || '—'],
+              ]}
+            />
+          ) : (
           <StatLines
             pares={[
               ['Desvio da média regional', num(lc.deviation_from_regional, 3)],
@@ -621,6 +724,7 @@ function DetalheCorpo({ d }: { d: Dado }) {
               ['Telhados por km²', num((lc.local_evidence || {}).density_per_km2, 0)],
             ]}
           />
+          )}
         </OCard>
         <OCard title="Insumo proposto ao Modelo de Carga Composta" note={an.aviso || undefined}>
           <StatLines

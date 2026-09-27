@@ -23,7 +23,7 @@ import pandas as pd
 
 from src.spatial import bdgd, excedentes, areas_influencia, mmgd
 from src.utils.config import arquivo_direto
-from src.spatial.saidas import (SAIDA_CARGA_AREA_INFLUENCIA, SAIDA_EXPORTADORES, SAIDA_AREAS_INFLUENCIA_GEOJSON,
+from src.spatial.saidas import (SAIDA_CARGA_AREA_INFLUENCIA, SAIDA_EXPORTADORES, SAIDA_MMGD_EMPREENDIMENTOS, SAIDA_AREAS_INFLUENCIA_GEOJSON,
                                 SAIDA_MMGD_DIARIA, SAIDA_MMGD_AREA_INFLUENCIA, SAIDA_RELATORIO)
 from src.utils.paths import DATA_PROCESSED, DOCS_REPORTS, OUTPUT, ensure
 
@@ -114,6 +114,7 @@ def construir() -> str:
     m["diaria_fronteira"].to_csv(SAIDA_MMGD_DIARIA, index=False)
     pesos.to_csv(SAIDA_CARGA_AREA_INFLUENCIA, index=False)
     exportadores.to_csv(SAIDA_EXPORTADORES, index=False)
+    mmgd.por_empreendimento(m["unidades"]).to_parquet(SAIDA_MMGD_EMPREENDIMENTOS, index=False)
     SAIDA_RELATORIO.write_text(relatorio(m["unidades"], geo, exportadores), encoding="utf-8")
     cap = geo["capacidade_mmgd_kw"].sum() / 1000
     return (f"{len(geo)} áreas de influência, MMGD {cap:,.1f} MW "

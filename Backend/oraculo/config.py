@@ -54,6 +54,30 @@ SUBSYSTEMS: dict[str, dict] = {
     "N": {"name": "Norte", "lat": -4.0, "lon": -50.0},
 }
 DEFAULT_AREA = "SIN"
+
+# Pontos de tempo (temperatura e ponto de orvalho, Open-Meteo/ERA5) por
+# subsistema: as capitais que concentram a carga de cada um. Decisao: o
+# centroide geografico do subsistema (SUBSYSTEMS acima) cai no interior e
+# nao representa onde o consumo esta -- a temperatura que move o ar
+# condicionado e a das metropoles. Peso = populacao da regiao metropolitana
+# (IBGE, estimativa 2024, milhoes), so para ponderar a media entre pontos.
+WEATHER_POINTS: dict[str, list[dict]] = {
+    "SE": [{"nome": "São Paulo", "lat": -23.55, "lon": -46.63, "peso": 21.5},
+           {"nome": "Rio de Janeiro", "lat": -22.91, "lon": -43.17, "peso": 13.3},
+           {"nome": "Belo Horizonte", "lat": -19.92, "lon": -43.94, "peso": 6.0},
+           {"nome": "Brasília", "lat": -15.79, "lon": -47.88, "peso": 4.8},
+           {"nome": "Goiânia", "lat": -16.68, "lon": -49.25, "peso": 2.7}],
+    "S": [{"nome": "Porto Alegre", "lat": -30.03, "lon": -51.23, "peso": 4.3},
+          {"nome": "Curitiba", "lat": -25.43, "lon": -49.27, "peso": 3.7},
+          {"nome": "Florianópolis", "lat": -27.59, "lon": -48.55, "peso": 1.3}],
+    "NE": [{"nome": "Salvador", "lat": -12.97, "lon": -38.51, "peso": 4.0},
+           {"nome": "Recife", "lat": -8.05, "lon": -34.88, "peso": 4.1},
+           {"nome": "Fortaleza", "lat": -3.72, "lon": -38.54, "peso": 4.1}],
+    "N": [{"nome": "Belém", "lat": -1.46, "lon": -48.49, "peso": 2.5},
+          {"nome": "Manaus", "lat": -3.12, "lon": -60.02, "peso": 2.3},
+          {"nome": "São Luís", "lat": -2.53, "lon": -44.30, "peso": 1.6}],
+}
+WEATHER_POINTS["SIN"] = [p for ss in ("SE", "S", "NE", "N") for p in WEATHER_POINTS[ss]]
 TZ_OFFSET_HOURS = -3.0  # horario de Brasilia
 
 # ---------------------------------------------------------------- MMGD

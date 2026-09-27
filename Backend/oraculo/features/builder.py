@@ -61,28 +61,10 @@ class FeatureMatrix:
 
 
 # ----------------------------------------------------------------- clima
-def synthetic_weather(index: np.ndarray, area: str, seed: int = 7) -> dict[str, np.ndarray]:
-    """Proxy determinístico de temperatura e ponto de orvalho.
-
-    Substituivel por ECMWF/GFS/WRF e INMET em producao (ver 10-roadmap.md).
-    Aqui a sazonalidade anual e o ciclo diario sao reproduzidos com amplitude
-    tipica da regiao, o que basta para exercitar as variaveis climaticas.
-    """
-    index = np.asarray(index, dtype="datetime64[s]")
-    geo = SUBSYSTEMS.get(area, SUBSYSTEMS["SIN"])
-    lat = abs(geo["lat"])
-    doy = day_of_year(index).astype("f8")
-    hod = hour_of_day(index).astype("f8")
-
-    base = 27.0 - 0.28 * (lat - 5.0)                 # mais frio ao sul
-    annual = 4.5 * np.cos(2 * np.pi * (doy - 15) / 365.25)   # verao em janeiro
-    diurnal = 4.0 * np.sin(2 * np.pi * (hod - 9.0) / 24.0)
-    rng = np.random.default_rng(seed + abs(hash(area)) % 9973)
-    noise = np.convolve(rng.normal(0.0, 1.1, len(index)),
-                        np.ones(6) / 6.0, mode="same")
-    temp = base - annual + diurnal + noise
-    dew = temp - (5.0 + 2.0 * np.sin(2 * np.pi * doy / 365.25))
-    return {"temperature": temp, "dewpoint": dew}
+# O tempo vem de fora (oraculo/tempo/clima.py::weather_for_area: ERA5 pelo
+# Open-Meteo). Decisao: nao existe mais proxy sintetico de temperatura aqui.
+# Sem tempo real, o grupo "clima" simplesmente nao entra na matriz: um modelo
+# com menos variaveis e honesto; um com temperatura inventada nao e.
 
 
 def discomfort_index(temp: np.ndarray, dew: np.ndarray) -> np.ndarray:
@@ -194,17 +176,23 @@ def build(
         scale = max(float(np.nanmax(mmgd)) if np.isfinite(mmgd).any() else 1.0, 1.0)
         add("solar.mmgd_norm", np.nan_to_num(np.asarray(mmgd, dtype="f8") / scale))
 
-    # --- clima
-    w = weather or synthetic_weather(index, area)
-    temp, dew = w["temperature"], w["dewpoint"]
-    di = discomfort_index(temp, dew)
-    add("clima.temperatura", temp / 40.0)
-    add("clima.ponto_orvalho", dew / 40.0)
-    add("clima.desconforto", di / 40.0)
-    for k in (1, 3, 24):
-        add("clima.temp_lag%d" % k, np.nan_to_num(_lag(temp, k), nan=float(np.nanmean(temp))) / 40.0)
-    add("clima.temp_media72h", np.nan_to_num(_rolling_mean(temp, 72),
-                                             nan=float(np.nanmean(temp))) / 40.0)
+    # --- clima (so com tempo observado; ver nota acima de discomfort_index)
+    if weather is not None:
+        temp = np.asarray(weather["temperature"], dtype="f8")
+        dew = np.asarray(weather["dewpoint"], dtype="f8")
+        # Hora sem tempo (buraco raro do servico) vira a media: a linha segue
+        # valida e a variavel nao carrega informacao nela.
+        tmean = float(np.nanmean(temp)) if np.isfinite(temp).any() else 25.0
+        dmean = float(np.nanmean(dew)) if np.isfinite(dew).any() else 20.0
+        temp = np.where(np.isfinite(temp), temp, tmean)
+        dew = np.where(np.isfinite(dew), dew, dmean)
+        di = discomfort_index(temp, dew)
+        add("clima.temperatura", temp / 40.0)
+        add("clima.ponto_orvalho", dew / 40.0)
+        add("clima.desconforto", di / 40.0)
+        for k in (1, 3, 24):
+            add("clima.temp_lag%d" % k, np.nan_to_num(_lag(temp, k), nan=tmean) / 40.0)
+        add("clima.temp_media72h", np.nan_to_num(_rolling_mean(temp, 72), nan=tmean) / 40.0)
 
     # --- defasagens do alvo
     if target is not None:

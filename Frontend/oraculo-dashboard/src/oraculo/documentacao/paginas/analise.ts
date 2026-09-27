@@ -4,7 +4,7 @@
  * conferido contra src/oraculo/pages/{Curtailment,Perfis,Triangulacao}.tsx. Os significados dos
  * códigos de razão seguem o dicionário do ONS, como na nota da própria tela de Curtailment.
  */
-import { aviso, formula, lista, secao, tabela, type PaginaDoc } from '../modelo'
+import { aviso, formula, lista, secao, sub, tabela, type PaginaDoc } from '../modelo'
 
 const GRUPO = 'Análise'
 
@@ -194,13 +194,16 @@ export const TRIANGULACAO: PaginaDoc = {
         ['Classificação', 'Satélite', 'BDGD', 'ANEEL', 'Encaminhamento'],
         [
           ['**CONFIRMADA**', 'sim', 'sim', 'sim', 'usar sem ressalva'],
+          ['**CADASTRAL**', 'não observado', 'sim', 'sim', 'BDGD e ANEEL concordam, sem a camada física: **entra no fator de correção**'],
           ['**LAG_DE_SISTEMA**', 'sim', 'não', 'sim', 'homologada, ausente da base anual: **entra no fator de correção**'],
           ['**NAO_HOMOLOGADA**', 'sim', '—', 'não', 'existe e gera sem registro: **escalada como exceção, nunca somada silenciosamente**'],
           ['**CADASTRO_SEM_EVIDENCIA**', 'não', '—', 'sim', 'registro sem evidência física: instalação pendente, erro de coordenada ou limite do detector'],
           ['**SEM_EVIDENCIA**', 'não', 'não', 'não', 'nada a afirmar'],
         ],
       ),
-      'Implementação em `Backend/oraculo/triangulation/evidence.py`, função `classify(detected, in_bdgd, in_aneel)`.',
+      'Implementação em `Backend/oraculo/triangulation/evidence.py`, função `classify(detected, in_bdgd, in_aneel)`. `detected=None` significa **camada 1 não observada** (≠ não detectado): o desempate cai para BDGD × ANEEL e a matriz da tela vira 2×2.',
+      sub('Dado real'),
+      'Os empreendimentos vêm do pipeline espacial (`src/spatial/mmgd.py`, saída `data/processed/mmgd_empreendimentos.parquet`): BDGD 2025 da LIGHT e da Enel RJ cruzada com o cadastro de MMGD da ANEEL pelo código do empreendimento (CEG). Potência = a da ANEEL. Área = distribuidora. Enquanto não há detecção de satélite sobre a área, nenhuma detecção é presumida. Sem a tabela, a tela mostra o erro com o comando que a gera — nunca o gerador demonstrativo, que só roda no modo demo.',
       aviso(
         'nota',
         'A decisão de projeto mais importante',
@@ -211,8 +214,8 @@ export const TRIANGULACAO: PaginaDoc = {
       'Os outros cartões',
       lista(
         '**Três camadas de evidência** — fonte, pergunta, cadência e disponibilidade atual de cada camada.',
-        '**Fator de correção por área** — unidades em defasagem e o fator a aplicar sobre a capacidade cadastrada. A capacidade implicada vem do déficit diurno observado na carga; uma razão muito acima de 1 sugere cadastro defasado.',
-        '**Amostra de unidades classificadas** — as 40 primeiras, para verificar a lógica em casos concretos em vez de confiar só no agregado.',
+        '**Fator de correção por área** — declarada = o que a BDGD conhece; corrigida = + defasagem de sistema; fator acima de 1 = a base anual subestima a MMGD homologada. (No modo demo, também a capacidade implicada pelo déficit diurno da carga.)',
+        '**Amostra de unidades classificadas** — os maiores empreendimentos de cada classificação, em rodízio, para verificar a lógica em casos concretos em vez de confiar só no agregado.',
       ),
       'A mesma lógica, aplicada à rede real da BDGD do RJ e às detecções do pipeline do time, está em [[auditoria]] e no mapa de [[mapa]].',
     ),
@@ -222,7 +225,7 @@ export const TRIANGULACAO: PaginaDoc = {
         'limite',
         'Limites',
         lista(
-          'A camada física do protótipo usa a detecção do banco de ensaio (ortoimagem sintética): o detector é real, a imagem é de demonstração. Ver [[visao]].',
+          'A camada física (satélite) ainda não cobre a área: com dado real, o desempate é BDGD × ANEEL. A auditoria por satélite do time está em [[auditoria]].',
           'A classificação **não é fiscalização**: "não homologada" é hipótese a verificar (pode haver erro de coordenada, de detecção ou de recorte temporal).',
           'A amostra exibida é amostra, não censo.',
         ),

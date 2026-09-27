@@ -197,6 +197,21 @@ def construir(fator: pd.Series | None = None) -> dict[str, pd.DataFrame]:
             "energia_mensal": pd.concat(energia).groupby(level=0).sum().rename_axis("area_id").reset_index()}
 
 
+def por_empreendimento(unidades: pd.DataFrame) -> pd.DataFrame:
+    """Uma linha por empreendimento (CEG), com a categoria do desempate e as duas potências.
+
+    `unidades` (saída de `construir`) repete o lag de sistema em várias áreas de influência
+    (rateio com `fracao`); aqui cada CEG aparece uma vez, com a área de influência da BDGD quando
+    ela localiza a unidade (lag: sem área, só o município). Só colunas não pessoais: código do
+    empreendimento (público na ANEEL), distribuidora, município, potências, data e tipo.
+    """
+    e = unidades.sort_values("fracao", ascending=False).drop_duplicates("ceg")
+    e = e.assign(area_id=e["area_id"].where(e["categoria"] != "lag_sistema"))
+    cols = ["ceg", "categoria", "distribuidora", "area_id", "mun", "pot_aneel_kw", "pot_bdgd_kw",
+            "data", "tipo", "data_bdgd"]
+    return e[cols].sort_values(["distribuidora", "ceg"]).reset_index(drop=True)
+
+
 def resumo_por_area(unidades: pd.DataFrame, fator: pd.Series) -> pd.DataFrame:
     """Capacidade atual (todo o cadastro baixado) por área de influência, por categoria, e fonte dominante.
 

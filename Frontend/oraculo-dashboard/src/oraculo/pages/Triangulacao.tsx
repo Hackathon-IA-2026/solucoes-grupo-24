@@ -2,6 +2,11 @@
  * Triangulação de evidências (protótipo, painel "triangulacao"). Porte de V.triangulacao em
  * 02-PROTOTIPO/web/js/views/analise.js: três camadas independentes (satélite, BDGD, ANEEL) e a
  * lógica de desempate entre defasagem administrativa e instalação não homologada.
+ *
+ * Dado real (modo cache/live): empreendimentos da BDGD × cadastro da ANEEL do pipeline espacial.
+ * Enquanto a camada 1 (satélite) não cobre a área, o backend manda `layer1_available: false` e a
+ * matriz vira BDGD × ANEEL; a coluna "Satélite" mostra "não observado" — nunca "não" (que seria
+ * afirmar uma não detecção que ninguém fez).
  */
 import { Api, type Envelope } from '../api'
 import { num, pct } from '../format'
@@ -33,28 +38,36 @@ function Corpo({ body }: { body: Envelope }) {
   const units = areas.reduce((s, a) => s + (a.units_total || 0), 0)
   const lag = tot.lag_de_sistema || 0
   const nh = tot.nao_homologada || 0
+  // Sem satélite, "confirmada" (três camadas) não existe: o análogo é BDGD e ANEEL concordarem.
+  const tresCamadas = t.layer1_available !== false
+  const concordam = tresCamadas ? tot.confirmada || 0 : tot.cadastral || 0
 
   return (
     <>
-      <div className="note-strip warn">{t.note || ''}</div>
+      <div className={'note-strip ' + (tresCamadas ? 'warn' : '')}>{t.note || ''}</div>
 
       <div className="grid g4" style={{ marginBottom: 14 }}>
         <Kpi label="Unidades avaliadas" value={num(units)} foot={num(areas.length) + ' áreas'} accent="teal" />
         <Kpi label="Defasagem de sistema" value={pct(units ? lag / units : 0, 1)} foot={num(lag) + ' unidades homologadas e ausentes na BDGD'} accent="amber" />
         <Kpi label="Não homologadas" value={pct(units ? nh / units : 0, 1)} foot={num(nh) + ' unidades escaladas como exceção'} accent="crimson" />
-        <Kpi label="Confirmadas" value={pct(units ? (tot.confirmada || 0) / units : 0, 1)} foot="três camadas concordam" accent="green" />
+        <Kpi
+          label={tresCamadas ? 'Confirmadas' : 'BDGD e ANEEL concordam'}
+          value={pct(units ? concordam / units : 0, 1)}
+          foot={tresCamadas ? 'três camadas concordam' : num(concordam) + ' unidades · satélite não observado'}
+          accent="green"
+        />
       </div>
 
       <OCard
         title="Lógica de desempate"
         note={
           <>
-            Somente <strong>confirmada</strong> e <strong>defasagem de sistema</strong> entram no fator de correção de capacidade. Instalação não homologada é reportada em separado,
+            Somente <strong>{tresCamadas ? 'confirmada' : 'BDGD e ANEEL concordam'}</strong> e <strong>defasagem de sistema</strong> entram no fator de correção de capacidade. Instalação não homologada é reportada em separado,
             nunca somada silenciosamente.
           </>
         }
       >
-        <Matriz t={t} tot={tot} />
+        {tresCamadas ? <Matriz t={t} tot={tot} /> : <MatrizCadastral t={t} tot={tot} />}
       </OCard>
 
       <div className="grid g2" style={{ marginTop: 14, marginBottom: 14 }}>
@@ -63,13 +76,17 @@ function Corpo({ body }: { body: Envelope }) {
         </OCard>
         <OCard
           title="Fator de correção por área"
-          note="A capacidade implicada vem do déficit diurno observado na carga; uma razão muito acima de 1 sugere cadastro defasado."
+          note={
+            tresCamadas
+              ? 'A capacidade implicada vem do déficit diurno observado na carga; uma razão muito acima de 1 sugere cadastro defasado.'
+              : 'Declarada = o que a BDGD conhece (potência da ANEEL). Corrigida = + defasagem de sistema. Fator acima de 1 = a BDGD subestima a MMGD homologada.'
+          }
         >
           <TabelaCorrecao areas={areas} />
         </OCard>
       </div>
 
-      <OCard title="Amostra de unidades classificadas" hint={'40 primeiras de ' + num(units)}>
+      <OCard title="Amostra de unidades classificadas" hint={(tresCamadas ? '40 primeiras de ' : 'maiores de cada classificação, de ') + num(units)}>
         <TabelaAmostra sample={t.sample} />
       </OCard>
       <Proveniencia body={body} />
@@ -110,6 +127,42 @@ function Matriz({ t, tot }: { t: Dado; tot: Record<string, number> }) {
   )
 }
 
+/** Desempate só com topologia × cadastro (camada 1 ausente): as células vêm do backend. */
+function MatrizCadastral({ t, tot }: { t: Dado; tot: Record<string, number> }) {
+  const cel: Dado[] = t.matrix || []
+  const kind: Record<string, string> = { cadastral: 'ok', lag_de_sistema: 'ok', nao_homologada: 'bad', sem_evidencia: 'neutral' }
+  const achar = (row: string, col: string) => cel.find((c) => c.row === row && c.col === col) || {}
+  const linhas = Array.from(new Set(cel.map((c) => c.row)))
+  const colunas = Array.from(new Set(cel.map((c) => c.col)))
+  return (
+    <div className="matrix">
+      <div className="mh" />
+      {colunas.map((c) => (
+        <div key={c} className="mh">
+          {c}
+        </div>
+      ))}
+      {linhas.map((r) => [
+        <div key={r} className="rh">
+          {r}
+        </div>,
+        ...colunas.map((c) => {
+          const x = achar(r, c)
+          // "Fora das bases": nenhuma base conhece, então não há contagem (não é um zero observado).
+          const n = x.classification === 'sem_evidencia' ? '—' : num(tot[x.classification] || 0)
+          return (
+            <div key={r + c} className={'mcell ' + (kind[x.classification] || 'neutral')}>
+              <h4>{x.label || ''}</h4>
+              <div className="n">{n}</div>
+              <p>{x.note || ''}</p>
+            </div>
+          )
+        }),
+      ])}
+    </div>
+  )
+}
+
 function TabelaCamadas({ layers }: { layers: Dado[] | undefined }) {
   return (
     <div className="table-wrap">
@@ -135,6 +188,12 @@ function TabelaCamadas({ layers }: { layers: Dado[] | undefined }) {
               <td>{l.question}</td>
               <td>
                 <span className="chip teal">{l.cadence}</span>
+                {l.observed === false && (
+                  <>
+                    <br />
+                    <span className="chip amber">não observada</span>
+                  </>
+                )}
               </td>
               <td className="small muted">{l.limitation}</td>
             </tr>
@@ -184,9 +243,11 @@ function TabelaCorrecao({ areas }: { areas: Dado[] }) {
   )
 }
 
-const BADGE: Record<string, string> = { confirmada: 'green', lag_de_sistema: 'amber', nao_homologada: 'crimson', cadastro_sem_evidencia: '', sem_evidencia: '' }
+const BADGE: Record<string, string> = { confirmada: 'green', cadastral: 'green', lag_de_sistema: 'amber', nao_homologada: 'crimson', cadastro_sem_evidencia: '', sem_evidencia: '' }
 
 function SimNao({ v }: { v: unknown }) {
+  // null/undefined = camada não observada (≠ "não": ninguém procurou).
+  if (v === null || v === undefined) return <span className="faint">não observado</span>
   return v ? <span className="pos">sim</span> : <span className="faint">não</span>
 }
 

@@ -631,7 +631,7 @@ function DetalheCorpo({ f }: { f: Dado }) {
           note={
             cmp ? (
               <>
-                O Mapa Inteligente estima a composição pela morfologia de ortoimagem (sintética no protótipo) com prior do subsistema. Aqui ela vem de <strong>energia faturada real</strong>. A
+                O Mapa Inteligente usa esta mesma energia faturada (e, sem a base real, a morfologia de ortoimagem sintética). Aqui ela vem de <strong>energia faturada real</strong>. A
                 diferença é o ganho de representação que esta seção entrega ao modelo de carga.
               </>
             ) : (

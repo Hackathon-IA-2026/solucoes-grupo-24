@@ -240,3 +240,57 @@ def test_celulas_da_matriz_descrevem_as_quatro_combinacoes():
     assert len(cells) == 4
     for c in cells:
         assert c["label"] and c["note"]
+
+
+def test_horizonte_muda_o_modelo_de_risco(client):
+    # Antes o horizonte so trocava o rotulo: agora a memoria de restricao
+    # termina `lag` horas antes do alvo (config.HORIZONS) e o modelo muda.
+    from oraculo.api.service import SERVICE
+    r30 = SERVICE.risk_payload("30min")
+    rd1 = SERVICE.risk_payload("d1")
+    assert r30["model"]["memory_lag_h"] == config.HORIZONS["30min"]
+    assert rd1["model"]["memory_lag_h"] == config.HORIZONS["d1"]
+    assert r30["horizon"] == "30min" and rd1["horizon"] == "d1"
+    assert r30 is not rd1
+
+
+# ================================================= desempate com dado real (camada 1 ausente)
+def test_sem_satelite_o_desempate_e_bdgd_por_aneel():
+    assert E.classify(None, True, True) == E.CADASTRAL
+    assert E.classify(None, False, True) == E.LAG_DE_SISTEMA
+    assert E.classify(None, True, False) == E.NAO_HOMOLOGADA
+    assert E.counts_in_correction(E.CADASTRAL)
+    assert not E.counts_in_correction(E.NAO_HOMOLOGADA)
+
+
+def _empreendimentos():
+    import pandas as pd
+    return pd.DataFrame({
+        "ceg": ["GD1", "GD2", "GD3", "GD4"],
+        "categoria": ["bdgd_e_aneel", "bdgd_e_aneel", "lag_sistema", "bdgd_sem_homologacao"],
+        "distribuidora": ["LIGHT"] * 4,
+        "pot_aneel_kw": [100.0, 300.0, 50.0, float("nan")],
+        "pot_bdgd_kw": [90.0, 280.0, float("nan"), 7.0],
+        "data": pd.to_datetime(["2024-01-01", "2024-02-01", "2026-03-01", None]),
+    })
+
+
+def test_empreendimentos_reais_viram_unidades_sem_deteccao_presumida():
+    units = E.units_from_empreendimentos(_empreendimentos())
+    assert all(u.detected is None for u in units)
+    assert [u.classification for u in units] == [E.CADASTRAL, E.CADASTRAL, E.LAG_DE_SISTEMA,
+                                                 E.NAO_HOMOLOGADA]
+    # potencia = ANEEL; so-BDGD usa a da BDGD
+    assert [u.capacity_kwp for u in units] == [100.0, 300.0, 50.0, 7.0]
+    a = E.aggregate(units)[0]
+    # declarada = o que a BDGD conhece (100+300+7); corrigida = cadastral + lag (100+300+50)
+    assert a["capacity_declared_mw"] == pytest.approx(0.41, abs=1e-3)
+    assert a["capacity_corrected_mw"] == pytest.approx(0.45, abs=1e-3)
+    assert a["capacity_unhomologated_mw"] == pytest.approx(0.01, abs=1e-3)
+    assert a["coverage"] == 0.0            # nenhuma unidade com as tres camadas
+
+
+def test_amostra_mostra_um_exemplo_de_cada_classificacao():
+    units = E.units_from_empreendimentos(_empreendimentos())
+    s = E.sample_units(units, n=3)
+    assert {u.classification for u in s} == {E.CADASTRAL, E.LAG_DE_SISTEMA, E.NAO_HOMOLOGADA}

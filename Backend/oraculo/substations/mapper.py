@@ -137,6 +137,8 @@ class SubstationProfile:
             "mmgd_kwp_per_km2": self.mmgd.get("kwp_per_km2"),
             "mmgd_panels": self.mmgd.get("panels"),
             "mmgd_confidence": self.mmgd.get("confidence"),
+            "mmgd_relative_to_sin": self.mmgd.get("relative_to_sin"),
+            "real": bool(self.load_class.get("real")),
             "tipo3_mw": round(s.tipo3_mw, 1),
         }
 
@@ -343,6 +345,93 @@ def analyse(sub: Substation, *, subsystem_index: np.ndarray | None = None,
                              scene_seed=seed, urban_hint=hint, notes=notes)
 
 
+# ------------------------------------------------------ perfil com dado real
+# Nivel de MMGD pela razao capacidade cadastrada / carga media da SE, relativa
+# a mesma razao no SIN (config.MMGD_CAPACITY_MWP["SIN"] / carga media do SIN,
+# ambas dado real). Decisao: kWp/km2 dependeria da area servida, que nenhuma
+# base publica traz; a razao pela carga e comparavel entre SEs de porte
+# diferente. Limites em multiplos da referencia nacional (premissa declarada).
+PENETRATION_REL_BINS = [("baixa", 0.0, 0.5), ("média", 0.5, 1.5), ("alta", 1.5, float("inf"))]
+
+
+def _rel_level(rel: float) -> str:
+    for name, lo, hi in PENETRATION_REL_BINS:
+        if lo <= rel < hi:
+            return name
+    return "alta"
+
+
+def with_frontier(prof: SubstationProfile, fr: dict, *, sin_ratio: float,
+                  regional: dict | None = None) -> SubstationProfile:
+    """Troca composicao e MMGD do perfil pelos da correlacao fronteira T-D (dado real).
+
+    `fr`: fronteira_detail_payload da SE (energia faturada BDGD + SAMP das SEDs
+    associadas; MMGD do cadastro da ANEEL). A composicao sai da energia por
+    classe de consumo, nao da morfologia de ortoimagem sintetica; a MMGD sai do
+    cadastro, nao de paineis detectados em cena sintetica. Sem SED associada
+    (n_sed == 0): composicao e MMGD ficam SEM DADO -- nunca o numero sintetico.
+    A amostra de visao continua no perfil so como demonstracao do detector.
+    """
+    n_sed = int(fr.get("n_sed") or 0)
+    src = ("correlação fronteira T–D: energia faturada da BDGD (MT/AT por UC) + "
+           "SAMP (BT) das %d SEDs associadas" % n_sed)
+    if n_sed == 0 or not fr.get("dominant"):
+        lc = {"weights": {c: None for c in C.CLASSES}, "dominant": None,
+              "label": "Sem dado", "is_mixed": False, "confidence": None,
+              "method": "sem_sed_associada", "source": src, "real": True,
+              "deviation_from_regional": None, "regional_prior": regional,
+              "prior_role": "Nenhuma subestação de distribuição da BDGD foi "
+                            "associada a esta SE: não há consumo faturado para "
+                            "compor o perfil."}
+        mm = {"level": None, "label": "Sem dado", "kwp_total": None, "real": True,
+              "source": "cadastro de MMGD da ANEEL associado às SEDs", "confidence": None}
+    else:
+        w = {c: float(fr["weights"].get(c, 0.0)) for c in C.CLASSES}
+        mix = C.ClassMix(weights=w, dominant=fr["dominant"], residual=float("nan"), r2=float("nan"))
+        dev = None
+        if regional and regional.get("weights"):
+            dev = round(sum(abs(w[c] - float(regional["weights"].get(c, 0.0)))
+                            for c in C.CLASSES) / 2.0, 4)
+        lc = {"weights": {c: round(v, 4) for c, v in w.items()}, "dominant": fr["dominant"],
+              "label": mix.label(), "is_mixed": mix.is_mixed,
+              # Parcela da energia medida por UC (MT/AT); o resto (BT) vem do SAMP
+              # rateado por municipio. E a confianca honesta da composicao.
+              "confidence": fr.get("measured_share"),
+              "confidence_note": "parcela da energia medida por unidade consumidora (MT/AT)",
+              "method": "energia_faturada_bdgd_samp", "source": src, "real": True,
+              "deviation_from_regional": dev, "regional_prior": regional,
+              "prior_role": "Composição pela energia faturada real. O desvio compara "
+                            "com a composição da curva de carga do subsistema %s "
+                            "(NNLS sobre perfis canônicos)." % prof.substation.subsystem}
+        gd_mw = float(fr.get("gd_kw") or 0.0) / 1000.0
+        mw_avg = float(fr.get("mw_avg") or 0.0)
+        ratio = gd_mw / mw_avg if mw_avg > 0 else None
+        rel = ratio / sin_ratio if ratio is not None and sin_ratio > 0 else None
+        lvl = _rel_level(rel) if rel is not None else None
+        mm = {"level": lvl, "label": PENETRATION_LABELS.get(lvl, "Sem dado"),
+              "kwp_total": round(gd_mw * 1000.0, 1), "gd_n": fr.get("gd_n"),
+              "mw_avg": round(mw_avg, 1),
+              "ratio_to_load": round(ratio, 4) if ratio is not None else None,
+              "ratio_to_load_sin": round(sin_ratio, 4),
+              "relative_to_sin": round(rel, 3) if rel is not None else None,
+              "direct_share": fr.get("gd_direct_share"),
+              "confidence": fr.get("gd_direct_share"),
+              "confidence_note": "parcela da MMGD localizada direto pela BDGD (o resto "
+                                 "é rateado pelo município)",
+              "bins": [{"level": n, "from_rel": lo, "to_rel": None if hi == float("inf") else hi}
+                       for n, lo, hi in PENETRATION_REL_BINS],
+              "source": "cadastro de MMGD da ANEEL nas SEDs associadas", "real": True,
+              "tipo3_mw_uf": round(prof.substation.tipo3_mw, 2),
+              "tipo3_count_uf": prof.substation.tipo3_count}
+    notes = ["Composição e MMGD: dado real (%s)." % src,
+             "A seção de visão computacional abaixo é uma amostra SINTÉTICA de "
+             "demonstração do detector: não entra em nenhum número desta SE."]
+    return SubstationProfile(substation=prof.substation, load_class=lc, mmgd=mm,
+                             vision=prof.vision, evaluation=prof.evaluation,
+                             scene_seed=prof.scene_seed, urban_hint=prof.urban_hint,
+                             notes=notes)
+
+
 def _panel_rate(sub: Substation) -> float:
     """Fracao de telhados com painel na cena, em ordem de grandeza real.
 
@@ -403,9 +492,9 @@ def aggregate(profiles: list[SubstationProfile]) -> dict:
     panels = 0
     dev = 0.0
     for p in profiles:
-        c = p.load_class.get("dominant", "?")
+        c = p.load_class.get("dominant") or "sem dado"
         by_class[c] = by_class.get(c, 0) + 1
-        lv = p.mmgd.get("level", "?")
+        lv = p.mmgd.get("level") or "sem dado"
         by_level[lv] = by_level.get(lv, 0) + 1
         kwp += float(p.mmgd.get("kwp_total") or 0.0)
         panels += int(p.mmgd.get("panels") or 0)
@@ -415,6 +504,7 @@ def aggregate(profiles: list[SubstationProfile]) -> dict:
     ious = [p.evaluation.get("mask_iou") for p in profiles]
     ious = [i for i in ious if i is not None]
     return {
+        "real": all(p.load_class.get("real") for p in profiles),
         "substations": len(profiles),
         "by_class": by_class,
         "by_mmgd_level": by_level,
@@ -447,7 +537,8 @@ def clm_hint(profile: SubstationProfile) -> dict:
     o especialista usa para escolher a composicao do Composite Load Model. A
     distincao esta declarada no proprio payload.
     """
-    w = profile.load_class.get("weights", {})
+    # Composicao "sem dado" (SE sem SED associada) vem com pesos None: fica vazia.
+    w = {k: v for k, v in (profile.load_class.get("weights") or {}).items() if v is not None}
     mmgd = profile.mmgd
     return {
         "composicao_classe": {k: round(v, 4) for k, v in w.items()},

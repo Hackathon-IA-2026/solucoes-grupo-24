@@ -83,6 +83,7 @@ export const OPERACAO: PaginaDoc = {
     secao(
       'Peso por grupo de variável',
       'Barras com a contribuição relativa de cada grupo (calendário, defasagens, geometria solar, meteorologia, memória operativa): coeficientes da mediana escalados pelo desvio de cada variável.',
+      'A **meteorologia** é observada: temperatura e ponto de orvalho da reanálise ERA5 (Open-Meteo; dias recentes pela análise operacional do ECMWF), média das capitais de cada subsistema ponderada pela população (`WEATHER_POINTS` em `Backend/oraculo/config.py`). Sem rede e sem cache, o grupo **sai do modelo** — não há mais temperatura sintética.',
       aviso(
         'medido',
         'Um erro que este cartão revelou',
@@ -157,6 +158,11 @@ export const RISCO: PaginaDoc = {
         'medido',
         '1. Sem vazamento',
         'Uma versão inicial atingiu AUC 0,99 com probabilidade 1,00 — número bonito e falso: o alvo `corte_mw` colocava a defasagem de 1 h do próprio rótulo entre as variáveis. A memória operativa legítima é o histórico de restrição defasado em **24 h ou mais**, o que o operador conhece ao prever D+1 (`occurrence_memory(y, min_lag=24, window=7*24)`). **A AUC caiu para 0,902** e passou a significar algo.',
+      ),
+      aviso(
+        'medido',
+        'O horizonte muda o modelo',
+        'A memória termina **h horas antes** do alvo (`config.HORIZONS`: 30 min → 1 h, 3 h → 3 h, D+1 → 24 h), mais o estado das 3 últimas horas conhecidas na emissão. Um modelo por horizonte: no 30 min o corte em curso é informação legítima, no D+1 não. Antes o seletor de horizonte só trocava o rótulo da resposta.',
       ),
       aviso(
         'medido',

@@ -15,6 +15,21 @@ Matriz de desempate::
     no satelite        | BDGD -> lag_de_sistema       | (excecao escalada)
     -------------------+------------------------------+--------------------------
     Nao detectado      | cadastro_sem_evidencia       | sem_evidencia
+
+Sem a camada 1 (nenhuma deteccao de satelite na area), o desempate roda so
+com topologia x cadastro, dado real do pipeline espacial
+(src/spatial/mmgd.py, uma linha por empreendimento):
+
+                       | Consta na ANEEL              | Nao consta
+    -------------------+------------------------------+--------------------------
+    Consta na BDGD     | cadastral (as duas bases     | nao_homologada
+                       | concordam; falta a fisica)   | (so a BDGD a conhece)
+    -------------------+------------------------------+--------------------------
+    Nao consta         | lag_de_sistema               | (nenhuma base conhece:
+                       |                              |  so a camada 1 acharia)
+
+Decisao: `detected=None` quer dizer "camada 1 nao observada", nunca "nao
+detectado". Detecao nao e inventada para completar a matriz.
 """
 from __future__ import annotations
 
@@ -30,8 +45,10 @@ LAG_DE_SISTEMA = "lag_de_sistema"
 NAO_HOMOLOGADA = "nao_homologada"
 CADASTRO_SEM_EVIDENCIA = "cadastro_sem_evidencia"
 SEM_EVIDENCIA = "sem_evidencia"
+# Camada 1 ausente: BDGD e ANEEL concordam, sem evidencia fisica a favor ou contra.
+CADASTRAL = "cadastral"
 
-CLASSES = (CONFIRMADA, LAG_DE_SISTEMA, NAO_HOMOLOGADA,
+CLASSES = (CONFIRMADA, CADASTRAL, LAG_DE_SISTEMA, NAO_HOMOLOGADA,
            CADASTRO_SEM_EVIDENCIA, SEM_EVIDENCIA)
 
 CLASS_LABELS = {
@@ -40,6 +57,7 @@ CLASS_LABELS = {
     NAO_HOMOLOGADA: "Não homologada",
     CADASTRO_SEM_EVIDENCIA: "Cadastro sem evidência",
     SEM_EVIDENCIA: "Sem evidência",
+    CADASTRAL: "BDGD e ANEEL concordam",
 }
 
 CLASS_NOTES = {
@@ -51,6 +69,8 @@ CLASS_NOTES = {
     CADASTRO_SEM_EVIDENCIA: "Registro sem evidência física: imagem defasada ou "
                             "obra não concluída. Revisar captura.",
     SEM_EVIDENCIA: "Nenhuma evidência em nenhuma camada. Nada a corrigir.",
+    CADASTRAL: "Topologia e cadastro concordam; a camada física (satélite) não "
+               "foi observada aqui. Entra no fator de correção.",
 }
 
 LAYERS = [
@@ -84,8 +104,16 @@ LAYERS = [
 
 
 # --------------------------------------------------------------- desempate
-def classify(detected: bool, in_bdgd: bool, in_aneel: bool) -> str:
-    """Aplica a matriz de desempate a uma unidade."""
+def classify(detected: bool | None, in_bdgd: bool, in_aneel: bool) -> str:
+    """Aplica a matriz de desempate a uma unidade.
+
+    `detected=None`: camada 1 nao observada -> desempate so BDGD x ANEEL.
+    """
+    if detected is None:
+        if in_aneel:
+            return CADASTRAL if in_bdgd else LAG_DE_SISTEMA
+        # So a BDGD conhece: instalacao conectada sem homologacao na ANEEL.
+        return NAO_HOMOLOGADA if in_bdgd else SEM_EVIDENCIA
     if detected and in_aneel:
         return CONFIRMADA if in_bdgd else LAG_DE_SISTEMA
     if detected and not in_aneel:
@@ -97,7 +125,7 @@ def classify(detected: bool, in_bdgd: bool, in_aneel: bool) -> str:
 
 def counts_in_correction(cls: str) -> bool:
     """Somente evidencia legitima entra no fator de correcao."""
-    return cls in (CONFIRMADA, LAG_DE_SISTEMA)
+    return cls in (CONFIRMADA, CADASTRAL, LAG_DE_SISTEMA)
 
 
 # --------------------------------------------------------------- unidades
@@ -106,7 +134,7 @@ class Unit:
     unit_id: str
     area: str
     capacity_kwp: float
-    detected: bool
+    detected: bool | None      # None = camada 1 (satelite) nao observada
     in_bdgd: bool
     in_aneel: bool
     homologated_at: str = ""
@@ -185,7 +213,7 @@ def aggregate(units: list[Unit]) -> list[dict]:
                 corrected += mw
             if c == NAO_HOMOLOGADA:
                 unhom += mw
-            if u.detected is not None and u.in_bdgd is not None and u.in_aneel is not None:
+            if u.detected is not None:
                 with_all += 1
         res.capacity_declared_mw = declared
         res.capacity_corrected_mw = corrected
@@ -193,6 +221,67 @@ def aggregate(units: list[Unit]) -> list[dict]:
         res.coverage = with_all / len(group) if group else 0.0
         out.append(res)
     return [r.to_dict() for r in out]
+
+
+# --------------------------------------------------------------- dado real
+# Nome do contrato para a categoria do pipeline espacial (src/spatial/mmgd.py).
+_CATEGORIA = {"bdgd_e_aneel": (True, True), "lag_sistema": (False, True),
+              "bdgd_sem_homologacao": (True, False)}
+
+
+def units_from_empreendimentos(df) -> list[Unit]:
+    """Empreendimentos reais (data/processed/mmgd_empreendimentos.parquet) -> Unit.
+
+    Area = distribuidora (a BDGD e por distribuidora; o lag de sistema nao
+    tem subestacao). Potencia = a da ANEEL (base oficial; decisao do
+    src/spatial/mmgd.py); so-BDGD usa a da propria BDGD. Camada 1 = None.
+    """
+    out: list[Unit] = []
+    pa = df["pot_aneel_kw"].to_numpy(dtype="f8")
+    pb = df["pot_bdgd_kw"].to_numpy(dtype="f8")
+    datas = df["data"].astype(str).str.slice(0, 10).to_numpy()
+    for i, (ceg, cat, dist) in enumerate(zip(df["ceg"], df["categoria"], df["distribuidora"])):
+        in_bdgd, in_aneel = _CATEGORIA[cat]
+        cap = pa[i] if np.isfinite(pa[i]) else (pb[i] if np.isfinite(pb[i]) else 0.0)
+        out.append(Unit(unit_id=str(ceg), area=str(dist), capacity_kwp=float(cap),
+                        detected=None, in_bdgd=in_bdgd, in_aneel=in_aneel,
+                        homologated_at=datas[i] if in_aneel and datas[i] != "NaT" else ""))
+    return out
+
+
+def sample_units(units: list[Unit], n: int = 40) -> list[Unit]:
+    """Amostra para a tabela: as maiores de cada classificacao, em rodizio.
+
+    As 40 primeiras seriam todas da classe mais comum; em rodizio a tabela
+    mostra um exemplo real de cada caso do desempate.
+    """
+    by: dict[str, list[Unit]] = {}
+    for u in sorted(units, key=lambda u: -u.capacity_kwp):
+        by.setdefault(u.classification, []).append(u)
+    out: list[Unit] = []
+    while len(out) < n and any(by.values()):
+        for c in CLASSES:
+            if by.get(c) and len(out) < n:
+                out.append(by[c].pop(0))
+    return out
+
+
+def matrix_cells_two_layers() -> list[dict]:
+    """Celulas do desempate so com topologia x cadastro (camada 1 ausente)."""
+    return [
+        {"row": "Consta na BDGD", "col": "Consta na ANEEL", "classification": CADASTRAL,
+         "label": CLASS_LABELS[CADASTRAL], "note": CLASS_NOTES[CADASTRAL]},
+        {"row": "Consta na BDGD", "col": "Não consta", "classification": NAO_HOMOLOGADA,
+         "label": CLASS_LABELS[NAO_HOMOLOGADA],
+         "note": "Conectada na rede da distribuidora sem homologação na ANEEL. "
+                 "Exceção reportada à parte; NÃO entra no fator de correção."},
+        {"row": "Não consta na BDGD", "col": "Consta na ANEEL", "classification": LAG_DE_SISTEMA,
+         "label": CLASS_LABELS[LAG_DE_SISTEMA], "note": CLASS_NOTES[LAG_DE_SISTEMA]},
+        {"row": "Não consta na BDGD", "col": "Não consta", "classification": SEM_EVIDENCIA,
+         "label": "Fora das bases",
+         "note": "Nenhuma base cadastral conhece: só a camada física (satélite) "
+                 "encontraria. Sem ela, não há como contar."},
+    ]
 
 
 # --------------------------------------------------------------- demo
