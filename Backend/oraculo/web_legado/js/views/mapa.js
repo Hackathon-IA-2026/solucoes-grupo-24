@@ -461,124 +461,20 @@
   }
 
   // ============================================== 10. CLASSES DE CONSUMO
+  // A pagina passou a usar perfis MEDIDOS (ANEEL CTR) e composicao real
+  // (BDGD + SAMP) e vive so no dashboard React (pages/Classes.tsx). A copia
+  // desta interface legada foi removida para nao manter dois desenhos da mesma
+  // tela (DRY); aqui fica so o encaminhamento.
   V.classes = {
     title: "Classes de consumo e assinatura da curva",
-    subtitle: "Perfis canônicos e decomposição da curva de carga verificada "
-            + "por mínimos quadrados não negativos",
-    loadingText: "Decompondo a curva de carga por subsistema…",
+    subtitle: "Perfis medidos por classe (ANEEL CTR) e composição real por subsistema",
+    loadingText: "…",
     async render(root, S, U) {
-      const body = await Api.get("mapa/classes");
-      const d = body.data;
-      const canon = d.canonical || {};
-      const subs = d.subsystems || [];
-
       root.innerHTML =
-        '<div class="note-strip">' + U.esc(d.note) + "</div>" +
-
-        '<div class="grid g-2-1" style="margin-bottom:14px">' +
-          U.card("Perfis canônicos por classe", '<div id="ch-canon"></div>',
-                 { note: U.esc(canon.note) }) +
-          U.card("Assinatura de fim de semana", weekendTable(canon, U),
-                 { note: "Segunda assinatura, independente da forma horária: " +
-                         "é o que separa comercial de industrial quando as " +
-                         "duas têm platô diurno." }) +
-        "</div>" +
-
-        '<div class="grid g2" style="margin-bottom:14px">' +
-          subs.map((s, i) =>
-            U.card(U.esc(s.subsystem) + " · " + U.esc(s.name),
-                   '<div id="ch-sub' + i + '"></div>' +
-                   '<div style="margin-top:10px">' + weightBars(s.weights, U) +
-                   "</div>",
-                   { hint: U.esc(s.label) + " · R² " + U.num(s.r2, 3) +
-                           " (" + U.esc(s.fit_quality || "—") + ")",
-                     note: s.fit_warning ? U.esc(s.fit_warning) : "" })
-          ).join("") +
-        "</div>" +
-
-        U.card("Composição por subsistema", subTable(subs, U),
-               { hint: "método: " + U.esc((subs[0] || {}).method || "—") }) +
-
-        '<div class="grid g2" style="margin-top:14px">' +
-          U.card("Limiares de área de telhado", footprintTable(canon, U),
-                 { note: "Usados na evidência morfológica do Mapa " +
-                         "Inteligente. A ponderação é por ÁREA, não por " +
-                         "contagem: um galpão de 5.000 m² pesa muito mais na " +
-                         "carga do que uma casa de 120 m²." }) +
-          U.card("Notas de cada classe", classNotes(canon, U)) +
-        "</div>" +
-        U.provenanceBlock(body);
-
-      const hours = (canon.hours || []).map((h) =>
-        String(h).padStart(2, "0") + "h");
-      Charts.lineChart(document.getElementById("ch-canon"), {
-        index: hours, height: 280, digits: 4, xTicks: 8,
-        formatTime: (v) => v, zeroBase: true,
-        series: (canon.classes || []).map((c) => ({
-          label: c.label, values: c.profile,
-          color: CLASS_COLORS[c.key] || "teal", digits: 4,
-        })),
-      });
-
-      subs.forEach((s, i) => {
-        Charts.lineChart(document.getElementById("ch-sub" + i), {
-          index: hours, height: 200, digits: 4, xTicks: 6,
-          formatTime: (v) => v,
-          series: [
-            { label: "observado", values: s.observed, color: "ink", width: 2.2,
-              digits: 4 },
-            { label: "ajustado", values: s.fitted, color: "teal",
-              style: "dash", digits: 4 },
-          ],
-        });
-      });
+        '<div class="note-strip">Esta tela está no dashboard principal, em ' +
+        '<a href="/classes">/classes</a>: perfis medidos pela ANEEL (CTR) e ' +
+        "composição real por subsistema (BDGD + SAMP), validados contra a " +
+        "curva de carga do ONS.</div>";
     },
   };
-
-  function weekendTable(canon, U) {
-    const rows = (canon.classes || []).map((c) =>
-      "<tr><td>" + U.esc(c.label) + '</td><td class="num">' +
-      U.num(c.weekend_ratio, 2) + "</td></tr>").join("");
-    return '<div class="table-wrap"><table><thead><tr><th>Classe</th>' +
-      '<th class="num">fim de semana / dia útil</th></tr></thead><tbody>' +
-      rows + "</tbody></table></div>";
-  }
-
-  function subTable(subs, U) {
-    const rows = (subs || []).map((s) =>
-      "<tr><td><strong>" + U.esc(s.subsystem) + "</strong> " +
-      '<span class="small faint">' + U.esc(s.name) + "</span></td>" +
-      "<td>" + U.esc(s.label) + "</td>" +
-      '<td class="num">' + U.pct(s.weights.residencial, 1) + "</td>" +
-      '<td class="num">' + U.pct(s.weights.comercial, 1) + "</td>" +
-      '<td class="num">' + U.pct(s.weights.industrial, 1) + "</td>" +
-      '<td class="num">' + U.pct(s.weights.rural, 1) + "</td>" +
-      '<td class="num">' + U.num(s.r2, 3) + "</td>" +
-      '<td class="num">' + U.num(s.weekend_ratio, 3) + "</td>" +
-      '<td class="num">' + U.num(s.samples) + "</td></tr>").join("");
-    return '<div class="table-wrap"><table><thead><tr><th>Subsistema</th>' +
-      '<th>Classe dominante</th><th class="num">resid.</th>' +
-      '<th class="num">comerc.</th><th class="num">indust.</th>' +
-      '<th class="num">rural</th><th class="num">R²</th>' +
-      '<th class="num">fim de sem.</th><th class="num">amostras</th>' +
-      "</tr></thead><tbody>" + rows + "</tbody></table></div>";
-  }
-
-  function footprintTable(canon, U) {
-    const t = canon.footprint_thresholds_m2 || {};
-    return U.statLines([
-      ["Residencial", "até " + U.num(t.residencial_max) + " m²"],
-      ["Comercial", U.num(t.residencial_max) + " a " +
-                    U.num(t.comercial_max) + " m²"],
-      ["Industrial", "acima de " + U.num(t.comercial_max) + " m²"],
-    ]);
-  }
-
-  function classNotes(canon, U) {
-    return (canon.classes || []).map((c) =>
-      '<div class="stat-line" style="display:block">' +
-      '<div style="color:var(--' + (CLASS_COLORS[c.key] || "teal") +
-      ');font-weight:600">' + U.esc(c.label) + "</div>" +
-      '<div class="small muted">' + U.esc(c.note) + "</div></div>").join("");
-  }
 })();

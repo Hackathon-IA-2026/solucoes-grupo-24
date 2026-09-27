@@ -292,8 +292,12 @@ async def bench_png_route(request: Request) -> Response:
 
 
 async def classes_route(request: Request) -> Response:
+    # Proveniencia propria: alem do ONS (validacao), a pagina usa a ANEEL CTR
+    # (forma horaria) e a base BDGD/SAMP da fronteira (composicao).
     try:
-        return _wrap(SERVICE.classes_payload())
+        return _json(envelope.ok(SERVICE.classes_payload(), mode=SERVICE.mode(),
+                                 provenance=SERVICE.classes_provenance(),
+                                 notes=SERVICE.notes()))
     except Exception as exc:
         return _fail(exc)
 

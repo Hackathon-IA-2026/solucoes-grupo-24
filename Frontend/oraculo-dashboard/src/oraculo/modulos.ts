@@ -142,7 +142,7 @@ export const MODULOS_ORACULO: readonly ModuleDef[] = [
     label: 'Classes de consumo',
     titulo: 'Classes de consumo e assinatura da curva',
     icone: 'pie',
-    description: 'Perfis canônicos e decomposição da curva de carga verificada por mínimos quadrados não negativos',
+    description: 'Perfis medidos por classe (ANEEL CTR) e composição real por subsistema (BDGD + SAMP), validados contra a curva do ONS',
     icon: ChartPie,
     Page: lazy(() => import('./pages/Classes')),
   },

@@ -88,6 +88,15 @@ arquivos_diretos:
     url: https://dadosabertos.aneel.gov.br/dataset/6d90b77c-c5f5-4d81-bdec-7bc619494bb9/resource/11ec447d-698d-4ab8-977f-b424d5deee6a/download/siga-empreendimentos-geracao.csv
     destino: data/raw/aneel/siga_empreendimentos_geracao.csv
     atualizar_apos_dias: 7
+  # CTR - Curva de Carga Consumidor Tipo (ANEEL): curvas de demanda de 15 min MEDIDAS nas
+  # campanhas das revisões tarifárias periódicas, por distribuidora, subgrupo tarifário (B1
+  # residencial, B2 rural, B3 demais BT, A4 MT, A2/A3 AT) e tipo de dia. É a forma horária real
+  # de cada classe na página Classes de consumo (oraculo/profiles/medidos.py); substitui os
+  # perfis estilizados. ~41 MB. A ANEEL republica mensalmente.
+  - apelido: aneel_ctr_consumidor_tipo
+    url: https://dadosabertos.aneel.gov.br/dataset/2594ebad-1306-49d1-9f30-ded144acca87/resource/fae0d52c-5f02-4e84-a11b-d03db87e990d/download/ctr-curvas-carga-consumidor-tipo.parquet
+    destino: data/raw/aneel/ctr_curvas_carga_consumidor_tipo.parquet
+    atualizar_apos_dias: 30
   # Malha dos municípios (IBGE, API de malhas v3, qualidade mínima, ~3,6 MB): ponto
   # representativo de cada município para a densidade de MMGD. GeoJSON vira GeoParquet na chegada.
   - apelido: ibge_malha_municipios

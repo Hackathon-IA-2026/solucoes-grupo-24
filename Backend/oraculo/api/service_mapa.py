@@ -12,6 +12,7 @@ import numpy as np
 
 from .. import config
 from ..profiles import classes as C
+from ..profiles import medidos as M
 from ..substations import mapper, registry
 from ..vision import detector as D
 from ..vision import evaluate as EV
@@ -30,6 +31,11 @@ CHANNEL_KEYS = {"azul": "blue_excess", "borda": "edge_density",
 
 def channel_key(channel: str) -> str:
     return CHANNEL_KEYS.get(channel, "blue_excess")
+
+
+def _r(v: float | None, casas: int) -> float | None:
+    """Arredonda para o JSON; NaN/None (ex.: sem domingo na serie) vira null."""
+    return None if v is None or not np.isfinite(v) else round(float(v), casas)
 
 
 class MapaMixin:
@@ -360,38 +366,96 @@ class MapaMixin:
 
     # ------------------------------------------------------------ classes
     def classes_payload(self) -> dict:
-        """Perfis canonicos e a decomposicao real por subsistema."""
+        """Perfis MEDIDOS por classe, composicao REAL por subsistema e validacao.
+
+        Tres pecas, todas de dado real (ver oraculo/profiles/medidos.py):
+          - forma horaria de cada classe: ANEEL CTR (campanhas de medicao);
+          - composicao: energia faturada da base da fronteira T-D (BDGD + SAMP);
+          - validacao: curva montada contra a curva de carga GLOBAL do ONS.
+        Decisao: compara com a carga GLOBAL, nao a supervisionada. O CTR mede
+        CONSUMO; a supervisionada desconta a MMGD e achata o meio-dia, o que
+        faria a curva montada "errar" por um efeito que nao e de classe.
+        Sem a base da fronteira (em construcao ou modo demo), a composicao
+        NAO e estimada por outro caminho: o subsistema sai sem ela e a tela diz
+        por que.
+        """
+        from .service_fronteira import BaseNotReady
         self.ensure()
-        out = {"canonical": C.canonical_payload(), "subsystems": []}
-        for ss, st in sorted(self.areas.items()):
-            if ss == "SIN":
+        # Sem o CTR baixado (maquina nova), a pagina abre com o aviso de como
+        # baixar -- nunca com perfis de outra origem no lugar.
+        try:
+            perfis, aviso_perfis = M.perfis(), None
+        except FileNotFoundError as exc:
+            perfis, aviso_perfis = None, str(exc)
+        comp, cobertura, aviso = {}, {}, None
+        if self._fr_demo():
+            aviso = ("Modo demonstrativo: a base da fronteira T–D é sintética, "
+                     "então a composição real por subsistema não é mostrada.")
+        else:
+            try:
+                r = self._fr()
+                comp = M.composicao_subsistemas(r.per_frontier, r.seds)
+                cobertura = {c["subsystem"]: c for c in self._fr_ons_coverage(r.per_frontier)}
+            except BaseNotReady as exc:
+                aviso = "Composição indisponível: %s. Acompanhe em /api/fronteira/status." % exc
+
+        subs = []
+        for ss in ("SE", "S", "NE", "N"):
+            st = self.areas.get(ss)
+            if st is None:
                 continue
-            mix = C.decompose(st.index, st.decomposition.carga_supervisionada)
-            d = mix.to_dict()
-            d["fit_quality"] = ("bom" if d["r2"] >= 0.70
-                                else "moderado" if d["r2"] >= 0.50
-                                else "fraco")
-            if d["fit_quality"] == "fraco":
-                d["fit_warning"] = (
-                    "R² baixo: a curva agregada do subsistema não é bem "
-                    "explicada pelos perfis canônicos. Interpretar a classe "
-                    "dominante com cautela.")
-            out["subsystems"].append({
+            carga = st.decomposition.carga_global
+            obs, n = C.hourly_shape(st.index, carga, "util")
+            item = {
                 "subsystem": ss,
                 "name": config.SUBSYSTEMS.get(ss, {}).get("name", ss),
-                **d,
-            })
-        sin = self.areas.get("SIN")
-        if sin is not None:
-            out["sin"] = {
-                "subsystem": "SIN",
-                **C.decompose(sin.index,
-                              sin.decomposition.carga_supervisionada).to_dict(),
+                "observed": [round(float(v), 5) for v in obs],
+                "weekend_ratio_observed": _r(C.weekend_weekday_ratio(st.index, carga), 3),
+                "samples": int(n),
+                "composition": None,
             }
-        out["note"] = (
-            "A decomposição roda sobre a curva de carga verificada do ONS, por "
-            "subsistema. É medição real da forma da curva contra perfis "
-            "canônicos estilizados. Não existe curva por subestação em dado "
-            "aberto: no Mapa Inteligente, isto entra como prior regional e a "
-            "evidência local vem da morfologia construída.")
-        return out
+            c = comp.get(ss)
+            if c is not None and perfis is not None:
+                mont = M.montar(c["pesos"], perfis)
+                r2 = M.r2(obs, mont["shape"])
+                cov = cobertura.get(ss) or {}
+                item.update({
+                    "composition": c,
+                    "dominant": max(c["pesos"], key=c["pesos"].get),
+                    "assembled": [round(float(v), 5) for v in mont["shape"]],
+                    "weekend_ratio_assembled": _r(mont["weekend_ratio"], 3),
+                    "r2": round(r2, 4),
+                    "fit_quality": M.qualidade(r2),
+                    "coverage": cov.get("ratio"),
+                    "coverage_year": cov.get("ano"),
+                })
+                if cov.get("ratio") is not None and cov["ratio"] < M.cfg()["cobertura_alerta"]:
+                    item["fit_warning"] = (
+                        "A distribuição (BDGD + SAMP) cobre só %.0f%% da energia do "
+                        "ONS neste subsistema. O resto — consumidores ligados direto "
+                        "na rede básica (eletrointensivos), perdas — não está na "
+                        "composição, e costuma ser carga plana: a curva montada "
+                        "sai mais ondulada que a observada." % (100 * cov["ratio"]))
+            subs.append(item)
+
+        return {
+            "measured": M.payload_perfis() if perfis is not None else None,
+            "measured_warning": aviso_perfis,
+            "subsystems": subs,
+            "composition_warning": aviso,
+            # limiares de telhado da evidencia morfologica do Mapa: PREMISSA,
+            # continuam em classes.py e sao rotulados como tal na tela
+            "footprint_thresholds_m2": C.canonical_payload()["footprint_thresholds_m2"],
+            "note": (
+                "Formas horárias medidas pela ANEEL (CTR, campanhas das revisões "
+                "tarifárias) e composição pela energia faturada real (BDGD + SAMP). "
+                "A curva de carga global do ONS entra só como validação da "
+                "composição × forma."),
+        }
+
+    def classes_provenance(self) -> list[dict]:
+        """ONS (validacao) + ANEEL/IBGE da fronteira (composicao) + ANEEL CTR (forma)."""
+        out = list(self.provenance())
+        if not self._fr_demo():
+            out += self.fronteira_provenance()
+        return out + ([M.proveniencia()] if M.caminho_saida().exists() else [])

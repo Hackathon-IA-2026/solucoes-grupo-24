@@ -1,0 +1,83 @@
+# Perfis de consumo por classe MEDIDOS (página "Classes de consumo" do dashboard).
+# Código: oraculo/profiles/medidos.py. Caminhos relativos a Backend/.
+#
+# Substitui os perfis ESTILIZADOS (desenhados à mão) que a página mostrava. Duas fontes reais:
+#   1. FORMA horária de cada classe: ANEEL "CTR - Curva de Carga Consumidor Tipo" (campanhas de
+#      medição das revisões tarifárias). Download: apelido `aneel_ctr_consumidor_tipo` em
+#      config/fontes_ons.yaml.
+#   2. COMPOSIÇÃO de cada subsistema (quanto de cada classe): energia faturada real da base da
+#      Fronteira T-D (BDGD UCMT/UCAT por SED + SAMP BT por distribuidora), já correlacionada às
+#      SEs de fronteira do ONS (oraculo/fronteira).
+# A curva do ONS entra só como VALIDAÇÃO: curva montada (1 × 2) contra a curva observada.
+
+# Tabela processada (derivada do bruto; data/processed/**/*.csv fica fora do git).
+saida: data/processed/perfis_classe_ctr.csv
+
+# Seleção das curvas do CTR.
+selecao:
+  # Cada distribuidora publica um processo por revisão tarifária (AnoPrcCal). Usa só o mais
+  # recente de cada uma: é a campanha mais nova, e misturar revisões contaria a mesma
+  # distribuidora várias vezes na média.
+  processo_mais_recente: true
+  # Curva com média de dia útil zero não normaliza (ex.: iluminação pública, que só acende de
+  # noite, tem dias com média ~0 em alguns CTs). Fica de fora e é contada no relatório.
+  media_minima_dia_util: 0.0
+
+# Classes da página. A ANEEL mede por SUBGRUPO TARIFÁRIO, não por classe comercial: o B3
+# ("demais classes") junta comércio, serviços e pequena indústria de baixa tensão, e a grande
+# indústria aparece como alta tensão. Por isso as classes seguem os subgrupos — separar
+# "comercial" de "industrial" dentro do B3 exigiria inventar um critério que o dado não traz.
+# Decisão: B4 (iluminação pública) não vira classe própria — no SAMP ela é pequena e já é
+# somada à comercial pela regra de classe da fronteira (config.CLASSE_CLM).
+classes:
+  residencial:
+    rotulo: Residencial (B1)
+    subgrupos: [B1]
+    nota: Baixa tensão residencial. Ponta noturna às 19h, vale de madrugada.
+  rural:
+    rotulo: Rural (B2)
+    subgrupos: [B2]
+    nota: >-
+      Baixa tensão rural. Medido, o pico também é noturno (19h) — a hipótese antiga de
+      "bombeamento de madrugada" não aparece na média das campanhas.
+  comercial_bt:
+    rotulo: Comercial, serviços e demais BT (B3)
+    subgrupos: [B3]
+    nota: >-
+      Comércio, serviços, poder público e pequena indústria em baixa tensão. Platô das 9h às
+      16h e queda forte no domingo.
+  media_tensao:
+    rotulo: Média tensão (A4 · 2,3–25 kV)
+    subgrupos: [A4, AS]
+    nota: >-
+      Indústria e grandes comércios ligados em média tensão (inclui AS, subterrâneo). Platô
+      diurno, fim de semana baixo.
+  alta_tensao:
+    rotulo: Alta tensão (A2/A3 · ≥ 30 kV)
+    subgrupos: [A1, A2, A3, A3a]
+    nota: Grande indústria. Curva quase plana nas 24 horas.
+
+# Energia real (base da fronteira) -> classe da página.
+composicao:
+  # Baixa tensão (SAMP), pela classe da regra CLASSE_CLM da fronteira.
+  bt:
+    residencial: residencial
+    rural: rural
+    comercial: comercial_bt
+    industrial: comercial_bt
+  # Média/alta tensão (BDGD), pela tensão das UCs da SED: só UCMT -> MT; só UCAT -> AT.
+  sed_so_mt: media_tensao
+  sed_so_at: alta_tensao
+  # SED com UCs de MT E de AT: a base agregada soma a energia das duas e não permite separar.
+  # Decisão: vai inteira para a MT (a maioria das UCs dessas SEDs é MT) e a fração é
+  # reportada na página em vez de escondida.
+  sed_mista: media_tensao
+
+# Qualidade do ajuste curva montada × curva observada do ONS (R² da forma do dia útil).
+qualidade_r2:
+  bom: 0.70
+  moderado: 0.50
+
+# Abaixo desta cobertura (energia da distribuição associada ÷ energia do ONS), a página avisa
+# que parte relevante da carga (rede básica, perdas) está fora da composição.
+cobertura_alerta: 0.70

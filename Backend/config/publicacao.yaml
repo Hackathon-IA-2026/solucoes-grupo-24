@@ -22,6 +22,7 @@ status_fontes:
                                                 usina_conjunto, modalidade_usina]
   "ANEEL — Cadastro de MMGD": [aneel_mmgd_empreendimentos]
   "ANEEL — SIGA (empreendimentos de geração)": [aneel_siga_empreendimentos]
+  "ANEEL — CTR (curvas de carga por classe)": [aneel_ctr_consumidor_tipo]
   "IBGE — Malha municipal": [ibge_malha_municipios]
   "ANEEL — BDGD (Light e Enel RJ)": [bdgd_light, bdgd_enel_rj]
   "IBGE — Malhas do RJ": [ibge_malha_rj, ibge_malha_municipios_rj]

@@ -444,15 +444,23 @@ def test_visao_declara_os_dois_backends_e_o_motivo(client):
     assert d["area_calibration"]["factor"] > 1.0
 
 
-def test_classes_traz_canonicos_e_decomposicao_real(client):
+def test_classes_nao_mostra_composicao_sintetica_como_real(client):
+    """No modo demo a base da fronteira e sintetica: a composicao sai vazia e avisada.
+
+    Os perfis medidos (ANEEL CTR) podem ou nao estar baixados na maquina; nos dois
+    casos a pagina abre, com os perfis ou com o aviso de como baixar.
+    """
     d = client.get("/api/mapa/classes").json()["data"]
-    assert len(d["canonical"]["classes"]) == 4
+    assert d["composition_warning"]
     assert d["subsystems"]
     for s in d["subsystems"]:
-        # pesos vem arredondados em 4 casas no payload
-        assert sum(s["weights"].values()) == pytest.approx(1.0, abs=5e-4)
-        assert s["fit_quality"] in ("bom", "moderado", "fraco")
-        assert len(s["observed"]) == 24 and len(s["fitted"]) == 24
+        assert s["composition"] is None
+        assert len(s["observed"]) == 24
+    if d["measured"] is None:
+        assert "perfis_classe" in d["measured_warning"]
+    else:
+        for c in d["measured"]["classes"]:
+            assert len(c["profile"]) == 24 and c["n_curvas"] > 0
 
 
 # ================================================= nao regressao

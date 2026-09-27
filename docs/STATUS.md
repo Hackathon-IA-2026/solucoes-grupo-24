@@ -805,3 +805,37 @@ Auditoria das abas do dashboard (o que era real × sintético) seguida das corre
 
 Continua pendente (não dá para resolver só com código): Visão · auditoria 3 camadas (sem imagem da área piloto nem
 `best.pt`), métricas do detector só no banco sintético, Projeção ENE demora >8 min no primeiro acesso.
+
+## 2026-09-27 — Classes de consumo com dado medido: perfis ANEEL CTR + composição BDGD/SAMP ✅
+
+A página **Classes de consumo** (`/classes`) mostrava perfis horários **desenhados à mão** (`CANONICAL` em
+`oraculo/profiles/classes.py`) e adivinhava a composição de cada subsistema encaixando a curva do ONS neles (NNLS).
+O perfil "rural" (bombeamento de madrugada) tinha correlação **negativa** (−0,38) com o rural medido, e o ajuste
+dava 35 % de rural ao Sudeste (energia faturada no RJ: 0,4 %). Agora tudo na página é dado real:
+
+- **Forma horária por classe**: ANEEL *CTR – Curva de Carga Consumidor Tipo* (campanhas de medição das revisões
+  tarifárias; 15 min; dia útil/sábado/domingo). Fonte nova `aneel_ctr_consumidor_tipo` em `config/fontes_ons.yaml`
+  (~41 MB, grupo novo em `publicacao.yaml`). Tabela `perfis_classe` no processamento
+  (`src/processing/perfis_classe.py` → `data/processed/perfis_classe_ctr.csv`): processo tarifário mais recente de
+  cada distribuidora, cada curva em p.u. da própria média de dia útil, média simples (o arquivo não traz peso).
+  3.675 curvas, 62 distribuidoras, 2016–2026.
+- **Classes pelos subgrupos que a ANEEL mede** (mudança de chaves do JSON aprovada pelo Tiago): residencial (B1),
+  rural (B2), comercial/serviços e demais BT (B3), média tensão (A4, AS), alta tensão (A1–A3a). Comercial × industrial
+  deixou de existir porque o B3 junta os dois. Parâmetros em `config/perfis_classe.yaml`.
+- **Composição por subsistema**: energia faturada real da base da Fronteira T–D (SAMP BT + BDGD MT/AT por SED; SED
+  com UCs de MT e AT conta como MT e a fração é mostrada). Reaproveita a correlação existente; nada foi baixado de
+  novo para isso. O `Backend/RDX/perfis_consumo.csv` foi avaliado e descartado: cobre só o RJ e não separa tensão.
+- **Validação contra o ONS** (`oraculo/profiles/medidos.py`, `service_mapa.classes_payload`): curva montada
+  (energia × forma, com o peso do dia útil corrigido pelo fim de semana medido) × **carga global** (o CTR mede
+  consumo; a supervisionada desconta a MMGD). R²: S 0,93, SE 0,77 (bom). N e NE não validam (R² < 0) e a tela diz
+  por quê: a distribuição cobre só 39 % (N) e 62 % (NE) da energia do ONS; o resto é rede básica/eletrointensivos.
+- Rota com proveniência própria (ONS + ANEEL/IBGE da fronteira + ANEEL CTR). Sem a tabela ou sem a base da
+  fronteira, a página abre com aviso; nunca troca por outra fonte. Limiares de telhado ficam rotulados PREMISSA.
+- Interface legada (`web_legado`): a view de classes virou um encaminhamento para o dashboard (sem duas cópias da
+  tela). Ajuda F1 e Sphinx (`classes-de-consumo.rst`, `referencia/profiles.rst`) reescritas.
+- Testes: `tests/test_perfis_classe.py` (construção a partir do CTR), `tests_oraculo/test_perfis_medidos.py`
+  (composição e montagem) e `test_mapa.py` atualizado. `tests_oraculo`: 545 ok; `test_estrutura`, `test_download`,
+  `test_heavywork`: ok. Sem teste de vazamento temporal: a tabela é descritiva, sem treino nem previsão.
+
+Pendente: o prior regional do Mapa · perfis por subestação (`service_mapa._regional_mix`) ainda usa o NNLS sobre os
+perfis estilizados de `classes.py`; os perfis do CTR são nacionais (o arquivo não traz subsistema).

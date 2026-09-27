@@ -16,6 +16,8 @@ Saídas (data/processed/):
                                  (GWh) e semi-horas com corte (Peça B: histórico / Figura 1)
     usinas_cadastro.csv          usina/conjunto: ponto de conexão, agente e coordenada do SIGA
                                  (src/processing/cadastro.py)
+    perfis_classe_ctr.csv        perfis horários medidos por classe (ANEEL CTR), p.u. do dia útil
+                                 (src/processing/perfis_classe.py; página Classes de consumo)
     clima_uf.csv                 UF × hora: radiação, vento, temperatura, nuvens (Open-Meteo)
 
 Um resumo de cobertura de cada tabela vai para docs/reports/cobertura_tabelas.csv.
@@ -27,7 +29,7 @@ import pandas as pd
 from src.features.calendario import montar_calendario
 # Leitor ÚNICO da carga verificada (DRY): subsistema, área piloto e áreas de carga (cadastro.py)
 # saem da mesma função, com o mesmo fuso, a mesma regra de duplicata e de carga <= 0.
-from src.processing import cadastro
+from src.processing import cadastro, perfis_classe
 from src.processing.carga_bruta import ler_carga_verificada
 from src.utils.banco_analitico import conectar
 from src.utils.config import arquivo_direto, carregar, razoes_curtailment
@@ -332,7 +334,7 @@ def cobertura(nome: str, df: pd.DataFrame, grupo: str | None) -> pd.DataFrame:
 
 
 TABELAS = ("calendario", "carga", "rotulos", "capacidade_mmgd", "carga_area", "curtailment_mensal", "usinas",
-           "clima")
+           "clima", "perfis_classe")
 
 
 def construir(tabelas=TABELAS) -> pd.DataFrame:
@@ -363,6 +365,11 @@ def construir(tabelas=TABELAS) -> pd.DataFrame:
         us = cadastro.construir_usinas()  # cadastro sem tempo: cobertura só com a contagem
         cob.append(pd.DataFrame([{"tabela": "usinas_cadastro", "grupo": f, "linhas": int(n),
                                   "inicio": None, "fim": None} for f, n in us["fonte"].value_counts().items()]))
+    if "perfis_classe" in tabelas:
+        # perfis medidos por classe (ANEEL CTR): sem tempo, cobertura = linhas por classe
+        pc = perfis_classe.construir_perfis_classe()
+        cob.append(pd.DataFrame([{"tabela": "perfis_classe_ctr", "grupo": c, "linhas": int(n),
+                                  "inicio": None, "fim": None} for c, n in pc["classe"].value_counts().items()]))
     cob = pd.concat(cob)
     arq = DOCS_REPORTS / "cobertura_tabelas.csv"
     if arq.exists():  # atualiza só as tabelas reconstruídas
