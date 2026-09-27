@@ -67,25 +67,8 @@ jobs:
       - name: Validar credenciais AWS
         run: python -c "import boto3; print(boto3.client('sts').get_caller_identity()['Arn'])"
 
+      # O próprio script só termina com sucesso quando o site serve o build NOVO do dashboard
+      # (e reimplanta até 3x se o ECS reverter por causa do alarme de erros).
       - name: Deploy (ECS Fargate)
         working-directory: Backend
         run: python deploy/deploy_ecs.py
-
-      # Confirma que o site novo responde antes de dar o job como verde.
-      - name: Verificar o site
-        working-directory: Backend
-        run: |
-          python - <<'PY'
-          import boto3, time, urllib.request
-          ecs = boto3.client("ecs")
-          arn = "arn:aws:ecs:us-west-2:%s:service/default/oraculo" % boto3.client("sts").get_caller_identity()["Account"]
-          host = ecs.describe_express_gateway_service(serviceArn=arn)["service"]["activeConfigurations"][0]["ingressPaths"][0]["endpoint"]
-          for i in range(40):  # até ~13 min: as tasks novas baixam o pacote do S3 ao subir
-              try:
-                  if urllib.request.urlopen(f"https://{host}/api-docs", timeout=15).status == 200:
-                      print("no ar:", f"https://{host}"); raise SystemExit(0)
-              except Exception as e:
-                  print(i, "aguardando:", type(e).__name__)
-              time.sleep(20)
-          raise SystemExit("o site não respondeu 200 a tempo")
-          PY

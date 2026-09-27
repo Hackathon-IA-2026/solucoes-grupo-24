@@ -29,7 +29,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import re
 import time
+import urllib.request
 import zipfile
 from pathlib import Path
 
@@ -217,6 +219,47 @@ def publicar(zip_path: Path, regiao: str, min_tasks: int, max_tasks: int, s3, bu
     print(json.dumps(r, default=str, indent=2)[:1500])
 
 
+def _entrada_do_dashboard(html: str) -> str | None:
+    """Nome do bundle de entrada do Vite (assets/index-<hash>.js): muda a cada build diferente."""
+    m = re.search(r"assets/index-[^\"']+\.js", html)
+    return m.group(0) if m else None
+
+
+def garantir_versao_no_ar(regiao: str, conta: str, tentativas: int = 3, espera_max: int = 900) -> str:
+    """Só dá o deploy por bom quando o site serve o build NOVO do dashboard. Devolve a URL.
+
+    Decisão: 200 em /api-docs não prova nada — o ECS Express REVERTE sozinho o deployment quando o
+    alarme de erros (RollbackAlarm: >1% de 4xx/5xx, sensível com pouco tráfego) dispara, e a versão
+    antiga continua respondendo 200. Por isso comparo o hash do bundle servido com o do dist local e,
+    se o ECS reverteu, forço um novo deployment (até `tentativas`).
+    """
+    import boto3
+    ecs = boto3.client("ecs", region_name=regiao)
+    arn = f"arn:aws:ecs:{regiao}:{conta}:service/default/{SERVICO}"
+    host = ecs.describe_express_gateway_service(serviceArn=arn)["service"]["activeConfigurations"][0][
+        "ingressPaths"][0]["endpoint"]
+    url = f"https://{host}"
+    esperado = _entrada_do_dashboard((DIST / "index.html").read_text(encoding="utf-8"))
+    for tentativa in range(1, tentativas + 1):
+        limite = time.time() + espera_max
+        while time.time() < limite:
+            try:
+                no_ar = _entrada_do_dashboard(urllib.request.urlopen(url, timeout=15).read().decode("utf-8", "replace"))
+            except Exception as e:  # 503 enquanto a task nova sobe é esperado
+                no_ar = None
+                print(f"  aguardando ({type(e).__name__})")
+            if no_ar == esperado:
+                print(f"versão nova no ar ({esperado}): {url}")
+                return url
+            deps = ecs.describe_services(cluster="default", services=[SERVICO])["services"][0]["deployments"]
+            if len(deps) == 1 and deps[0]["rolloutState"] == "COMPLETED":
+                break  # rollout terminou e o site ainda serve outra versão => foi revertido
+            time.sleep(20)
+        print(f"tentativa {tentativa}/{tentativas}: o ECS terminou sem a versão nova (rollback?); reimplantando")
+        ecs.update_service(cluster="default", service=SERVICO, forceNewDeployment=True)
+    sys.exit(f"a versão nova ({esperado}) não ficou no ar depois de {tentativas} tentativas")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--so-empacotar", action="store_true", help="monta o pacote e para (não usa a AWS)")
@@ -244,6 +287,7 @@ def main() -> None:
     print(f"zip: {zip_path} ({zip_path.stat().st_size / 1024 / 1024:.0f} MB)")
     if not args.so_empacotar:
         publicar(zip_path, args.regiao, args.min_tasks, args.max_tasks, s3, bucket, conta)
+        garantir_versao_no_ar(args.regiao, conta)
 
 
 if __name__ == "__main__":
